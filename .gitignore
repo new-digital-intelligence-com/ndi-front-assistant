@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Local test files, never committed
 file-to-test/
+
+# Clara's knowledge PDFs and their sources: kept on this machine and in the approved Drive folder, not in the public repo
+/knowledge-base/

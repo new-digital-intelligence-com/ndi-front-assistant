@@ -133,6 +133,10 @@ Operating mode: AGENT (summary of the request, never claims a meeting is booked)
 client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
 - the **AI Employee catalog** and the **latest company presentation** — as PDF copies, because ElevenLabs cannot read PowerPoint
 - the **SARAA factsheet**
+- three PDFs written for Clara on 2 Oct 2026 from public sources only (website, LinkedIn, YouTube, privacy policy,
+  the presentation and the catalog's overview): **NDI Company Knowledge Base**, **NDI Frequently Asked Questions**
+  and, optionally, **NDI Public Demo Videos**. They and their HTML sources are in `knowledge-base/` on the
+  developer's machine (git-ignored; `knowledge-base/README.md` says how to rebuild them)
 
 Best kept in **one approved folder with one owner at NDI**, and Clara reads nothing else (never the whole shared drive).
 
