@@ -58,8 +58,8 @@ type Overview = {
 
 /** Why alerts are off, in words staff can act on. */
 const ALERTS_OFF: Record<string, string> = {
-  no_address: "STAFF_ALERT_EMAIL is empty on this deployment: add it on Vercel (Production) and redeploy.",
-  invalid_address: "STAFF_ALERT_EMAIL does not look like an email address. Write it plainly (name@example.com; several separated by commas) and redeploy.",
+  no_address: "STAFF_ALERT_EMAIL is empty on this deployment: add it in Railway (the service → Variables); Railway redeploys by itself.",
+  invalid_address: "STAFF_ALERT_EMAIL does not look like an email address. Write it plainly (name@example.com; several separated by commas).",
   mail_not_configured: "The mailbox that sends emails (gmail_sender and gmail_app_password) is not set on this deployment.",
 };
 

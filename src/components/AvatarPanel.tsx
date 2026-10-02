@@ -158,7 +158,7 @@ export function AvatarPanel({
           <div>
             <h2 className="text-xl font-bold text-heading">Talk to Clara face to face</h2>
             <p className="mt-1 max-w-md text-muted">
-              Start a video call with Clara. She listens, answers out loud and uses the same CDA knowledge as the chat.
+              Start a video call with Clara. She listens, answers out loud and uses the same NDI knowledge as the chat.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">

@@ -11,7 +11,6 @@ const CHANNEL_LABELS: Record<string, string> = {
   telegram: "Telegram",
   instagram: "Instagram",
   messenger: "Messenger",
-  alexa: "Alexa",
   email: "Email",
   phone: "Phone",
   website: "This website",
@@ -90,7 +89,7 @@ export function AccountPanel() {
   if (signedIn === null) {
     return (
       <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-heading">Your CDA account</h2>
+        <h2 className="font-semibold text-heading">Your NDI account</h2>
         <p className="mt-2 text-sm text-muted">Loading…</p>
       </section>
     );
@@ -99,7 +98,7 @@ export function AccountPanel() {
   if (!signedIn) {
     return (
       <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-heading">Your CDA account</h2>
+        <h2 className="font-semibold text-heading">Your NDI account</h2>
         <p className="mt-1 text-sm text-muted">
           Link Telegram, Instagram, your phone number and your email addresses, so Clara knows you on all of
           them and remembers what you asked before.
@@ -278,7 +277,7 @@ export function AccountPanel() {
               await refresh();
             }}
           >
-            <p className="text-sm text-muted">Clara will know you when you call CDA, and when CDA calls you.</p>
+            <p className="text-sm text-muted">Clara will know you when you call NDI, and when NDI calls you.</p>
             <PhoneInput
               value={phone || undefined}
               onChange={(value) => setPhone(value ?? "")}

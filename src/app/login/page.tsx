@@ -4,7 +4,7 @@ import { safeNextPath, sitePasswordConfigured } from "@/lib/auth";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Sign in – CDA Customer Assistant Demo",
+  title: "Sign in – NDI Assistant",
   robots: { index: false, follow: false },
 };
 
@@ -16,11 +16,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex flex-1 items-center justify-center bg-heading px-4 py-12">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl">
         <div className="flex items-center gap-3">
-          <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider text-white">CDA</span>
-          <span className="text-lg font-semibold text-heading">Customer Assistant</span>
+          <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider text-white">NDI</span>
+          <span className="text-lg font-semibold text-heading">Assistant</span>
         </div>
         <p className="mt-2 text-xs text-muted">
-          NDI demo · not an official CDA website ·{" "}
+          A live demo of NDI&apos;s Multi-Channel Front Office Assistant ·{" "}
           <Link href="/docs" className="underline">
             How this demo works
           </Link>

@@ -4,34 +4,34 @@ import { ChannelLinks } from "@/components/ChannelLinks";
 import { IntercomMessenger } from "@/components/IntercomMessenger";
 
 const helpTopics = [
-  "Product features, dimensions and energy ratings",
-  "Warranty and appliance registration",
-  "Faults, repairs and engineer visits",
-  "Spare parts, accessories and user manuals",
-  "Where to buy CDA appliances",
+  "What AI Employees are and what they do",
+  "Finding the right AI Employee for your process",
+  "How NDI works: implementation, go-live and the pay-per-use model",
+  "Booking a meeting or a demo with the NDI team",
+  "NDI's offices and contacts",
 ];
 
 export default function Home() {
   return (
     <>
       <div className="bg-ink px-4 py-1.5 text-center text-xs text-white/80">
-        NDI demo · not an official CDA website
+        A live demo of NDI&apos;s Multi-Channel Front Office Assistant
       </div>
 
-      <header className="bg-heading text-white">
+      <header className="bg-brand text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
-            <span className="text-lg font-semibold">Customer Assistant</span>
+            <span className="rounded-md bg-white px-2.5 py-1 text-xl font-extrabold tracking-wider text-brand">NDI</span>
+            <span className="text-lg font-semibold">Assistant</span>
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="https://www.cda.co.uk/customer-care/"
+              href="https://new-digital-intelligence.com/contact"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden text-sm text-white/80 hover:text-white sm:block"
             >
-              CDA Customer Care ↗
+              Contact NDI ↗
             </a>
             <form action="/api/logout" method="post">
               <button type="submit" className="rounded-full border border-white/30 px-3 py-1 text-xs text-white/80 hover:text-white">
@@ -40,7 +40,7 @@ export default function Home() {
             </form>
           </div>
         </div>
-        <div className="h-1 bg-brand" />
+        <div className="h-1 bg-accent" />
       </header>
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-4 py-4 lg:grid-cols-[320px_1fr] lg:gap-6">
@@ -55,7 +55,7 @@ export default function Home() {
           <section className="rounded-xl bg-white p-4 shadow-sm">
             <h1 className="text-xl font-bold text-heading">Hi, I&apos;m Clara</h1>
             <p className="mt-1 text-sm text-muted">
-              The virtual assistant for CDA kitchen appliances. Chat, send a photo or PDF, or just talk.
+              NDI&apos;s virtual assistant. Ask about our AI Employees, send a document, or just talk.
             </p>
             <details className="group mt-3">
               <summary className="cursor-pointer list-none text-sm font-semibold text-heading">
@@ -75,18 +75,21 @@ export default function Home() {
           <ChannelLinks />
           <AccountPanel />
           <p className="rounded-xl border-l-4 border-brand bg-white px-4 py-3 text-sm text-muted shadow-sm">
-            <strong className="text-heading">Smell gas?</strong> Leave the property and call{" "}
-            <strong>0800 111 999</strong>.
+            <strong className="text-heading">Prefer a person?</strong> Write to{" "}
+            <a href="mailto:mail@new-digital-intelligence.com" className="font-semibold text-brand underline">
+              mail@new-digital-intelligence.com
+            </a>
+            .
           </p>
         </aside>
       </main>
 
       <IntercomMessenger />
 
-      <footer className="mt-auto bg-accent text-white">
+      <footer className="mt-auto bg-brand text-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between">
-          <span>CDA Customer Care: 01949 862012 · Mon–Fri 9am–5pm, Sat 9am–1pm</span>
-          <span>Demo built by NDI with ElevenLabs Agents</span>
+          <span>NDI – New Digital Intelligence · new-digital-intelligence.com</span>
+          <span>Built by NDI with ElevenLabs Agents</span>
         </div>
       </footer>
     </>

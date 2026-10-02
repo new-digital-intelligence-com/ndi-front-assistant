@@ -1,4 +1,4 @@
-// Sends email from the CDA demo Gmail mailbox (gmail_sender) with a Gmail app password
+// Sends email from the NDI Gmail mailbox (gmail_sender) with a Gmail app password
 // (gmail_app_password). Server side only.
 
 import nodemailer from "nodemailer";
@@ -21,5 +21,5 @@ export function mailConfigured(): boolean {
 export async function sendMail(message: { to: string; subject: string; text: string; html: string }) {
   const { user, pass } = credentials();
   transport ??= nodemailer.createTransport({ service: "gmail", auth: { user, pass } });
-  await transport.sendMail({ from: `"CDA Customer Care (demo)" <${user}>`, ...message });
+  await transport.sendMail({ from: `"NDI - New Digital Intelligence" <${user}>`, ...message });
 }

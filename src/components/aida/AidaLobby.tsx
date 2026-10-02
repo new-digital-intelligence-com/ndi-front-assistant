@@ -62,7 +62,7 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
   return (
     <div className="mx-auto w-full max-w-md">
       <form onSubmit={submit} className="space-y-3 rounded-xl bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-heading">CDA staff</h1>
+        <h1 className="text-xl font-bold text-heading">NDI staff</h1>
         <p className="text-sm text-muted">
           Enter the staff password to manage Aida rooms, email replies and customers.
         </p>
@@ -96,7 +96,7 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
   );
 }
 
-/** The "Aida rooms" tab of the admin page: create, join, close and read rooms as CDA staff. */
+/** The "Aida rooms" tab of the admin page: create, join, close and read rooms as NDI staff. */
 export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut: () => void }) {
   const [joined, setJoined] = useState<JoinedRoom | null>(null);
   const [name, setName] = useState("");
@@ -215,7 +215,7 @@ export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut
           <div>
             <h1 className="text-xl font-bold text-heading">Aida rooms</h1>
             <p className="mt-1 text-sm text-muted">
-              Live calls with a customer. Aida listens and drafts answers that only CDA staff see; you approve
+              Live calls with a customer. Aida listens and drafts answers that only NDI staff see; you approve
               what gets sent.
             </p>
           </div>

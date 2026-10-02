@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const days = Number(new URL(request.url).searchParams.get("days"));
   try {
     const alerts = moodAlertStatus();
-    // Instagram, Messenger, Alexa and Telegram conversations may never reach the post-call webhook with
+    // Instagram, Messenger and Telegram conversations may never reach the post-call webhook with
     // a mood: after answering, bring in any new ones, so they show on the next refresh.
     if (Date.now() - lastRefresh > REFRESH_EVERY_MS) {
       lastRefresh = Date.now();

@@ -50,7 +50,7 @@ export class RoomClosedError extends Error {
 
 /**
  * Joining and creating rooms share one response shape. Sending the staff token is what makes the
- * server treat this person as CDA staff; without it they are a customer.
+ * server treat this person as NDI staff; without it they are a customer.
  */
 export async function requestRoom(
   path: "/api/aida/rooms" | "/api/aida/join",

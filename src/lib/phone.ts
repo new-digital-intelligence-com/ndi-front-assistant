@@ -3,7 +3,7 @@
 // it can run anywhere.
 
 /**
- * "07576 593472" → "+447576593472", "00216 90 217 664" → "+21690217664". A number starting with a
+ * "07700 900123" → "+447700900123", "00216 90 217 664" → "+21690217664". A number starting with a
  * single 0 is read as a UK number, the way people write them in the UK. Null when it is not a number.
  */
 export function normalisePhone(input: unknown): string | null {

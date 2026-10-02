@@ -5,7 +5,7 @@ import type { AidaRole } from "./livekit";
 
 /**
  * Who is asking, in an Aida route. Staff are decided by the Aida staff token only. A customer may
- * also be signed in to their CDA account on the website (same browser): then we know their name,
+ * also be signed in to their NDI account on the website (same browser): then we know their name,
  * so they are not asked for it, and Aida can use what we remember about them.
  */
 export async function whoIsAsking(request: Request): Promise<{ role: AidaRole; account: Customer | null }> {

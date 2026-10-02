@@ -69,7 +69,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
   const [draft, setDraft] = useState("");
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  /** Set when the customer is signed in to their CDA account and Aida has been given their history. */
+  /** Set when the customer is signed in to their NDI account and Aida has been given their history. */
   const [knownCustomer, setKnownCustomer] = useState<string | null>(null);
   /** Staff only: the mood of each customer line, by line id. */
   const [moods, setMoods] = useState<Record<string, LineMood>>({});
@@ -177,7 +177,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
       lastCustomerRef.current = name;
       copilotRef.current.sendUserMessage(`${name}: ${text}`);
     } else {
-      copilotRef.current.sendContextualUpdate(`CDA employee ${name} said: ${text}`);
+      copilotRef.current.sendContextualUpdate(`NDI employee ${name} said: ${text}`);
     }
   };
 
@@ -238,7 +238,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
     setSuggestions((current) =>
       current.map((s) => (s.id === suggestionId ? { ...s, status: "approved", decidedBy: byName } : s)),
     );
-    tellCopilot(`The CDA employee sent the customer this reply: ${text}`);
+    tellCopilot(`The NDI employee sent the customer this reply: ${text}`);
   };
 
   const startCopilot = async () => {
@@ -306,7 +306,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             );
             return;
           case "approved":
-            // Only an employee can put words in CDA's mouth; a customer's browser cannot fake this.
+            // Only an employee can put words in NDI's mouth; a customer's browser cannot fake this.
             if (role !== "employee") return;
             applyApproved(message.suggestionId, message.text, name);
             return;
@@ -315,7 +315,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             setSuggestions((current) =>
               current.map((s) => (s.id === message.suggestionId ? { ...s, status: "declined", decidedBy: name } : s)),
             );
-            tellCopilot("The CDA employee chose not to send your last draft.");
+            tellCopilot("The NDI employee chose not to send your last draft.");
         }
       },
       onSpoken(text) {
@@ -343,14 +343,14 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
         const transcript = recent
           .map((line) =>
             line.kind === "approved"
-              ? `CDA reply: ${line.text}`
-              : `${line.name} (${line.role === "customer" ? "customer" : "CDA"}): ${line.text}`,
+              ? `NDI reply: ${line.text}`
+              : `${line.name} (${line.role === "customer" ? "customer" : "NDI"}): ${line.text}`,
           )
           .join("\n");
         copilotRef.current.sendContextualUpdate(`The call so far:\n${transcript}`);
       },
       shareCustomerContext() {
-        // What CDA already knows about a signed-in customer (other channels, earlier calls), so
+        // What NDI already knows about a signed-in customer (other channels, earlier calls), so
         // Aida's drafts can build on it. Only the host runs Aida, so only the host asks.
         if (!isHostRef.current || !copilotReadyRef.current) return;
         void api("/api/aida/context")
@@ -457,7 +457,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
       .on(RoomEvent.AudioPlaybackStatusChanged, () => setNeedsAudioClick(!room.canPlaybackAudio))
       .on(RoomEvent.Disconnected, (reason) => {
         if (cancelled) return;
-        setEndedMessage(reason === DisconnectReason.ROOM_DELETED ? "CDA ended this room." : "You left the room.");
+        setEndedMessage(reason === DisconnectReason.ROOM_DELETED ? "NDI ended this room." : "You left the room.");
         setStatus("ended");
       });
 
@@ -499,7 +499,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- react to the host changing, nothing else
   }, [isHost, status, isEmployee]);
 
-  // The transcript starts only once a CDA employee is in the room: until then there is nobody to
+  // The transcript starts only once an NDI employee is in the room: until then there is nobody to
   // help, and it would only spend transcription minutes.
   const employeePresent = people.some((person) => person.role === "employee");
   const shouldTranscribe = status === "connected" && !muted && employeePresent;
@@ -572,7 +572,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
     );
     send({ type: "declined", suggestionId: suggestion.id }, otherEmployees());
     save("declined", null, suggestion.id);
-    tellCopilot("The CDA employee chose not to send your last draft.");
+    tellCopilot("The NDI employee chose not to send your last draft.");
   }
 
   function submitChat(event: React.FormEvent) {
@@ -628,7 +628,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             {" · "}
             {status === "connecting" ? "connecting…" : `${people.length} in the room`}
             {" · "}
-            {isEmployee ? "You are CDA staff" : "You are the customer"}
+            {isEmployee ? "You are NDI staff" : "You are the customer"}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -664,7 +664,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             <span aria-hidden="true">{person.speaking ? "🔊" : "🎙"}</span>
             <span className="font-semibold">{person.isMe ? `${person.name} (you)` : person.name}</span>
             <span className={person.speaking ? "text-white/80" : "text-muted"}>
-              {person.role === "employee" ? "CDA" : "customer"}
+              {person.role === "employee" ? "NDI" : "customer"}
             </span>
           </li>
         ))}
@@ -738,7 +738,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
               </span>
             </div>
             <p className="text-xs text-muted">
-              Only CDA staff see this. Approve a draft to send it to the customer in the chat.
+              Only NDI staff see this. Approve a draft to send it to the customer in the chat.
             </p>
             <MoodMeter
               lines={lines
@@ -748,7 +748,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             />
             {knownCustomer && (
               <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-800">
-                <strong>{knownCustomer}</strong> is signed in to their CDA account. Aida has their earlier
+                <strong>{knownCustomer}</strong> is signed in to their NDI account. Aida has their earlier
                 conversations from other channels.
               </p>
             )}
@@ -847,10 +847,10 @@ export function LineView({ line, viewerRole, mood }: { line: TimelineLine; viewe
   const who = line.mine
     ? "You"
     : line.kind === "approved"
-      ? line.approvedBy || "CDA Support"
+      ? line.approvedBy || "NDI Support"
       : line.name;
   // My side of the conversation is on the right, the other side on the left, as in any chat app:
-  // staff see CDA on the right, a customer sees their own messages there.
+  // staff see NDI on the right, a customer sees their own messages there.
   const mySide = line.role === viewerRole;
   return (
     <div className={`flex ${mySide ? "justify-end" : "justify-start"}`}>
@@ -859,7 +859,7 @@ export function LineView({ line, viewerRole, mood }: { line: TimelineLine; viewe
       >
         {/* Spoken or typed makes no difference to the reader: a message is a message. */}
         <p className={`text-xs font-semibold ${mySide ? "text-white/70" : "text-muted"}`}>
-          {who} · {line.role === "employee" ? "CDA" : "customer"}
+          {who} · {line.role === "employee" ? "NDI" : "customer"}
           {/* Staff only: how the customer sounded. The dot carries the colour, the word says it. */}
           {mood && line.role === "customer" && (
             <span
@@ -889,11 +889,11 @@ function transcriptStatus({
   scribeStatus: string;
 }) {
   if (muted) return "You are muted, so nothing you say is transcribed.";
-  if (!employeePresent) return "The live transcript starts when a CDA employee joins.";
+  if (!employeePresent) return "The live transcript starts when an NDI employee joins.";
   if (scribeStatus === "connecting") return "Starting the live transcript…";
   if (scribeStatus === "error") return "The live transcript is unavailable. You can still type.";
   if (scribeStatus === "connected" || scribeStatus === "transcribing") {
-    return `🎙 Live transcript on · headphones help${isEmployee ? "" : " · CDA staff can see what you say"}`;
+    return `🎙 Live transcript on · headphones help${isEmployee ? "" : " · NDI staff can see what you say"}`;
   }
   return "Live transcript off.";
 }

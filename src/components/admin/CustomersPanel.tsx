@@ -65,7 +65,6 @@ const CHANNEL_STYLE: Record<string, { icon: string; label: string; className: st
   telegram: { icon: "✈", label: "Telegram", className: "bg-sky-50 text-sky-800" },
   instagram: { icon: "◎", label: "Instagram", className: "bg-pink-50 text-pink-800" },
   messenger: { icon: "ⓜ", label: "Messenger", className: "bg-blue-50 text-blue-800" },
-  alexa: { icon: "◉", label: "Alexa", className: "bg-cyan-50 text-cyan-800" },
   phone: { icon: "☎", label: "Phone", className: "bg-emerald-50 text-emerald-800" },
   website: { icon: "🌐", label: "Website", className: "bg-line text-heading" },
   slack: { icon: "#", label: "Slack", className: "bg-purple-50 text-purple-800" },
@@ -243,7 +242,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
 function OverviewCards({ overview }: { overview: Overview }) {
   const stats: [string, number | string, string?][] = [
     ["Customers", overview.customers],
-    ["With a CDA account", overview.withAccount],
+    ["With an NDI account", overview.withAccount],
     ["On 2+ channels", overview.multiChannel],
     ["Active this week", overview.active7Days],
     ["Active now", overview.activeNow, "last chat under 15 min ago"],
@@ -348,8 +347,8 @@ function WeekInsightCard({ staffToken }: { staffToken: string }) {
           <div className="grid gap-3 md:grid-cols-2">
             <InsightList title="Top topics" items={insight.topTopics} />
             <InsightList title="Common problems" items={insight.commonProblems} />
-            <InsightList title="Products mentioned" items={insight.products} />
-            <InsightList title="Ideas for CDA" items={insight.suggestions} />
+            <InsightList title="AI Employees mentioned" items={insight.products} />
+            <InsightList title="Ideas for NDI" items={insight.suggestions} />
           </div>
           <p className="text-xs text-muted">Based on {insight.basedOn} conversations and emails.</p>
         </div>
@@ -433,7 +432,7 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
     ...detail.rooms.map((room) => ({
       at: room.createdAt,
       channel: "aida",
-      text: `Live call with CDA staff: ${room.title ?? "Aida room"} (room ${room.code})${room.closedAt ? "" : " — still open"}`,
+      text: `Live call with NDI staff: ${room.title ?? "Aida room"} (room ${room.code})${room.closedAt ? "" : " — still open"}`,
       kind: "room" as const,
     })),
   ].sort((a, b) => b.at.localeCompare(a.at));
@@ -452,7 +451,7 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-semibold ${customer.hasAccount ? "bg-green-100 text-green-800" : "bg-line text-heading"}`}
           >
-            {customer.hasAccount ? "CDA account" : "No account"}
+            {customer.hasAccount ? "NDI account" : "No account"}
           </span>
         </div>
       </header>
@@ -533,7 +532,7 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
             )}
             <div className="grid gap-3 sm:grid-cols-2">
               <InsightList title="Topics" items={insight.topics} />
-              <InsightList title="Products" items={insight.products} />
+              <InsightList title="AI Employees and services" items={insight.products} />
               <InsightList title="Not resolved yet" items={insight.openIssues} />
             </div>
             {insight.nextAction && (

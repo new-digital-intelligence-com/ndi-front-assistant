@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 // Clara learns from the questions she could not answer and from feedback on her answers. Both arrive
 // here by themselves: unanswered questions and what customers said come from ElevenLabs' post-call
 // analysis, 👎 from the website chat, and corrections from staff editing Aida's or Clara's drafts.
-// Staff write or fix the answer and approve it, and it is published as "CDA approved FAQ" at once.
+// Staff write or fix the answer and approve it, and it is published as "NDI approved FAQ" at once.
 
 type Gap = { id: number; conversation_id: string | null; channel: string | null; question: string; created_at: string };
 type Faq = { id: number; question: string; answer: string; approved_by: string | null; updated_at: string };
@@ -50,7 +50,6 @@ const CHANNELS: Record<string, string> = {
   instagram: "Instagram",
   messenger: "Messenger",
   phone: "Phone",
-  alexa: "Alexa",
   aida: "Aida room",
 };
 
@@ -226,7 +225,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           </button>
         </div>
         <p className="mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-heading">
-          📚 <strong>CDA approved FAQ</strong> in Clara&apos;s knowledge: {state.published.entries} answer
+          📚 <strong>NDI approved FAQ</strong> in Clara&apos;s knowledge: {state.published.entries} answer
           {state.published.entries === 1 ? "" : "s"}
           {state.published.published_at ? ` · published ${when(state.published.published_at)}` : " · not published yet"}
           {state.faq.length !== state.published.entries && (
@@ -557,7 +556,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
             <input
               value={manual.question}
               onChange={(event) => setManual((current) => ({ ...current, question: event.target.value }))}
-              placeholder="Question, e.g. Do CDA ovens come with a plug fitted?"
+              placeholder="Question, e.g. Can an AI Employee work in German and French?"
               className="w-full rounded-lg border border-line px-3 py-2 text-sm"
             />
             <textarea

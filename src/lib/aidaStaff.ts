@@ -1,5 +1,5 @@
 // Aida has its own staff password (AIDA_STAFF_PASSWORD), separate from the site password: typing it
-// is what makes someone CDA staff in a room. Everyone else is a customer.
+// is what makes someone NDI staff in a room. Everyone else is a customer.
 //
 // The proof is a short signed token the browser keeps per tab (sessionStorage) and sends in the
 // `x-aida-staff` header, rather than a cookie. That way one browser can be staff in one tab and a

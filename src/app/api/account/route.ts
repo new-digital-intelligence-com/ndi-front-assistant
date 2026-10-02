@@ -38,14 +38,14 @@ export async function POST(request: Request) {
     return Response.json(await createLinkCode(customerId));
   }
 
-  // Their own phone number: Clara then knows them when they call CDA, and when CDA calls them.
+  // Their own phone number: Clara then knows them when they call NDI, and when NDI calls them.
   if (action === "phone") {
     const customerId = await signedInCustomerId();
     if (!customerId) return Response.json({ error: "Please sign in first" }, { status: 401 });
     const result = await linkPhone(customerId, text(body.phone));
     if (!result.ok) {
       const error =
-        result.reason === "invalid" ? "Please enter a valid phone number" : "This number is already linked to another CDA account";
+        result.reason === "invalid" ? "Please enter a valid phone number" : "This number is already linked to another NDI account";
       return Response.json({ error }, { status: result.reason === "invalid" ? 400 : 409 });
     }
     return Response.json({ ok: true });

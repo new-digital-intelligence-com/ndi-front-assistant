@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AdminApp } from "@/components/admin/AdminApp";
 
 export const metadata: Metadata = {
-  title: "Admin – CDA Customer Assistant Demo",
+  title: "Admin – NDI Assistant",
   robots: { index: false, follow: false },
 };
 
@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 export default function AdminPage() {
   return (
     <>
-      <div className="bg-ink px-4 py-1.5 text-center text-xs text-white/80">NDI demo · not an official CDA website</div>
-      <header className="bg-heading text-white">
+      <div className="bg-ink px-4 py-1.5 text-center text-xs text-white/80">NDI Assistant · staff page</div>
+      <header className="bg-brand text-white">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-4">
-          <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
+          <span className="rounded-md bg-white px-2.5 py-1 text-xl font-extrabold tracking-wider text-brand">NDI</span>
           <span className="text-lg font-semibold">Admin</span>
           <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/80">staff only</span>
         </div>
-        <div className="h-1 bg-brand" />
+        <div className="h-1 bg-accent" />
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-4">
         <AdminApp />

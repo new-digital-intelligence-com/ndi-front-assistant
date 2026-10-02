@@ -10,7 +10,7 @@ import { supabaseConfigured } from "@/lib/supabase";
 //   POST → { action: "approve" | "add", question, answer, gapIds?, feedbackIds? }, { action: "update",
 //          id, question, answer }, { action: "delete", id }, { action: "dismiss", gapIds?, feedbackIds? },
 //          { action: "publish" }
-// Every change to the approved answers republishes "CDA approved FAQ" to Clara straight away.
+// Every change to the approved answers republishes "NDI approved FAQ" to Clara straight away.
 
 export async function GET(request: Request) {
   if (!(await isStaffRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });

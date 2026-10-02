@@ -8,8 +8,8 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "CDA Customer Assistant – Demo",
-  description: "Chat or talk with Clara, the virtual assistant for CDA kitchen appliances (NDI demo).",
+  title: "NDI Assistant – Clara",
+  description: "Chat or talk with Clara, the virtual assistant of NDI (New Digital Intelligence).",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

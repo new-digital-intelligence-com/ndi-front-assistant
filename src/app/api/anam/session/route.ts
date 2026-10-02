@@ -1,4 +1,4 @@
-import type { AvatarOrientation } from "@/components/types";
+import { CALL_LANGUAGES, type AvatarOrientation } from "@/components/types";
 import { elevenLabsGet } from "@/lib/elevenlabs";
 import { conversationIdFromSignedUrl, registerWebsiteConversation } from "@/lib/websiteSession";
 import { hasValidSession } from "@/lib/session";
@@ -19,8 +19,10 @@ export async function POST(request: Request) {
   }
   const { orientation, language } = (await request.json().catch(() => ({}))) as { orientation?: string; language?: string };
   const videoSize = VIDEO_SIZES[orientation === "vertical" ? "vertical" : "horizontal"];
-  // Polish uses Clara's "pl" preset in ElevenLabs. Anam passes the override on when it joins Clara.
-  const languageOverride = language === "pl" ? { conversationConfigOverride: { agent: { language: "pl" } } } : {};
+  // German, Italian and French use Clara's presets in ElevenLabs. Anam passes the override on when it
+  // joins Clara. Anything else is English, the default.
+  const callLanguage = CALL_LANGUAGES.find((code) => code === language) ?? "en";
+  const languageOverride = callLanguage !== "en" ? { conversationConfigOverride: { agent: { language: callLanguage } } } : {};
 
   const apiKey = process.env.ANAM_API_KEY;
   const avatarId = process.env.ANAM_AVATAR_ID;

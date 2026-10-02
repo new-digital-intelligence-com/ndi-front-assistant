@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const phone = normalisePhone(typeof row?.phone === "string" ? row.phone : "");
     const instructions = typeof row?.instructions === "string" ? row.instructions.trim() : "";
     const name = typeof row?.name === "string" ? row.name.trim().slice(0, MAX_NAME) : "";
-    if (!phone) problems.push(`Line ${index + 1}: the phone number is not valid (use +44…, or 07… for the UK).`);
+    if (!phone) problems.push(`Line ${index + 1}: the phone number is not valid (use +<country code>…, or 07… for the UK).`);
     if (!instructions) problems.push(`Line ${index + 1}: tell Clara what the call is about.`);
     if (phone && instructions) calls.push({ phone, name: name || null, instructions: instructions.slice(0, MAX_INSTRUCTIONS) });
   });

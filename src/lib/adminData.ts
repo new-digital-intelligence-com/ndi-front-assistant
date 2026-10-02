@@ -50,7 +50,6 @@ function channelLabel(channel: string, key: string): string {
   if (channel === "website") return `browser ${key.slice(0, 6)}`;
   if (channel === "telegram") return `chat ${key}`;
   if (channel === "instagram" || channel === "messenger") return `id ${key}`;
-  if (channel === "alexa") return `Alexa user ${key.slice(0, 6)}`;
   if (channel === "phone") return key;
   return key;
 }
@@ -206,9 +205,10 @@ export type CustomerInsight = {
   flags: string[];
 };
 
-const ANALYST = `You are an analyst for CDA (a UK kitchen appliance brand) customer care.
-You write short, factual insights for CDA staff, based only on the data you are given.
-Never invent facts, models or dates. If the data is thin, say so. British English. Answer with JSON only.`;
+const ANALYST = `You are an analyst for NDI (New Digital Intelligence), a company that builds, runs and improves AI Employees
+(role-specific AI agents) for medium and large organisations.
+You write short, factual insights for NDI staff, based only on the data you are given.
+Never invent facts, AI Employee names or dates. If the data is thin, say so. British English. Answer with JSON only.`;
 
 /** A few recent transcripts give Claude more than one-line notes. Free to read from ElevenLabs. */
 async function recentTranscripts(conversationIds: string[]): Promise<string[]> {
@@ -237,7 +237,7 @@ const strings = (value: unknown, max: number) =>
 export async function customerInsight(detail: CustomerDetail): Promise<CustomerInsight> {
   const { customer } = detail;
   const transcripts = await recentTranscripts(detail.conversations.map((conversation) => conversation.id));
-  const prompt = `Customer: ${customer.name ?? "(no name known)"}${customer.hasAccount ? " — has a CDA account on the website" : ""}
+  const prompt = `Customer: ${customer.name ?? "(no name known)"}${customer.hasAccount ? " — has an NDI account on the website" : ""}
 First seen ${day(customer.createdAt)}, last activity ${day(customer.lastActivity)}.
 Channels: ${customer.channels.map((channel) => `${channel.channel}${channel.verified ? " (verified)" : ""}`).join(", ") || "(none)"}
 Conversations: ${detail.conversations.length} (${Object.entries(countBy(detail.conversations, (c) => c.channel)).map(([channel, count]) => `${channel} ${count}`).join(", ") || "none"})
@@ -258,14 +258,14 @@ Most recent conversation transcripts:
 ${transcripts.length ? transcripts.map((text, index) => `--- conversation ${index + 1} ---\n${text}`).join("\n") : "(none available)"}
 
 Return this JSON object and nothing else:
-{"summary": "2-3 sentences on who this customer is and what they have wanted from CDA",
+{"summary": "2-3 sentences on who this customer is and what they have wanted from NDI",
  "topics": ["up to 5 short topics"],
- "products": ["appliances or model numbers they mentioned, up to 5"],
+ "products": ["AI Employees or services they asked about, up to 5"],
  "sentiment": "positive | neutral | negative | unknown",
  "sentiment_reason": "one short sentence; base the sentiment on the measured moods when there are any",
  "open_issues": ["things that do not look resolved yet, up to 3"],
- "next_action": "one concrete suggestion for CDA staff",
- "flags": ["only if present: complaint, safety concern, repeated contact, asked for a person, refund or legal"]}`;
+ "next_action": "one concrete suggestion for NDI staff",
+ "flags": ["only if present: complaint, security or data concern, repeated contact, asked for a person, contract or legal"]}`;
 
   const answer = parseJsonObject<Record<string, unknown>>(await askClaude({ system: ANALYST, prompt }));
   if (!answer) throw new Error("Claude did not return an insight");
@@ -306,11 +306,11 @@ Subjects of customer emails in the same period:
 ${list(emails.map((email) => email.subject ?? "(no subject)"))}
 
 Return this JSON object and nothing else:
-{"summary": "2-3 sentences on what customers contacted CDA about this week",
+{"summary": "2-3 sentences on what customers contacted NDI about this week",
  "top_topics": ["the most common topics, most frequent first, up to 5"],
- "common_problems": ["faults or frustrations that came up, up to 4"],
- "products": ["appliances or models mentioned most, up to 5"],
- "suggestions": ["up to 3 concrete ideas for CDA, e.g. a knowledge base gap to fill"]}`;
+ "common_problems": ["problems or frustrations that came up, up to 4"],
+ "products": ["AI Employees or services mentioned most, up to 5"],
+ "suggestions": ["up to 3 concrete ideas for NDI, e.g. a knowledge base gap to fill"]}`;
 
   const answer = parseJsonObject<Record<string, unknown>>(await askClaude({ system: ANALYST, prompt }));
   if (!answer) throw new Error("Claude did not return an insight");

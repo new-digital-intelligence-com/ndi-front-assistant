@@ -1,13 +1,19 @@
 import type { ReactNode } from "react";
 
-const SUPPORT_EMAIL = "cda_domestic_appliances@new-digital-intelligence.com";
-/** Clara's phone line (Twilio, answered by ElevenLabs). */
-const PHONE_LINE = { display: "+44 7576 593472", dial: "+447576593472" };
+// Still to come (CHANNEL_SETUP.md): while one of these is empty, its button is not shown.
+/** The NDI mailbox Clara answers. */
+const SUPPORT_EMAIL = "";
+/** The Telegram bot's username, without the @. */
+const TELEGRAM_BOT = "";
+/** Clara's phone line (Twilio, answered by ElevenLabs), as shown and as dialled (+...). */
+const PHONE_LINE = { display: "", dial: "" };
 
 type Channel = {
   name: string;
   detail: string;
   href: string;
+  /** Not set up yet. */
+  hidden?: boolean;
   iconClassName: string;
   icon: ReactNode;
 };
@@ -17,6 +23,7 @@ const channels: Channel[] = [
     name: "Phone",
     detail: `${PHONE_LINE.display} · call Clara`,
     href: `tel:${PHONE_LINE.dial}`,
+    hidden: !PHONE_LINE.dial,
     iconClassName: "bg-[#16a34a]",
     icon: (
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -25,7 +32,8 @@ const channels: Channel[] = [
   {
     name: "Email",
     detail: SUPPORT_EMAIL,
-    href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}&su=${encodeURIComponent("Question for CDA")}`,
+    href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}&su=${encodeURIComponent("Question for NDI")}`,
+    hidden: !SUPPORT_EMAIL,
     iconClassName: "bg-[#ea4335]",
     icon: (
       <>
@@ -36,8 +44,9 @@ const channels: Channel[] = [
   },
   {
     name: "Telegram",
-    detail: "@CDA_2026_Support_Bot",
-    href: "https://t.me/CDA_2026_Support_Bot",
+    detail: `@${TELEGRAM_BOT}`,
+    href: `https://t.me/${TELEGRAM_BOT}`,
+    hidden: !TELEGRAM_BOT,
     iconClassName: "bg-[#229ed9]",
     icon: (
       <>
@@ -78,7 +87,7 @@ export function ChannelLinks() {
     <section className="rounded-xl bg-white p-4 shadow-sm">
       <h2 className="font-semibold text-heading">Message Clara on your app</h2>
       <ul className="mt-2 space-y-1.5">
-        {channels.map((channel) => (
+        {channels.filter((channel) => !channel.hidden).map((channel) => (
           <li key={channel.name}>
             <a
               href={channel.href}

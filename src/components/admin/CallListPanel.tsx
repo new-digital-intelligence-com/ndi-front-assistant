@@ -7,7 +7,7 @@ import en from "react-phone-number-input/locale/en";
 import "react-phone-number-input/style.css";
 
 // Staff enter phone numbers with instructions, press Start, and Clara phones them one by one from
-// the CDA demo line. The server moves a list forward each time this panel asks (every few seconds
+// NDI's phone line. The server moves a list forward each time this panel asks (every few seconds
 // while a list is running) and when ElevenLabs reports that a call ended.
 
 type ItemStatus = "waiting" | "calling" | "reached" | "failed" | "stopped";
@@ -39,7 +39,8 @@ type Row = { key: number; phone: string; name: string; instructions: string };
 
 const MAX_ATTEMPTS = 3;
 const POLL_MS = 4_000;
-const DEMO_LINE = "+44 7576 593472";
+/** NDI's Twilio number as shown, once it is bought and imported into ElevenLabs (CHANNEL_SETUP.md). */
+const DEMO_LINE = "";
 
 /** "Tunisia +216" in the country list, so the dial code is visible while choosing. */
 const COUNTRY_LABELS: Labels = Object.fromEntries(
@@ -156,7 +157,7 @@ export function CallListPanel({ staffToken, onSignOut }: { staffToken: string; o
         <div>
           <h2 className="font-semibold text-heading">New call list</h2>
           <p className="text-sm text-muted">
-            Clara calls from {DEMO_LINE}, one number at a time. If nobody answers she tries again a minute later, up to{" "}
+            Clara calls from {DEMO_LINE || "NDI's phone line"}, one number at a time. If nobody answers she tries again a minute later, up to{" "}
             {MAX_ATTEMPTS} times, then moves on. Keep this page open while the list runs.
           </p>
         </div>
@@ -206,7 +207,7 @@ export function CallListPanel({ staffToken, onSignOut }: { staffToken: string; o
             <textarea
               value={row.instructions}
               onChange={(event) => updateRow(row.key, "instructions", event.target.value)}
-              placeholder="What Clara should do on this call, e.g. Their oven warranty is not registered yet. Explain the lifetime parts warranty and offer to help them register."
+              placeholder="What Clara should do on this call, e.g. They asked for a demo of the AI SDR on our website. Ask what they want to automate and offer a call with the NDI team."
               maxLength={1000}
               rows={2}
               className="w-full rounded-lg border border-line px-3 py-2 text-sm"

@@ -42,13 +42,13 @@ export async function POST(request: Request) {
   const started = record.metadata?.start_time_unix_secs;
   const kind = record.metadata?.text_only ? "chat" : "voice conversation";
   const { text, html } = transcriptEmail({
-    heading: `Your ${kind} with Clara, CDA's virtual assistant`,
+    heading: `Your ${kind} with Clara, NDI's virtual assistant`,
     intro: started ? formatDate(started * 1000) : "Your conversation",
     lines,
   });
 
   try {
-    await sendMail({ to, subject: `Your conversation with CDA's assistant Clara`, text, html });
+    await sendMail({ to, subject: `Your conversation with NDI's assistant Clara`, text, html });
   } catch (error) {
     console.error("Could not email the conversation", error);
     return Response.json({ error: "The email could not be sent. Please try again." }, { status: 502 });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   return Response.json({ ok: true, sentTo: to });
 }
 
-/** The customer records this browser can speak for: its CDA account and its website cookie. */
+/** The customer records this browser can speak for: its NDI account and its website cookie. */
 async function requesterIds(): Promise<string[]> {
   const ids: string[] = [];
   const accountId = await signedInCustomerId().catch(() => null);

@@ -121,7 +121,7 @@ export async function listClosedRooms(): Promise<AidaRoom[]> {
   );
 }
 
-// The customer behind a room, when they joined signed in to their CDA account. This column arrived
+// The customer behind a room, when they joined signed in to their NDI account. This column arrived
 // after the table did, so these two never fail: before supabase/schema.sql is run again the room
 // simply has no known customer.
 
@@ -215,16 +215,16 @@ export async function listEvents(roomId: string, forRole: AidaRole): Promise<Aid
   );
 }
 
-/** The conversation as people saw it: what was said and typed, and the replies CDA sent. */
+/** The conversation as people saw it: what was said and typed, and the replies NDI sent. */
 export function roomTranscript(events: AidaEvent[]): TranscriptLine[] {
   return events.flatMap((event): TranscriptLine[] => {
     const text = event.text ?? "";
     if (event.kind === "speech" || event.kind === "chat") {
-      const who = event.author_role === "employee" ? "CDA" : "customer";
+      const who = event.author_role === "employee" ? "NDI" : "customer";
       return [{ speaker: `${event.author_name || "Someone"} (${who})`, text }];
     }
     // An approved draft goes out in the staff member's name, exactly as it looked in the room.
-    if (event.kind === "approved") return [{ speaker: `${event.author_name || "CDA Support"} (CDA)`, text, highlight: true }];
+    if (event.kind === "approved") return [{ speaker: `${event.author_name || "NDI Support"} (NDI)`, text, highlight: true }];
     return [];
   });
 }

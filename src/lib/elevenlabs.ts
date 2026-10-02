@@ -37,8 +37,6 @@ export type ConversationRecord = {
     /** Phone calls: external_number is the customer's own number, whichever side dialled. */
     phone_call?: { direction?: "inbound" | "outbound" | string; external_number?: string | null } | null;
   };
-  /** What the channel passed in when the conversation started, e.g. Make's instagram_id. */
-  conversation_initiation_client_data?: { dynamic_variables?: Record<string, unknown> | null } | null;
 };
 
 /** One conversation with its transcript, as ElevenLabs stored it. Free to read. */

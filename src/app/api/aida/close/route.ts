@@ -53,10 +53,10 @@ async function rememberCall(room: AidaRoom) {
   const replies = events.filter((event) => event.kind === "approved").length;
   if (!firstQuestion && replies === 0) return;
 
-  const asked = firstQuestion ? `asked "${firstQuestion.slice(0, 160)}"` : "talked with CDA staff";
+  const asked = firstQuestion ? `asked "${firstQuestion.slice(0, 160)}"` : "talked with NDI staff";
   await addCustomerNote(
     customerId,
     "aida",
-    `Live call with CDA staff on ${formatDate(room.created_at)}: ${asked}${replies ? `; CDA sent ${replies} written repl${replies === 1 ? "y" : "ies"}` : ""}.`,
+    `Live call with NDI staff on ${formatDate(room.created_at)}: ${asked}${replies ? `; NDI sent ${replies} written repl${replies === 1 ? "y" : "ies"}` : ""}.`,
   );
 }

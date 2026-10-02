@@ -7,7 +7,7 @@ import { rememberName, RoomClosedError, requestRoom, savedName, type JoinedRoom 
 
 /**
  * The customer side, open without any password: join with a code, or open a new room. A customer
- * signed in to their CDA account on the website is recognised and not asked for a name. A room that
+ * signed in to their NDI account on the website is recognised and not asked for a name. A room that
  * has ended can still be read (and emailed) with its code, but not joined.
  */
 export function AidaJoin({ initialCode }: { initialCode: string }) {
@@ -37,7 +37,7 @@ export function AidaJoin({ initialCode }: { initialCode: string }) {
   }, []);
 
   async function enter(path: "/api/aida/rooms" | "/api/aida/join", body: Record<string, string>) {
-    // A signed-in customer needs no name: the server takes it from their CDA account.
+    // A signed-in customer needs no name: the server takes it from their NDI account.
     const cleanName = accountName ? "" : name.trim();
     if (!accountName && !cleanName) {
       setNameMissing(true);
@@ -75,15 +75,15 @@ export function AidaJoin({ initialCode }: { initialCode: string }) {
   return (
     <section className="mx-auto w-full max-w-md space-y-4 rounded-xl bg-white p-6 shadow-sm">
       <div>
-        <h1 className="text-xl font-bold text-heading">Talk to CDA</h1>
+        <h1 className="text-xl font-bold text-heading">Talk to NDI</h1>
         <p className="mt-1 text-sm text-muted">
-          Join a call with the CDA team. You can talk or type; the conversation is transcribed live.
+          Join a call with the NDI team. You can talk or type; the conversation is transcribed live.
         </p>
       </div>
 
       {accountName ? (
         <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-          Signed in as <strong>{accountName}</strong>. The CDA team will see your earlier conversations, so you
+          Signed in as <strong>{accountName}</strong>. The NDI team will see your earlier conversations, so you
           don&apos;t need to repeat yourself.
         </p>
       ) : (
@@ -133,7 +133,7 @@ export function AidaJoin({ initialCode }: { initialCode: string }) {
       </form>
 
       <div className="border-t border-line pt-4">
-        <p className="text-sm text-muted">No code? Open a room and the CDA team will join you.</p>
+        <p className="text-sm text-muted">No code? Open a room and the NDI team will join you.</p>
         <button
           type="button"
           disabled={busy}
@@ -146,7 +146,7 @@ export function AidaJoin({ initialCode }: { initialCode: string }) {
 
       {error && <p className="text-sm text-brand">{error}</p>}
       <p className="text-xs text-muted">
-        NDI demo · not an official CDA service. Headphones give the best sound. A room that has ended can still be
+        A live demo of NDI&apos;s assistant. Headphones give the best sound. A room that has ended can still be
         read with its code.
       </p>
     </section>

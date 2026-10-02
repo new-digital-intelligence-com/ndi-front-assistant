@@ -5,8 +5,8 @@ import { useEffect } from "react";
 // Intercom's chat bubble on the customer page. ElevenLabs answers every conversation started in it
 // as Clara (Intercom integration, "Intercom Conversation" trigger), and staff see the same
 // conversations in Intercom's inbox. The App ID is public by design: every site that runs Intercom
-// has it in its page.
-const INTERCOM_APP_ID = "zrrcz82c";
+// has it in its page. Optional: without NEXT_PUBLIC_INTERCOM_APP_ID there is no bubble.
+const INTERCOM_APP_ID = process.env.NEXT_PUBLIC_INTERCOM_APP_ID ?? "";
 const INTERCOM_SETTINGS = { app_id: INTERCOM_APP_ID, api_base: "https://api-iam.intercom.io" };
 
 type IntercomFn = ((...args: unknown[]) => void) & { q?: unknown[][]; c?: (args: unknown[]) => void };
@@ -20,6 +20,7 @@ declare global {
 
 export function IntercomMessenger() {
   useEffect(() => {
+    if (!INTERCOM_APP_ID) return;
     window.intercomSettings = INTERCOM_SETTINGS;
     if (typeof window.Intercom === "function") {
       // Loaded before (the page was left and opened again): start it again.

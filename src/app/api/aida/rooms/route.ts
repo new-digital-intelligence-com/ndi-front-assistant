@@ -15,7 +15,7 @@ import { supabaseConfigured } from "@/lib/supabase";
 
 // Aida rooms. This route is outside the site password lock (see src/proxy.ts) because customers
 // create rooms too. Who you are is decided here and nowhere else: a valid Aida staff token makes
-// you CDA staff, anything else makes you a customer. The name you type is only a label.
+// you NDI staff, anything else makes you a customer. The name you type is only a label.
 
 const summary = (room: AidaRoom) => ({
   code: displayCode(room.code),
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const { role, account } = await whoIsAsking(request);
-  // A customer signed in to their CDA account is not asked for a name: we already know it.
+  // A customer signed in to their NDI account is not asked for a name: we already know it.
   const name = cleanText(body.name, 40) || cleanText(account?.name, 40);
   if (!name) return Response.json({ error: "Please enter your name" }, { status: 400 });
 

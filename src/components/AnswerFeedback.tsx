@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // 👍 / 👎 under one of Clara's answers in the website chat. A 👎 asks what was wrong. The rating
-// reaches CDA staff on /admin (📚 Knowledge → Feedback) and shows on the conversation in ElevenLabs.
+// reaches NDI staff on /admin (📚 Knowledge → Feedback) and shows on the conversation in ElevenLabs.
 
 type Props = { conversationId: string; messageId: string; question: string; answer: string };
 
@@ -22,7 +22,7 @@ export function AnswerFeedback({ conversationId, messageId, question, answer }: 
     }).catch(() => {});
   }
 
-  if (sent) return <p className="mt-1 pl-1 text-xs text-muted">Thanks, CDA will look at this answer.</p>;
+  if (sent) return <p className="mt-1 pl-1 text-xs text-muted">Thanks, NDI will look at this answer.</p>;
 
   if (asking) {
     return (

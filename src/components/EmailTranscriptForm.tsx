@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 /**
  * "Email me this conversation": used under the website chat, voice and avatar, and on a finished
- * Aida room. A customer signed in to their CDA account gets it with one click at the address they
+ * Aida room. A customer signed in to their NDI account gets it with one click at the address they
  * signed up with (shown, with a way to pick another); anyone else types an address. The caller
  * decides what is sent; this only chooses the address and reports back.
  */
@@ -17,7 +17,7 @@ export function EmailTranscriptForm({
   onSend: (email: string) => Promise<void>;
   label?: string;
   note?: string;
-  /** Off for CDA staff: their sign-in has no email, and the browser may hold a customer's account. */
+  /** Off for NDI staff: their sign-in has no email, and the browser may hold a customer's account. */
   useAccountEmail?: boolean;
 }) {
   const [accountEmail, setAccountEmail] = useState<string | null>(null);

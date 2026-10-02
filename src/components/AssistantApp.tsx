@@ -20,10 +20,10 @@ import {
 } from "./types";
 
 const SUGGESTIONS = [
-  "What warranty do CDA appliances have?",
-  "What's the spare parts phone number?",
-  "My dishwasher is leaking, I need an engineer.",
-  "Do you have a black built-under double oven?",
+  "What is an AI Employee?",
+  "How does NDI's pricing work?",
+  "Which AI Employees help with customer service?",
+  "I'd like to book a demo.",
 ];
 
 type PendingMessage = { text: string; files: File[] };
@@ -180,11 +180,12 @@ function Assistant() {
     setConversationId(id ?? null);
     sessionKindRef.current = "voice";
     setMessages([]);
-    // Polish uses Clara's "pl" preset in ElevenLabs (Polish greeting, multilingual voice model, same voice).
+    // German, Italian and French use Clara's language presets in ElevenLabs (a greeting in that
+    // language, the multilingual voice model, the same voice). English needs no override.
     conversation.startSession({
       conversationToken,
       connectionType: "webrtc",
-      ...(callLanguage === "pl" ? { overrides: { agent: { language: "pl" } } } : {}),
+      ...(callLanguage !== "en" ? { overrides: { agent: { language: callLanguage } } } : {}),
     });
   }
 
@@ -277,7 +278,7 @@ function Assistant() {
                   message={{
                     id: "welcome",
                     role: "agent",
-                    text: "Hello, I'm Clara, CDA's virtual assistant. Ask me anything about your CDA appliance, or attach a photo of the rating plate or a PDF receipt.",
+                    text: "Hello, I'm Clara, NDI's virtual assistant. Ask me anything about NDI and our AI Employees, or attach a PDF or a screenshot, for example a process description or an RFP.",
                   }}
                 />
                 <div className="flex flex-wrap gap-2">
@@ -469,7 +470,7 @@ function Assistant() {
       ) : mode === "avatar" ? (
         <AvatarPanel language={callLanguage} onLanguageChange={setCallLanguage} />
       ) : (
-        // A live call with CDA staff. From here someone is always a customer: the staff side is /admin.
+        // A live call with NDI staff. From here someone is always a customer: the staff side is /admin.
         <div className="flex-1 overflow-y-auto bg-surface p-4">
           <AidaJoin initialCode="" />
         </div>

@@ -17,7 +17,7 @@ import { formatDate, transcriptEmail } from "@/lib/transcriptEmail";
 
 // Emails a finished room's history to the address the person types. Customers get the conversation
 // they saw; staff also get Aida's drafts and what happened to each. Only once the room has ended,
-// and only a limited number of times per room, so the CDA mailbox cannot be used to send spam.
+// and only a limited number of times per room, so the NDI mailbox cannot be used to send spam.
 export async function POST(request: Request) {
   if (!mailConfigured()) return Response.json({ error: "Email is not configured" }, { status: 503 });
 
@@ -41,19 +41,19 @@ export async function POST(request: Request) {
   const ended = room.closed_at ?? room.expires_at;
 
   const { text, html } = transcriptEmail({
-    heading: `Your call with CDA${room.title ? `: ${room.title}` : ""}`,
+    heading: `Your call with NDI${room.title ? `: ${room.title}` : ""}`,
     intro: `Room ${code} · ${formatDate(room.created_at)} · ended ${formatDate(ended)}`,
     lines: roomTranscript(events),
-    sections: drafts.length ? [{ heading: "Aida's drafts (CDA staff only)", lines: drafts }] : [],
+    sections: drafts.length ? [{ heading: "Aida's drafts (NDI staff only)", lines: drafts }] : [],
   });
 
   try {
-    await sendMail({ to, subject: `Your CDA call – room ${code}`, text, html });
+    await sendMail({ to, subject: `Your NDI call – room ${code}`, text, html });
   } catch (error) {
     console.error("Could not email the room history", error);
     return Response.json({ error: "The email could not be sent. Please try again." }, { status: 502 });
   }
 
-  await markEmailed(room.id, { identity: role, name: role === "employee" ? "CDA staff" : "customer", role });
+  await markEmailed(room.id, { identity: role, name: role === "employee" ? "NDI staff" : "customer", role });
   return Response.json({ ok: true, sentTo: to });
 }
