@@ -42,6 +42,8 @@ export function SocialRepliesCard({ staffToken, onSignOut }: { staffToken: strin
   const [texts, setTexts] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Why the card could not load, shown instead of the card (e.g. supabase/schema.sql not run again yet). */
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   const call = useCallback(
@@ -70,7 +72,10 @@ export function SocialRepliesCard({ staffToken, onSignOut }: { staffToken: strin
   useEffect(() => {
     let cancelled = false;
     const refresh = () => {
-      if (!cancelled) void call("/api/admin/social").catch(() => {});
+      if (cancelled) return;
+      void call("/api/admin/social")
+        .then(() => setLoadError(null))
+        .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : "Could not load Instagram and Messenger."));
     };
     const first = setTimeout(refresh, 0);
     const timer = setInterval(refresh, REFRESH_MS);
@@ -104,7 +109,16 @@ export function SocialRepliesCard({ staffToken, onSignOut }: { staffToken: strin
       }),
     );
 
-  if (!state) return null;
+  if (!state) {
+    if (!loadError) return null;
+    return (
+      <section className="rounded-xl bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-heading">Instagram and Messenger replies</h2>
+        <p className="mt-1 text-sm text-brand-dark">{loadError}</p>
+        <p className="mt-1 text-xs text-muted">If the database was just updated, run supabase/schema.sql again in Supabase.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
