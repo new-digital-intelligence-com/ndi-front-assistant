@@ -113,7 +113,8 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 ## 5. Open tasks (in order)
 
 1. **GitHub**: the user creates the public repository → add it as `origin` and push `main` (author HelmiDev03).
-2. **Supabase**: the user creates a new project → run `supabase/schema.sql` → `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Supabase**: the team's shared "pocs" project (the team's rule), own schema `fo01_ndi`: run `supabase/schema.sql`,
+   add `fo01_ndi` to Data API → Exposed schemas, then `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SCHEMA=fo01_ndi`.
 3. **Railway**: new service from the repository, variables from `.env.local`, domain `ndi-assistant.up.railway.app`
    (CHANNEL_SETUP.md §3). If the domain must differ, update `APP_URL`, both tools and the post-call webhook.
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,

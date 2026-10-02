@@ -2,6 +2,11 @@
 -- Aida rooms, and the email channel's record of what Clara did with each email.
 -- Run this once in the Supabase project: SQL Editor -> New query -> paste -> Run.
 --
+-- Everything goes into its own schema, fo01_ndi, because the Supabase project is shared with other
+-- PoCs. After the first run, add fo01_ndi to Project Settings -> Data API -> Exposed schemas, and set
+-- SUPABASE_SCHEMA=fo01_ndi for the app (src/lib/supabase.ts). To use another name, replace fo01_ndi
+-- everywhere in this file.
+--
 -- A customer is a person. Every way of reaching them - a Telegram chat, an Instagram sender id, an
 -- email address, a website cookie - is a row in customer_channels, so one person can have several
 -- of the same kind (two email addresses, two Telegram accounts) with no special case.
@@ -10,9 +15,11 @@
 -- themselves: they sign in on the website, get a short code, and send it from the channel.
 
 -- Safe to run again at any time: every statement only creates what is missing and never drops or
--- changes existing data.
+-- changes existing data. It touches nothing outside fo01_ndi (gen_random_uuid() is built into
+-- Postgres, so no extension is needed).
 
-create extension if not exists "pgcrypto";
+create schema if not exists fo01_ndi;
+set search_path to fo01_ndi;
 
 create table if not exists customers (
   id           uuid primary key default gen_random_uuid(),
@@ -406,3 +413,17 @@ create table if not exists aida_moods (
 create unique index if not exists aida_moods_line_idx on aida_moods (room_id, line_id);
 
 alter table aida_moods enable row level security;
+
+-- ---------------------------------------------------------------------------------------------
+-- Access. Only the server's service role key reaches this schema (through the Data API); the
+-- anon and authenticated roles get nothing here, and row level security is on everywhere with no
+-- policies. Then the Data API is told about the new tables at once.
+-- ---------------------------------------------------------------------------------------------
+
+grant usage on schema fo01_ndi to service_role;
+grant all on all tables in schema fo01_ndi to service_role;
+grant all on all sequences in schema fo01_ndi to service_role;
+alter default privileges in schema fo01_ndi grant all on tables to service_role;
+alter default privileges in schema fo01_ndi grant all on sequences to service_role;
+
+notify pgrst, 'reload schema';

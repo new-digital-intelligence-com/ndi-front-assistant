@@ -219,16 +219,26 @@ which is harmless. Logs: "daily jobs: 200 {...}".
 
 ## 4. Supabase (database)
 
-A **new Supabase project** for NDI (CDA's database is not shared).
+NDI uses the team's shared **"pocs"** Supabase project (the team's rule), in **its own schema `fo01_ndi`**, so its
+tables never mix with other PoCs' schemas (CDA's database is not shared).
 
-1. **supabase.com** → New project (name `ndi-assistant`, an EU region) → wait until it is ready.
-2. **SQL Editor** → New query → paste `supabase/schema.sql` → **Run** (safe to run again at any time).
-3. **Project Settings → API**: Project URL → `SUPABASE_URL`; `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
-   (server only) → Railway variables.
+1. **SQL Editor** (pocs project) → New query → paste `supabase/schema.sql` → **Run**. It creates the schema `fo01_ndi`
+   and its 23 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
+   `customers` table next to it).
+2. **Project Settings → Data API → Exposed schemas** → add `fo01_ndi` → Save. Without this the API answers
+   "The schema must be one of the following…". (If the team account cannot change it, ask the project admin.)
+3. **Project Settings → API keys**: Project URL → `SUPABASE_URL`; `service_role` (secret) key → `SUPABASE_SERVICE_ROLE_KEY`
+   (server only); `SUPABASE_SCHEMA=fo01_ndi` → Railway variables. The app sends the schema with every request
+   (`src/lib/supabase.ts`).
 
 Tables: customers, channels, link codes, conversations, notes, **customer_interests**, Aida rooms/events/moods, email
 log, Gmail state, Instagram/Messenger threads, channel tokens, call lists, knowledge, feedback, draft outcomes,
-conversation moods. Row level security on, no policies: only the service role key reads it.
+conversation moods. Row level security on, no policies, and only the `service_role` role has rights on the schema:
+only the server reads it.
+
+**Shared on purpose:** Supabase **Auth** belongs to the whole project, so the customer accounts made on NDI's website
+share one user list with the other PoCs of the pocs project (an email already used there signs in with that
+password). Fine for a demo with test accounts; a project of its own would separate them.
 
 ---
 
@@ -545,7 +555,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `ELEVENLABS_API_KEY` | Same ElevenLabs account as CDA (copied) |
 | `ELEVENLABS_AGENT_ID`, `ELEVENLABS_BRANCH_ID` (optional) | Clara `agent_0901m3y1xemxeg2s0tjk20fjfgbv` |
 | `AGENT_TOOL_SECRET`, `ELEVENLABS_WEBHOOK_SECRET` | Clara's tools (= workspace secret `NDI_AGENT_TOOL_SECRET`), post-call webhook signing secret |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | NDI's own Supabase project (section 4) |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SCHEMA` | The team's shared "pocs" Supabase project, schema `fo01_ndi` (section 4) |
 | `ANAM_API_KEY`, `ANAM_AVATAR_ID`, `ANAM_MAX_SESSION_SECONDS` | Avatar (the key copied from CDA; the NDI avatar ID to add) |
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Aida rooms (CDA's LiveKit project for now, copied) |
 | `AIDA_AGENT_ID`, `AIDA_STAFF_PASSWORD` | Aida `agent_0301m3y1xgv9ee8tr3qf8w110kbb`, staff password (new for NDI) |

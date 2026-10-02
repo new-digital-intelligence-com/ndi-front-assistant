@@ -1,5 +1,10 @@
 // Supabase over its REST API with the service role key, so no extra npm package is needed.
 // Server side only: the service role key bypasses row level security and must never reach a browser.
+// NDI's tables live in their own schema inside a shared Supabase project (SUPABASE_SCHEMA, e.g.
+// fo01_ndi; see supabase/schema.sql); without it they are in public.
+
+/** The schema every request goes to. PostgREST reads it from Accept-Profile (reads) and Content-Profile (writes). */
+const schema = () => process.env.SUPABASE_SCHEMA?.trim() || "public";
 
 function credentials() {
   const url = process.env.SUPABASE_URL;
@@ -23,6 +28,8 @@ export async function supabaseRest<T>(path: string, init: RequestInit & { prefer
       apikey: key,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
+      "Accept-Profile": schema(),
+      "Content-Profile": schema(),
       ...(prefer ? { Prefer: prefer } : {}),
       ...init.headers,
     },
