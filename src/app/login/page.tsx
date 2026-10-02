@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { safeNextPath, sitePasswordConfigured } from "@/lib/auth";
 import { NdiLogo } from "@/components/NdiLogo";
 import LoginForm from "./LoginForm";
@@ -18,12 +17,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <div className="w-full max-w-sm rounded-2xl border-t-4 border-accent bg-white p-8 shadow-xl">
         <NdiLogo className="h-24 w-auto" />
         <p className="mt-4 text-lg font-semibold text-heading">Assistant</p>
-        <p className="mt-2 text-xs text-muted">
-          A live demo of NDI&apos;s Multi-Channel Front Office Assistant ·{" "}
-          <Link href="/docs" className="underline">
-            How this demo works
-          </Link>
-        </p>
+        <p className="mt-2 text-xs text-muted">A live demo of NDI&apos;s Multi-Channel Front Office Assistant</p>
         {sitePasswordConfigured() ? (
           <LoginForm nextPath={nextPath} />
         ) : (
