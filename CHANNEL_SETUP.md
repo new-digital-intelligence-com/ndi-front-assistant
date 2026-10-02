@@ -116,7 +116,7 @@ then read it back. API changes go live at once; dashboard changes need **Publish
 in Zug, 8 markets, pay-per-use model, 7 offices, mail@new-digital-intelligence.com; numbers that change, such as team
 size or delivery locations, are left to the knowledge base) · Environment (channel
 rules: phone/avatar short answers; *Telegram only* text; *Instagram and Messenger only* plain text under 900
-characters; *Website chat* reads images and PDFs; *Email only*: body of one plain-text reply, never asks for the
+characters; *Website chat* (the chat tells Clara so when it connects, a contextual update) gives links in full and reads images and PDFs; *Email only*: body of one plain-text reply, never asks for the
 email address, answers `SKIP` to robots) · Goal · Knowledge rules (only knowledge-base facts; AI Employees only as
 written in the knowledge base; no prices: explain pay-per-use and offer a call) · Collecting details for a meeting or
 a request · Data and security · Handover to a human · When the customer is upset · Style (British English) ·

@@ -26,6 +26,11 @@ const SUGGESTIONS = [
   { icon: "📅", text: "I'd like to book a demo." },
 ];
 
+/** Told to Clara when a website chat connects (an ElevenLabs contextual update: she reads it, it gets no reply). */
+const WEBSITE_CHAT_NOTE =
+  "This conversation is the typed chat on NDI's website: the customer reads your answers on screen. It is a written " +
+  "channel, so give links in full, for example a demo video's YouTube link, and never offer to email them instead.";
+
 /** Messages and the live transcript sit in a column that stays easy to read on a wide screen. */
 const COLUMN = "mx-auto w-full max-w-3xl 2xl:max-w-4xl";
 
@@ -69,7 +74,15 @@ function Assistant() {
     setMessages((current) => [...current, { id: crypto.randomUUID(), role, text, attachments }]);
   }, []);
 
+  // On the website Clara is one agent for chat, voice and the avatar, and cannot tell a typed chat from a call by
+  // herself. The chat tells her as soon as it connects, so she gives links in full here (her prompt keeps them
+  // out of spoken answers).
+  const conversationRef = useRef<{ sendContextualUpdate: (text: string) => void } | null>(null);
+
   const conversation = useConversation({
+    onConnect: () => {
+      if (sessionKindRef.current === "chat") conversationRef.current?.sendContextualUpdate(WEBSITE_CHAT_NOTE);
+    },
     onMessage: ({ message, role }) => {
       // In chat mode we render the user's own message immediately, so skip the echo.
       if (role === "user" && sessionKindRef.current === "chat") return;
@@ -98,6 +111,10 @@ function Assistant() {
   const { status, isSpeaking, isMuted, setMuted } = conversation;
   const connected = status === "connected";
   const busy = status === "connecting";
+
+  useEffect(() => {
+    conversationRef.current = conversation;
+  });
 
   // Only once there is a conversation: the welcome screen stays at its top.
   useEffect(() => {
