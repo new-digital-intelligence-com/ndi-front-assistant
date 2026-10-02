@@ -406,6 +406,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 "Two separate passwords: the site password for the customer site, and the staff password for /admin. Being on the site never makes anyone staff.",
                 "Everything that calls the web app from outside proves who it is: ElevenLabs' tools send a secret, its webhooks are signed, Google and Meta send their own proof, and the daily job has its own secret.",
                 "Keys and passwords live only in Railway and the servers' settings, never in the code (the repository is public).",
+                "Customer accounts are NDI's own: a customer's password is never stored, only a scrambled form of it (an scrypt hash), and after 5 wrong passwords that email is locked for 15 minutes.",
                 "The database is locked down (row level security) and only the server reads it. No message text is stored for memory: short notes and scores only; transcripts stay in ElevenLabs.",
                 "For real customers, the use of Anthropic (Claude) for insights and mood belongs in the privacy notice.",
               ]}

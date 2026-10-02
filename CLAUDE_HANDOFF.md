@@ -38,7 +38,9 @@ and model. The staff copilot is **Aida**.
 repository the user creates (not Vercel), **no Alexa**, a **new Twilio number**, a **new Anam avatar**, Instagram and
 Messenger **shared with CDA and switched per demo**, and the **AI Employees knowledge comes from the user's Google
 Drive** — never build or change AI Employee knowledge yourself. "Appliances" became **interests** (what the
-customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them).
+customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them). Website accounts
+are **NDI's own table `customer_accounts`** (email + scrypt password hash, `src/lib/account.ts`), not Supabase Auth,
+because the Supabase project is shared with other PoCs.
 
 ---
 

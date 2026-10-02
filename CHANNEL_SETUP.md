@@ -223,7 +223,7 @@ NDI uses the team's shared **"pocs"** Supabase project (the team's rule), in **i
 tables never mix with other PoCs' schemas (CDA's database is not shared).
 
 1. **SQL Editor** (pocs project) → New query → paste `supabase/schema.sql` → **Run**. It creates the schema `fo01_ndi`
-   and its 23 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
+   and its 24 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
    `customers` table next to it).
 2. **Project Settings → Data API → Exposed schemas** → add `fo01_ndi` → Save. Without this the API answers
    "The schema must be one of the following…". (If the team account cannot change it, ask the project admin.)
@@ -231,14 +231,14 @@ tables never mix with other PoCs' schemas (CDA's database is not shared).
    (server only); `SUPABASE_SCHEMA=fo01_ndi` → Railway variables. The app sends the schema with every request
    (`src/lib/supabase.ts`).
 
-Tables: customers, channels, link codes, conversations, notes, **customer_interests**, Aida rooms/events/moods, email
+Tables: customers, **customer_accounts** (website sign-ins), channels, link codes, conversations, notes, **customer_interests**, Aida rooms/events/moods, email
 log, Gmail state, Instagram/Messenger threads, channel tokens, call lists, knowledge, feedback, draft outcomes,
 conversation moods. Row level security on, no policies, and only the `service_role` role has rights on the schema:
 only the server reads it.
 
-**Shared on purpose:** Supabase **Auth** belongs to the whole project, so the customer accounts made on NDI's website
-share one user list with the other PoCs of the pocs project (an email already used there signs in with that
-password). Fine for a demo with test accounts; a project of its own would separate them.
+**Website accounts are NDI's own:** sign-ups go into `fo01_ndi.customer_accounts` (email + scrypt hash of the
+password), not into Supabase **Auth**, whose user list the whole pocs project shares. Nothing to set up under
+Authentication.
 
 ---
 
@@ -445,8 +445,9 @@ Any conversation → customer_lookup(system__conversation_id) → known? greet b
 Conversation ends → post-call webhook → one short note (max 700 characters) and their interests
 ```
 
-- **Accounts**: Supabase Auth (`email_confirm: true`); signing up links and verifies that email. One code works
-  once, 30 minutes
+- **Accounts**: NDI's own table `customer_accounts` (`src/lib/account.ts`): the email and an scrypt hash of the
+  password, never the password. Open at once (no confirmation email); 5 wrong passwords lock that email for 15
+  minutes. Signing up links and verifies that email. One code works once, 30 minutes
 - **Interests**: Clara's analysis item `interest` records what the customer wants from NDI when they say it clearly:
   *"AI SDR – Acme GmbH (Head of Sales), outbound to DACH, wants a demo in November"* → `customer_interests` (one row
   per topic, the part before the dash; the newest description wins). `customer_lookup` returns them as `interests`

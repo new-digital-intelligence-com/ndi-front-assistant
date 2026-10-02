@@ -10,7 +10,7 @@
 
 import { elevenLabsConversation, type ConversationRecord } from "./elevenlabs";
 import { normalisePhone } from "./phone";
-import { supabaseConfigured, supabaseRest as rest } from "./supabase";
+import { embedded, supabaseConfigured, supabaseRest as rest } from "./supabase";
 
 export const CHANNELS = ["telegram", "instagram", "messenger", "email", "phone", "website", "slack"] as const;
 export type Channel = (typeof CHANNELS)[number];
@@ -134,11 +134,11 @@ export async function findByChannel({ channel, key }: Identity): Promise<{ custo
   return customer ? { customer, verified: row.verified } : null;
 }
 
-export async function createCustomer(name?: string, authUserId?: string): Promise<Customer> {
+export async function createCustomer(name?: string): Promise<Customer> {
   const [customer] = await rest<Customer[]>("customers?select=id,name", {
     method: "POST",
     prefer: "return=representation",
-    body: JSON.stringify({ name: name ?? null, auth_user_id: authUserId ?? null }),
+    body: JSON.stringify({ name: name ?? null }),
   });
   return customer;
 }
@@ -200,13 +200,13 @@ export async function forgetRobotSender(conversationId: string | null) {
   );
   const id = links[0]?.customer_id;
   if (!id) return;
-  const [owners, channels, notes, conversations] = await Promise.all([
-    rest<{ auth_user_id: string | null }[]>(`customers?id=eq.${q(id)}&select=auth_user_id&limit=1`),
+  const [account, channels, notes, conversations] = await Promise.all([
+    hasAccount(id),
     listChannels(id),
     rest<{ id: number }[]>(`customer_notes?customer_id=eq.${q(id)}&select=id&limit=1`),
     rest<{ conversation_id: string }[]>(`customer_conversations?customer_id=eq.${q(id)}&select=conversation_id&limit=2`),
   ]);
-  if (!owners[0] || owners[0].auth_user_id || notes.length || conversations.length > 1) return;
+  if (account || notes.length || conversations.length > 1) return;
   if (channels.length > 1 || channels.some((channel) => channel.channel !== "email")) return;
   await rest(`customers?id=eq.${q(id)}`, { method: "DELETE", prefer: "return=minimal" });
 }
@@ -256,27 +256,66 @@ export async function profileFor(customer: Customer): Promise<Profile> {
 
 // --- the account on the website --------------------------------------------------------------
 
-/**
- * The customer behind a signed-in website account. If that email was already seen on the email
- * channel, the existing record is adopted so nothing they told us before is lost.
- */
-export async function customerForAccount(authUserId: string, email: string, name?: string): Promise<Customer> {
-  const byAuth = await rest<Customer[]>(
-    `customers?auth_user_id=eq.${q(authUserId)}&select=id,name&limit=1`,
-  );
-  if (byAuth[0]) return byAuth[0];
+// Accounts are NDI's own table customer_accounts: the email someone signs in with and a hash of their
+// password (src/lib/account.ts), one account per customer.
 
+/** The account that signs in with this email: its customer and password hash. Null when there is none. */
+export async function findAccount(email: string): Promise<{ customer: Customer; passwordHash: string } | null> {
+  const rows = await rest<{ password_hash: string; customers: Customer | Customer[] | null }[]>(
+    `customer_accounts?email=eq.${q(email)}&select=password_hash,customers(id,name)&limit=1`,
+  );
+  const customer = embedded(rows[0]?.customers);
+  return rows[0] && customer ? { customer, passwordHash: rows[0].password_hash } : null;
+}
+
+/** The address a signed-in customer signs in with. */
+export async function accountEmail(customerId: string): Promise<string | null> {
+  const rows = await rest<{ email: string }[]>(`customer_accounts?customer_id=eq.${q(customerId)}&select=email&limit=1`);
+  return rows[0]?.email ?? null;
+}
+
+async function hasAccount(customerId: string): Promise<boolean> {
+  return Boolean(await accountEmail(customerId));
+}
+
+/**
+ * Opens a website account. If that email was already seen on the email channel, the existing record
+ * is adopted so nothing they told us before is lost. Refused when the email already has an account
+ * ("exists") or is linked to someone else's account ("taken").
+ */
+export async function createAccount(
+  email: string,
+  passwordHash: string,
+  name?: string,
+): Promise<{ ok: true; customer: Customer } | { ok: false; reason: "exists" | "taken" }> {
+  if (await findAccount(email)) return { ok: false, reason: "exists" };
   const existing = await findByChannel({ channel: "email", key: email });
+  if (existing && (await hasAccount(existing.customer.id))) return { ok: false, reason: "taken" };
   const customer = existing?.customer ?? (await createCustomer(name));
 
-  await rest(`customers?id=eq.${q(customer.id)}`, {
-    method: "PATCH",
-    prefer: "return=minimal",
-    body: JSON.stringify(name ? { auth_user_id: authUserId, name } : { auth_user_id: authUserId }),
-  });
-  // Signing in with that address proves it, so the email channel counts as verified.
+  try {
+    await rest("customer_accounts", {
+      method: "POST",
+      prefer: "return=minimal",
+      body: JSON.stringify({ customer_id: customer.id, email, password_hash: passwordHash }),
+    });
+  } catch (error) {
+    // The same email (or record) got an account a moment earlier: Postgres' unique violation, 23505.
+    if (!existing) await rest(`customers?id=eq.${q(customer.id)}`, { method: "DELETE", prefer: "return=minimal" });
+    if (String(error).includes("23505")) return { ok: false, reason: "exists" };
+    throw error;
+  }
+
+  if (name) {
+    await rest(`customers?id=eq.${q(customer.id)}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: JSON.stringify({ name }),
+    });
+  }
+  // The address the account signs in with counts as verified on the email channel.
   await attachChannel(customer.id, { channel: "email", key: email }, true);
-  return { id: customer.id, name: name ?? customer.name };
+  return { ok: true, customer: { id: customer.id, name: name ?? customer.name } };
 }
 
 // --- link codes ------------------------------------------------------------------------------
@@ -337,11 +376,7 @@ export async function redeemLinkCode(rawCode: string, identity: Identity): Promi
 async function adoptAnonymousOwner(identity: Identity, customerId: string): Promise<"ok" | "account"> {
   const existing = await findByChannel(identity);
   if (!existing || existing.customer.id === customerId) return "ok";
-  const owners = await rest<{ id: string; auth_user_id: string | null }[]>(
-    `customers?id=eq.${q(existing.customer.id)}&select=id,auth_user_id&limit=1`,
-  );
-  if (!owners[0]) return "ok";
-  if (owners[0].auth_user_id) return "account";
+  if (await hasAccount(existing.customer.id)) return "account";
   for (const table of ["customer_notes", "customer_conversations"]) {
     await rest(`${table}?customer_id=eq.${q(existing.customer.id)}`, {
       method: "PATCH",
@@ -447,10 +482,4 @@ export async function addCustomerNote(customerId: string, channel: string, summa
 export async function getCustomer(customerId: string): Promise<Customer | null> {
   const rows = await rest<Customer[]>(`customers?id=eq.${q(customerId)}&select=id,name&limit=1`);
   return rows[0] ?? null;
-}
-
-/** The address a signed-in customer signed up with: their first verified email channel. */
-export async function accountEmail(customerId: string): Promise<string | null> {
-  const channels = await listChannels(customerId);
-  return channels.find((row) => row.channel === "email" && row.verified)?.channel_key ?? null;
 }

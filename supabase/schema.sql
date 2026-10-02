@@ -22,10 +22,19 @@ create schema if not exists fo01_ndi;
 set search_path to fo01_ndi;
 
 create table if not exists customers (
-  id           uuid primary key default gen_random_uuid(),
-  auth_user_id uuid unique,                 -- the Supabase Auth user, when they have signed up
-  name         text,
-  created_at   timestamptz not null default now()
+  id         uuid primary key default gen_random_uuid(),
+  name       text,
+  created_at timestamptz not null default now()
+);
+
+-- Website accounts (src/lib/account.ts): the email someone signs in with and an scrypt hash of their
+-- password, never the password itself. One account per customer. NDI's own table instead of Supabase
+-- Auth, because Auth's user list belongs to the whole project, which other PoCs share.
+create table if not exists customer_accounts (
+  customer_id   uuid primary key references customers (id) on delete cascade,
+  email         text not null unique,       -- lower case
+  password_hash text not null,              -- scrypt$N$r$p$salt$hash
+  created_at    timestamptz not null default now()
 );
 
 create table if not exists customer_channels (
@@ -74,6 +83,7 @@ create index if not exists customer_notes_recent_idx on customer_notes (customer
 -- Row level security on with no policies: only the service role key (server side) can read or
 -- write. The publishable key cannot see anything, which is what we want for customer data.
 alter table customers              enable row level security;
+alter table customer_accounts      enable row level security;
 alter table customer_channels      enable row level security;
 alter table link_codes             enable row level security;
 alter table customer_conversations enable row level security;

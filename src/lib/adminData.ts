@@ -6,7 +6,7 @@ import { displayCode } from "./aida";
 import { askClaude, parseJsonObject } from "./anthropic";
 import { elevenLabsConversation } from "./elevenlabs";
 import { moodsFor, type ConversationMoodBadge } from "./mood";
-import { supabaseRest as rest } from "./supabase";
+import { embedded, supabaseRest as rest } from "./supabase";
 
 const q = encodeURIComponent;
 const DAY = 86_400_000;
@@ -43,7 +43,14 @@ export type Overview = {
 };
 
 type ChannelRow = { channel: string; channel_key: string; verified: boolean };
-type CustomerRow = { id: string; name: string | null; auth_user_id: string | null; created_at: string; customer_channels: ChannelRow[] | null };
+type AccountRow = { email: string };
+type CustomerRow = {
+  id: string;
+  name: string | null;
+  created_at: string;
+  customer_channels: ChannelRow[] | null;
+  customer_accounts: AccountRow | AccountRow[] | null;
+};
 
 /** Website "channels" are browser cookies: meaningless to staff, so they are not shown in full. */
 function channelLabel(channel: string, key: string): string {
@@ -68,7 +75,7 @@ const countBy = <T>(items: T[], key: (item: T) => string | null | undefined) =>
 
 export async function customersOverview(): Promise<{ customers: CustomerSummary[]; overview: Overview }> {
   const [customers, notes, conversations, emails, rooms] = await Promise.all([
-    rest<CustomerRow[]>("customers?select=id,name,auth_user_id,created_at,customer_channels(channel,channel_key,verified)&order=created_at.desc&limit=1000"),
+    rest<CustomerRow[]>("customers?select=id,name,created_at,customer_channels(channel,channel_key,verified),customer_accounts(email)&order=created_at.desc&limit=1000"),
     rest<{ customer_id: string; created_at: string }[]>("customer_notes?select=customer_id,created_at&order=created_at.desc&limit=10000"),
     rest<{ customer_id: string; channel: string | null; created_at: string }[]>(
       "customer_conversations?select=customer_id,channel,created_at&order=created_at.desc&limit=10000",
@@ -96,7 +103,7 @@ export async function customersOverview(): Promise<{ customers: CustomerSummary[
       return {
         id: customer.id,
         name: customer.name,
-        hasAccount: Boolean(customer.auth_user_id),
+        hasAccount: Boolean(embedded(customer.customer_accounts)),
         createdAt: customer.created_at,
         lastActivity,
         activeNow: Boolean(lastConversation && now - new Date(lastConversation).getTime() < ACTIVE_NOW_MS),
@@ -145,7 +152,7 @@ export type CustomerDetail = {
 
 export async function customerDetail(id: string): Promise<CustomerDetail | null> {
   const [customers, notes, conversations, rooms] = await Promise.all([
-    rest<CustomerRow[]>(`customers?id=eq.${q(id)}&select=id,name,auth_user_id,created_at,customer_channels(channel,channel_key,verified)&limit=1`),
+    rest<CustomerRow[]>(`customers?id=eq.${q(id)}&select=id,name,created_at,customer_channels(channel,channel_key,verified),customer_accounts(email)&limit=1`),
     rest<{ summary: string; channel: string | null; created_at: string }[]>(
       `customer_notes?customer_id=eq.${q(id)}&select=summary,channel,created_at&order=created_at.desc&limit=50`,
     ),
@@ -172,7 +179,7 @@ export async function customerDetail(id: string): Promise<CustomerDetail | null>
     customer: {
       id: row.id,
       name: row.name,
-      hasAccount: Boolean(row.auth_user_id),
+      hasAccount: Boolean(embedded(row.customer_accounts)),
       createdAt: row.created_at,
       lastActivity: last,
       activeNow: Boolean(conversations[0] && Date.now() - new Date(conversations[0].created_at).getTime() < ACTIVE_NOW_MS),
