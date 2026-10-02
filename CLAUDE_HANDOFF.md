@@ -93,7 +93,9 @@ npm run lint
 - Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
   (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
 - **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only, `email_mode` placeholder)
-- Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, attached to Clara **and** Aida; demo videos follow via `/demos` once Railway is live
+- Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, plus the URL document
+  "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, auto-sync, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
+  attached to Clara **and** Aida on their live branches
 - Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026)
 - Settings changes via API: `PATCH /v1/convai/agents/{id}` with only the changed part, then read it back; back up first
 
@@ -139,10 +141,10 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
 9. **Instagram/Messenger**: Custom Channels "NDI Instagram" and "NDI Messenger" → variables; switch the 2 Meta
    Callback URLs when NDI should answer (CHANNEL_SETUP.md §7).
-10. **Demo videos** (after Railway): YouTube Data API key → `YOUTUBE_API_KEY`; add `<APP_URL>/demos` as an ElevenLabs
-    URL document (auto-sync on), attach to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
-    then refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos"). Test once what ElevenLabs
-    extracts from the live page (free: create, read `/content`).
+10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
+    API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
+    links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
+    refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos").
 11. Optional: Intercom (own workspace), Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`.
 
 ---

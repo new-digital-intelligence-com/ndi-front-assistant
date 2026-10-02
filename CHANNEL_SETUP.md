@@ -182,8 +182,12 @@ scheduler calls `/api/cron/demos`: when the list changed, it asks ElevenLabs to 
 (`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara knows a new video within about an hour. Clara never
 calls YouTube during a conversation.
 
+**Set up on 2 Oct 2026:** API key in project `ndi-front-assistant` → `YOUTUBE_API_KEY`; `/demos` lists 85 videos;
+URL document **"NDI public demo videos (live page)"** `EEG5MebQkLEcbyy25NuF` (auto-sync, search index built; ElevenLabs
+read all 85 links) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`.
+
 **Set it up (after the app is live on Railway)**
-1. **Google Cloud** (any NDI project, e.g. `cda-email-509312`) → APIs & Services → **Enable** "YouTube Data API v3"
+1. **Google Cloud** (NDI's project `ndi-front-assistant`) → APIs & Services → **Enable** "YouTube Data API v3"
    → Credentials → **Create credentials → API key** → edit it: **API restrictions → YouTube Data API v3** only;
    application restrictions: none (Railway has no fixed IP). → Railway variable `YOUTUBE_API_KEY`.
 2. Check `<APP_URL>/demos`: it lists the demos (without the key it only shows the channel link).
