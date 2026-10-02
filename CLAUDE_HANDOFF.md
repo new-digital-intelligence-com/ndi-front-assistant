@@ -90,7 +90,7 @@ npm run lint
 - Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
   (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
 - **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only, `email_mode` placeholder)
-- Knowledge base: **empty until the user's Google Drive documents are attached** (to Clara **and** Aida)
+- Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, attached to Clara **and** Aida; demo videos follow via `/demos` once Railway is live
 - Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026)
 - Settings changes via API: `PATCH /v1/convai/agents/{id}` with only the changed part, then read it back; back up first
 
@@ -116,7 +116,7 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 2. **Supabase**: the user creates a new project → run `supabase/schema.sql` → `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 3. **Railway**: new service from the repository, variables from `.env.local`, domain `ndi-assistant.up.railway.app`
    (CHANNEL_SETUP.md §3). If the domain must differ, update `APP_URL`, both tools and the post-call webhook.
-4. **Knowledge**: the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
+4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.
 5. **Telegram**: new bot → ElevenLabs trigger → `TELEGRAM_BOT` in ChannelLinks.

@@ -127,7 +127,10 @@ Operating mode: AGENT (summary of the request, never claims a meeting is booked)
 
 ### Knowledge base
 
-**Empty for now.** The AI Employees and the rest of NDI's knowledge come from the NDI shared drive on **Google Drive**.
+**Attached on 2 Oct 2026** to Clara and Aida (usage *auto*, searched on every turn, indexes complete), from the approved
+Drive folder through ElevenLabs' Google Drive integration: *NDI AI Employee Catalog.pptx.pdf*, *1 NDI Presentation
+EN.pptx.pdf*, *NDI_Company_Knowledge_Base.pdf*, *NDI_Frequently_Asked_Questions.pdf*. Keep RAG on: ignore the
+dashboard's "small knowledge base, disable RAG" hint (the catalog alone is about 140 KB of text).
 
 **What goes in (decided 2 Oct 2026).** Clara is public: anything in her knowledge can be repeated to anyone. So only
 client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
