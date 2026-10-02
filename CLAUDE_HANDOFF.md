@@ -116,7 +116,9 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 2. **Supabase**: the user creates a new project → run `supabase/schema.sql` → `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
 3. **Railway**: new service from the repository, variables from `.env.local`, domain `ndi-assistant.up.railway.app`
    (CHANNEL_SETUP.md §3). If the domain must differ, update `APP_URL`, both tools and the post-call webhook.
-4. **Knowledge**: the user connects Google Drive in ElevenLabs and attaches the NDI documents to Clara and Aida.
+4. **Knowledge**: the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
+   current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
+   or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.
 5. **Telegram**: new bot → ElevenLabs trigger → `TELEGRAM_BOT` in ChannelLinks.
 6. **Email**: the user chooses the mailbox → consent (refresh token) → Pub/Sub topic `gmail-inbox-ndi` + push
    subscription → Custom Channel "NDI email" → variables → `SUPPORT_EMAIL`; app password for `gmail_sender`.

@@ -111,8 +111,9 @@ Same ElevenLabs account as CDA (Creator plan, 121,005 credits a month, resets ~1
 **Changing settings by API:** back up the agent JSON, `PATCH /v1/convai/agents/{id}` with only the changed part,
 then read it back. API changes go live at once; dashboard changes need **Publish**.
 
-**Prompt sections:** Personality · Company context (NDI facts from new-digital-intelligence.com: founded 2023 in Zug,
-70+ experts, 8 markets, pay-per-use model, 7 offices, mail@new-digital-intelligence.com) · Environment (channel
+**Prompt sections:** Personality · Company context (stable NDI facts from new-digital-intelligence.com: founded 2023
+in Zug, 8 markets, pay-per-use model, 7 offices, mail@new-digital-intelligence.com; numbers that change, such as team
+size or delivery locations, are left to the knowledge base) · Environment (channel
 rules: phone/avatar short answers; *Telegram only* text; *Instagram and Messenger only* plain text under 900
 characters; *Website chat* reads images and PDFs; *Email only*: body of one plain-text reply, never asks for the
 email address, answers `SKIP` to robots) · Goal · Knowledge rules (only knowledge-base facts; AI Employees only as
@@ -126,7 +127,18 @@ Operating mode: AGENT (summary of the request, never claims a meeting is booked)
 
 ### Knowledge base
 
-**Empty for now.** The AI Employees and the rest of NDI's knowledge come from the user's **Google Drive**:
+**Empty for now.** The AI Employees and the rest of NDI's knowledge come from the NDI shared drive on **Google Drive**.
+
+**What goes in (decided 2 Oct 2026).** Clara is public: anything in her knowledge can be repeated to anyone. So only
+client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
+- the **AI Employee catalog** and the **latest company presentation** — as PDF copies, because ElevenLabs cannot read PowerPoint
+- the **SARAA factsheet** and the **partner programme one-pager** (partner-facing)
+
+**What never goes in:** client project folders, contracts and contract templates, pricing, costing and business-case
+tools, HR and company operations, internal policies and audits, CRM exports and prospect lists, sales and meeting
+recordings, partner contracts and commission terms, investor material, demo access details. The FAQ, flyers and
+one-pagers in the website's download folder are out of date and stay out until NDI updates them (an FAQ cleaned for
+customers can be added once NDI has approved it).
 
 1. ElevenLabs → Knowledge Base → **Google Drive** → connect → pick the files (PDF or Google Docs; Sheets and
    Slides are not supported by the Drive sync) → auto sync on.
