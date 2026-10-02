@@ -23,19 +23,19 @@ and model. The staff copilot is **Aida**.
 | Channel | Status | How |
 |---|---|---|
 | Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
-| Telegram | ✅ **@ndi2026bot**, linked to Clara (2 Oct 2026) | Native ElevenLabs Telegram trigger |
+| Telegram | ✅ **@ndi2026bot**, linked to Clara, tested by the user (2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on /admin → ✉️ Replies | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. NDI's side ready (2 Oct 2026); Meta points at CDA until the switch | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
+| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. ✅ Switched to NDI and tested by the user (2 Oct 2026) | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
-| Video avatar | ⏳ New Anam avatar (the user sets it up) | Anam joined to Clara |
-| Intercom | Optional | Needs NDI's own Intercom workspace |
+| Video avatar | ⏳ NDI's own Anam account + avatar "Elena" set (2 Oct 2026); first test by the user | Anam joined to Clara |
+| Intercom | ❌ Removed on purpose (user's decision, 2 Oct 2026) | — |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link |
 | Alexa | ❌ Removed on purpose (user's decision) | — |
 | Slack, WhatsApp | Not built | — |
 
 **What differs from CDA** (decisions of the user, 2 Oct 2026): assistant **Clara** (not Ellie), voice **Katie X**
 (close to Shelley), call languages **English + German, Italian, French**, hosting on **Railway** from a **public**
-repository the user creates (not Vercel), **no Alexa**, a **new Twilio number**, a **new Anam avatar**, Instagram and
+repository the user creates (not Vercel), **no Alexa**, **no Intercom**, a **new Twilio number**, a **new Anam avatar**, Instagram and
 Messenger **shared with CDA and switched per demo**, and the **AI Employees knowledge comes from the user's Google
 Drive** — never build or change AI Employee knowledge yourself. "Appliances" became **interests** (what the
 customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them). Website accounts
@@ -132,7 +132,7 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.
-5. ✅ **Telegram**: bot **@ndi2026bot** linked to Clara; `TELEGRAM_BOT` in ChannelLinks.
+5. ✅ **Telegram**: bot **@ndi2026bot** linked to Clara; `TELEGRAM_BOT` in ChannelLinks; tested by the user (2 Oct 2026).
 6. ✅ **Email** (contact@new-digital-intelligence.com, 2 Oct 2026): NDI's own Google Cloud project `ndi-front-assistant`
    (owned by contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
    subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`, Custom Channel "NDI email" (3 values on Railway),
@@ -140,16 +140,19 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
    `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** (built 2 Oct 2026,
    `src/lib/handover.ts`, CHANNEL_SETUP.md §12; tested only with fakes so far: the first real test is the user's).
-8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
+8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
+   (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
+   input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (Avatar tab).
+   Anam's free plan: 30 minutes a month, 3-minute calls, watermark.
 9. **Instagram/Messenger** (CDA's accounts, the user's decision): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
    on Clara (2 Oct 2026; secret order checked, 6 values on Railway); tokens checked (NDI's Instagram token refreshed,
-   valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. Next: the
-   user switches the 2 Meta Callback URLs when NDI should answer (CHANNEL_SETUP.md §7) and tests with a DM.
+   valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. The user
+   switched the 2 Meta Callback URLs to NDI and tested both (2 Oct 2026). Back to CDA for a demo: CHANNEL_SETUP.md §7.
 10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
     API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
     links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
     refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos").
-11. Optional: Intercom (own workspace), Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`.
+11. Optional: Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`. (Intercom was removed on the user's decision.)
 
 ---
 

@@ -18,7 +18,7 @@ const SECTIONS: { id: string; title: string }[] = [
   { id: "phone", title: "Phone" },
   { id: "email", title: "Email" },
   { id: "messaging", title: "Telegram, Instagram, Messenger" },
-  { id: "more-channels", title: "Intercom, widget and QR code" },
+  { id: "more-channels", title: "Widget, QR code and demo videos" },
   { id: "memory", title: "Customer memory" },
   { id: "aida", title: "Aida rooms (live copilot)" },
   { id: "admin", title: "Admin page" },
@@ -41,7 +41,7 @@ export default function DocsPage() {
           </div>
           <p className="mt-4 max-w-3xl text-ink">
             One AI assistant, <strong className="text-heading">Clara</strong>, answers NDI&apos;s customers on the website, the phone,
-            email, Telegram, Instagram, Messenger and Intercom, remembers them across all of them, and hands over to NDI staff with{" "}
+            email, Telegram, Instagram and Messenger, remembers them across all of them, and hands over to NDI staff with{" "}
             <strong className="text-heading">Aida</strong>, a copilot that drafts answers during live calls.
           </p>
           <p className="mt-2 text-xs text-muted">
@@ -90,9 +90,8 @@ export default function DocsPage() {
                 ["Phone", "Calls NDI's number, or Clara calls them from a staff call list", "Setting up"],
                 ["Email", "Emails contact@new-digital-intelligence.com and gets a reply in the same thread", "Live"],
                 ["Telegram", "Messages NDI's Telegram bot @ndi2026bot", "Live"],
-                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Shared with the CDA demo"],
-                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Shared with the CDA demo"],
-                ["Intercom", "Types in the chat bubble on the customer page", "Optional"],
+                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Live (shared with the CDA demo)"],
+                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Live (shared with the CDA demo)"],
                 ["Hosted page, QR code, widget", "ElevenLabs’ own page and chat bubble", "Live"],
                 ["Slack, WhatsApp", "—", "Not built yet"],
               ]}
@@ -102,7 +101,7 @@ Phone (Twilio) ─────────────────────�
 Telegram ───────────────────────────┤
 Email ─► Gmail ─► web app ──────────┤──►  Clara (ElevenLabs agent)  ──►  answer on the same channel
 Instagram / Messenger ─► web app ───┤         │  knowledge base (RAG) · customer_lookup tool
-Intercom / hosted page / widget ────┘         ▼
+Hosted page / widget ───────────────┘         ▼
                                    web app (Next.js on Railway)  ─  Supabase database
                                    customer memory · Aida rooms · admin · learning · mood`}</Flow>
             <P>There are three pages:</P>
@@ -178,9 +177,6 @@ Intercom / hosted page / widget ────┘         ▼
                   <B>Channel links</B>: buttons that open email, the phone line, Telegram, Instagram and Messenger (each one appears
                   once that channel is set up).
                 </>,
-                <>
-                  <B>Intercom bubble</B>: a second way to chat, answered by Clara through Intercom (optional).
-                </>,
               ]}
             />
           </Section>
@@ -240,13 +236,9 @@ Intercom / hosted page / widget ────┘         ▼
             </P>
           </Section>
 
-          <Section id="more-channels" title="Intercom, widget and QR code">
+          <Section id="more-channels" title="Widget, QR code and demo videos">
             <List
               items={[
-                <>
-                  <B>Intercom</B> (optional): the chat bubble on the customer page. Intercom sends the conversation to Clara through
-                  ElevenLabs&apos; native Intercom integration, and staff see the same conversations in Intercom&apos;s inbox.
-                </>,
                 <>
                   <B>Hosted page and QR code</B>: ElevenLabs&apos; own talk-to page for Clara (voice and text), and a QR code that
                   opens it.
@@ -441,7 +433,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["Anam", "The video avatar", "Free plan: 30 minutes a month, 3-minute calls"],
                 ["Twilio", "The phone number (calls in and out), and hand-overs to a colleague with a live transcript", "A monthly fee for the number, plus calls; the live transcript $0.027 a minute"],
                 ["Google Cloud", "Gmail API and Pub/Sub for the email channel", "Free tier"],
-                ["Meta, Telegram, Intercom", "Instagram, Messenger, Telegram and the Intercom bubble", "Free (Intercom: a trial)"],
+                ["Meta, Telegram", "Instagram, Messenger and Telegram", "Free"],
               ]}
             />
           </Section>
@@ -452,7 +444,7 @@ End of every conversation   → post-call webhook  → one short note, their int
               rows={[
                 ["Agent", "An AI assistant on ElevenLabs: Clara for customers, Aida for staff."],
                 ["AI Employee", "NDI's product: a role-specific AI agent that NDI builds, connects to a company's systems, runs and improves."],
-                ["Channel", "A way a customer reaches Clara: website, phone, email, Telegram, Instagram, Messenger, Intercom."],
+                ["Channel", "A way a customer reaches Clara: website, phone, email, Telegram, Instagram, Messenger."],
                 ["Custom Channel", "ElevenLabs' connector for channels it has no built-in support for; the web app passes messages in and sends answers out."],
                 ["Webhook", "An address a service calls when something happens, for example ElevenLabs at the end of a conversation."],
                 ["RAG", "Retrieval: Clara looks up the relevant parts of NDI's documents before answering."],

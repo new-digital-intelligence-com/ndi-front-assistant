@@ -185,7 +185,6 @@ async function channelOf(record: ConversationForMood, conversationId: string): P
   const known = await conversationChannel(conversationId, isPhone).catch(() => null);
   if (known) return known;
   const source = record.conversation_initiation_source ?? record.metadata?.conversation_initiation_source ?? "";
-  if (/_ic_\d+$/.test(conversationId) || /intercom/i.test(source)) return "intercom";
   if (/telegram/i.test(source)) return "telegram";
   if (/twilio|sip|phone/i.test(source)) return "phone";
   // react_sdk / js_sdk: chat and voice on the site, the widget and the hosted page; python_sdk: the
@@ -562,7 +561,7 @@ export type FrustratedLine = {
 
 const emptyCounts = (): MoodCounts => ({ total: 0, positive: 0, neutral: 0, negative: 0 });
 /** Every channel of the demo is always listed, even in a period without conversations on it. */
-const DEMO_CHANNELS = ["website", "phone", "email", "telegram", "instagram", "messenger", "intercom", "hosted"];
+const DEMO_CHANNELS = ["website", "phone", "email", "telegram", "instagram", "messenger", "hosted"];
 const add = (counts: MoodCounts, moodLabel: MoodLabel) => {
   counts.total += 1;
   counts[moodLabel] += 1;

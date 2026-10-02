@@ -8,8 +8,8 @@ Last updated: **2 October 2026**. A public, plain-words version of this guide is
 > **This repository is public. No secrets in this file.** Keys and tokens live in the tools themselves,
 > in Railway and in `.env.local` — see [Credentials](#14-credentials).
 
-`<APP_URL>` below is the app's address on Railway: **`https://ndi-assistant.up.railway.app`** (planned; the
-ElevenLabs tools and webhook already point there — see [Railway](#3-railway-hosting)).
+`<APP_URL>` below is the app's address on Railway: **`https://ndi-assistant.up.railway.app`** (live since 2 Oct
+2026 — see [Railway](#3-railway-hosting)).
 
 ## Contents
 
@@ -41,19 +41,19 @@ second agent, Aida, drafts answers for staff).
 
 | Channel | Status | How it reaches Clara |
 |---|---|---|
-| Website `<APP_URL>` (Chat, Voice, Avatar, Aida) | ⏳ Deploy on Railway | Next.js app on Railway, site password |
-| Admin `<APP_URL>/admin` | ⏳ With the website | Staff page, Aida staff password |
-| Docs `<APP_URL>/docs` | ⏳ With the website | Public documentation page, no password |
-| Telegram | ⏳ New bot to create | Native ElevenLabs Telegram trigger |
-| Email | ⏳ Mailbox to choose | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram **@new_digital_intelligence** | 🔀 Shared with the CDA demo | Meta webhook → web app → Custom Channel "NDI Instagram" |
-| Facebook Messenger, Page **New Digital Intelligence** | 🔀 Shared with the CDA demo | Meta webhook → web app → Custom Channel "NDI Messenger" |
+| Website `<APP_URL>` (Chat, Voice, Avatar, Aida) | ✅ Live on Railway (2 Oct 2026) | Next.js app on Railway, site password |
+| Admin `<APP_URL>/admin` | ✅ Live | Staff page, Aida staff password |
+| Docs `<APP_URL>/docs` | ✅ Live | Public documentation page, no password |
+| Telegram | ✅ **@ndi2026bot** (tested 2 Oct 2026) | Native ElevenLabs Telegram trigger |
+| Email | ✅ contact@new-digital-intelligence.com (tested 2 Oct 2026) | Gmail push → web app → Custom Channel "NDI email" |
+| Instagram **@new_digital_intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
+| Facebook Messenger, Page **New Digital Intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
 | Phone | ⏳ New Twilio number to buy | Imported into ElevenLabs natively |
-| Video avatar (Avatar tab) | ⏳ New Anam avatar | Anam joined to Clara |
-| Intercom chat bubble | Optional | ElevenLabs' native Intercom integration |
+| Video avatar (Avatar tab) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
 | Slack, WhatsApp | Not built | Section 16 |
 | Alexa | Removed | Not part of NDI's assistant |
+| Intercom | Removed | Not used by NDI (decided 2 Oct 2026) |
 
 ```
  Website chat / voice / files ─────────►┐
@@ -375,7 +375,7 @@ assistant, so Meta's webhooks point at **one app at a time**:
 | Messenger Callback URL | `https://cda-demo.vercel.app/api/messenger/webhook?token=<MESSENGER_WEBHOOK_SECRET>` | `<APP_URL>/api/messenger/webhook?token=<MESSENGER_WEBHOOK_SECRET>` |
 
 NDI uses the **same tokens and the same webhook secrets (verify tokens) as CDA** (copied into `.env.local`), so a
-switch only changes the address:
+switch only changes the address (first switched to NDI and tested on 2 Oct 2026):
 
 1. **developers.facebook.com** → app **Customer Support** → **Use cases** → "Manage messaging & content on
    Instagram" → **API setup with Instagram login** → **Configure webhooks** → Callback URL from the table, Verify
@@ -457,7 +457,8 @@ the web app tells Anam `conversationConfigOverride: { agent: { language } }`, an
 
 1. **lab.anam.ai** → create the NDI avatar from a picture → copy its ID (and the **API key** if it is a new Anam
    account; the free plan allows one custom avatar per account) → `ANAM_AVATAR_ID` (and `ANAM_API_KEY`).
-   `ANAM_MAX_SESSION_SECONDS=180`.
+   `ANAM_MAX_SESSION_SECONDS=180`. Done 2 Oct 2026: NDI's own Anam account (not CDA's) and its custom avatar
+   **Elena** (at an office desk, the NDI logo on the wall; model `cara-4`, which the app asks for).
 2. Clara's user input audio format is already **PCM 16000 Hz** (Anam needs it).
 3. **Test:** Avatar tab → Start video call → ask a question.
 
@@ -475,14 +476,6 @@ text; a QR code can be made from this link). To add the chat bubble to any websi
 
 > Anyone with this link can talk to Clara and use credits. Turning on authentication in Clara's **Security**
 > settings stops the page, QR code and widget; test every channel after such a change.
-
-### Intercom chat bubble (optional)
-
-Needs **NDI's own Intercom workspace** (CDA's `CDA Demo` workspace stays with CDA). Same steps as in the CDA guide:
-Intercom developer app → ElevenLabs Intercom integration → trigger **Intercom Conversation** on Clara → webhook
-topics `conversation.user.created` and `conversation.user.replied`. Then set **`NEXT_PUBLIC_INTERCOM_APP_ID`** on
-Railway (without it there is no bubble). An EU-hosted workspace needs `api_base` `https://api-iam.eu.intercom.io`
-in `src/components/IntercomMessenger.tsx`.
 
 ---
 
@@ -641,7 +634,6 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `MESSENGER_PAGE_TOKEN`, `MESSENGER_PAGE_ID`, `MESSENGER_WEBHOOK_SECRET` | Messenger (copied from CDA: the same Page) |
 | `MESSENGER_CHANNEL_INBOUND_URL`, `MESSENGER_CHANNEL_INBOUND_SECRET`, `MESSENGER_CHANNEL_SIGNING_SECRET` | "NDI Messenger" Custom Channel |
 | `META_APP_SECRET` (optional) | Also check Meta's signature on Instagram and Messenger webhooks |
-| `NEXT_PUBLIC_INTERCOM_APP_ID` (optional) | NDI's Intercom workspace; without it there is no bubble |
 | `YOUTUBE_API_KEY` | YouTube Data API key for `/demos` (public data only; restricted to YouTube Data API v3) |
 | `ELEVENLABS_DEMOS_DOCUMENT_ID` | The ElevenLabs URL document that reads `<APP_URL>/demos`; refreshed when the videos change |
 

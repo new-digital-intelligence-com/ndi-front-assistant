@@ -17,7 +17,6 @@ const CHANNEL_NAMES: Record<string, string> = {
   website: "Website",
   slack: "Slack",
   messaging: "Messaging app",
-  intercom: "Intercom",
   hosted: "ElevenLabs page / QR code",
 };
 

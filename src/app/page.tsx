@@ -1,7 +1,6 @@
 import AssistantApp from "@/components/AssistantApp";
 import { AccountPanel } from "@/components/AccountPanel";
 import { ChannelLinks } from "@/components/ChannelLinks";
-import { IntercomMessenger } from "@/components/IntercomMessenger";
 import { NdiLogo } from "@/components/NdiLogo";
 
 const helpTopics = [
@@ -73,8 +72,6 @@ export default function Home() {
           <AccountPanel />
         </aside>
       </main>
-
-      <IntercomMessenger />
 
       <footer className="mt-auto bg-heading text-white/80">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between lg:px-6">
