@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
-/* Palette taken from the NDI website (new-digital-intelligence.com: theme colour #002a6c and its
-   stylesheet). The names are neutral, so another copy of this app only changes the values. */
+/* Palette of the NDI logo: red capitals (#fe0100) and black on white. accent is the logo's own red,
+   for the logo, lines and dots; brand is a slightly deeper red for buttons, tabs and links, so white
+   text on it and small red text on white stay easy to read (contrast at least 4.5:1). The greys are
+   neutral. The names are neutral too, so another copy of this app only changes the values. */
 @theme inline {
-  --color-brand: #002a6c;
-  --color-brand-dark: #001d4c;
-  --color-heading: #0f172a;
-  --color-line: #dfeaf6;
-  --color-surface: #eef4fb;
-  --color-accent: #1190cb;
-  --color-muted: #475569;
-  --color-ink: #1e293b;
+  --color-brand: #e00000;
+  --color-brand-dark: #b80000;
+  --color-heading: #111111;
+  --color-line: #e5e5e5;
+  --color-surface: #f5f5f5;
+  --color-accent: #fe0100;
+  --color-muted: #525252;
+  --color-ink: #262626;
   --font-sans: var(--font-figtree);
+  --font-logo: var(--font-archivo-black);
 }
 
 body {

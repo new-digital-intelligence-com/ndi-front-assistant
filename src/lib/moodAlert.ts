@@ -135,15 +135,15 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
   const text = [heading, "", ...rows.map(([name, value]) => `${name}: ${value}`), "", link ? `Open /admin → 😊 Mood: ${link}` : ""]
     .join("\n")
     .trim();
-  const html = `<div style="font-family:Arial,sans-serif;max-width:620px;color:#1e293b">
-<h2 style="margin:0 0 12px;font-size:18px;color:#002a6c">${escapeHtml(heading)}</h2>
+  const html = `<div style="font-family:Arial,sans-serif;max-width:620px;color:#262626;border-top:4px solid #fe0100;padding-top:12px">
+<h2 style="margin:0 0 12px;font-size:18px;color:#111111">${escapeHtml(heading)}</h2>
 <table style="border-collapse:collapse;font-size:14px;width:100%">${rows
     .map(
       ([name, value]) =>
-        `<tr><td style="padding:6px 10px;color:#475569;vertical-align:top;white-space:nowrap">${escapeHtml(name)}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>`,
+        `<tr><td style="padding:6px 10px;color:#525252;vertical-align:top;white-space:nowrap">${escapeHtml(name)}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>`,
     )
     .join("")}</table>
-${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#1190cb">Open /admin → 😊 Mood</a></p>` : ""}
+${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#e00000">Open /admin → 😊 Mood</a></p>` : ""}
 <p style="margin-top:18px;color:#999999;font-size:12px">Sent by NDI's assistant Clara. Mood scores come from ElevenLabs and Claude.</p>
 </div>`;
 

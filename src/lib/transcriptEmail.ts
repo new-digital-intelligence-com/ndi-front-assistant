@@ -42,30 +42,30 @@ export function transcriptEmail(options: {
         .map(
           (line) =>
             `<tr><td style="padding:6px 10px;vertical-align:top;white-space:nowrap;font-weight:600;color:${
-              line.highlight ? "#1190cb" : "#0f172a"
-            }">${escapeHtml(line.speaker)}</td><td style="padding:6px 10px;color:#1e293b">${escapeHtml(line.text).replace(
+              line.highlight ? "#e00000" : "#111111"
+            }">${escapeHtml(line.speaker)}</td><td style="padding:6px 10px;color:#262626">${escapeHtml(line.text).replace(
               /\n/g,
               "<br>",
             )}</td></tr>`,
         )
         .join("")
-    : `<tr><td style="padding:6px 10px;color:#475569">No messages</td></tr>`;
+    : `<tr><td style="padding:6px 10px;color:#525252">No messages</td></tr>`;
 
   const extra = sections
     .map(
       (section) =>
-        `<h3 style="margin:24px 0 8px;font-size:15px;color:#0f172a">${escapeHtml(section.heading)}</h3><ul style="margin:0;padding-left:18px;color:#1e293b">${section.lines
+        `<h3 style="margin:24px 0 8px;font-size:15px;color:#111111">${escapeHtml(section.heading)}</h3><ul style="margin:0;padding-left:18px;color:#262626">${section.lines
           .map((line) => `<li style="margin:4px 0">${escapeHtml(line)}</li>`)
           .join("")}</ul>`,
     )
     .join("");
 
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto">
-<div style="background:#002a6c;padding:14px 18px;border-bottom:4px solid #1190cb"><span style="background:#ffffff;color:#002a6c;font-weight:800;padding:4px 8px;border-radius:4px;letter-spacing:1px">NDI</span></div>
+<div style="background:#ffffff;padding:12px 18px;border-bottom:4px solid #fe0100"><span style="color:#fe0100;font-family:'Arial Black',Arial,Helvetica,sans-serif;font-weight:900;font-size:28px;letter-spacing:-0.5px;line-height:1">NDI</span></div>
 <div style="padding:18px">
-<h2 style="margin:0 0 6px;font-size:18px;color:#0f172a">${escapeHtml(heading)}</h2>
-<p style="margin:0 0 16px;color:#475569;font-size:14px">${escapeHtml(intro)}</p>
-<table style="border-collapse:collapse;width:100%;font-size:14px;background:#eef4fb;border-radius:8px">${rows}</table>
+<h2 style="margin:0 0 6px;font-size:18px;color:#111111">${escapeHtml(heading)}</h2>
+<p style="margin:0 0 16px;color:#525252;font-size:14px">${escapeHtml(intro)}</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;background:#f5f5f5;border-radius:8px">${rows}</table>
 ${extra}
 <p style="margin-top:24px;color:#999999;font-size:12px">${escapeHtml(footer)}</p>
 </div></div>`;

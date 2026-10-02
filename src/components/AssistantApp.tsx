@@ -505,7 +505,7 @@ function ClaraBadge({ large = false }: { large?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`flex shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1190cb,#002a6c)] font-bold text-white shadow ${
+      className={`flex shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fe0100,#a30000)] font-bold text-white shadow ${
         large ? "h-16 w-16 text-3xl sm:h-20 sm:w-20 sm:text-4xl" : "h-10 w-10 text-lg"
       }`}
     >

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { NdiLogo } from "@/components/NdiLogo";
 
 // Public documentation of NDI's assistant: every channel, module and feature, in plain words. No
 // password (see src/proxy.ts) and therefore no secrets: no keys, passwords, tokens or private settings.
@@ -32,21 +33,22 @@ const SECTIONS: { id: string; title: string }[] = [
 export default function DocsPage() {
   return (
     <div className="flex-1 bg-surface">
-      <header className="bg-brand text-white">
+      <header className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md bg-white px-2.5 py-1 text-xl font-extrabold tracking-wider text-brand">NDI</span>
-            <span className="text-lg font-semibold">Assistant · Documentation</span>
+          <div className="flex flex-wrap items-end gap-4">
+            <NdiLogo className="h-16 w-auto" />
+            <span className="text-lg font-semibold text-heading">Assistant · Documentation</span>
           </div>
-          <p className="mt-3 max-w-3xl text-white/80">
-            One AI assistant, <strong className="text-white">Clara</strong>, answers NDI&apos;s customers on the website, the phone,
+          <p className="mt-4 max-w-3xl text-ink">
+            One AI assistant, <strong className="text-heading">Clara</strong>, answers NDI&apos;s customers on the website, the phone,
             email, Telegram, Instagram, Messenger and Intercom, remembers them across all of them, and hands over to NDI staff with{" "}
-            <strong className="text-white">Aida</strong>, a copilot that drafts answers during live calls.
+            <strong className="text-heading">Aida</strong>, a copilot that drafts answers during live calls.
           </p>
-          <p className="mt-2 text-xs text-white/60">
+          <p className="mt-2 text-xs text-muted">
             NDI (New Digital Intelligence) runs it for itself: a live example of NDI&apos;s Multi-Channel Front Office Assistant.
           </p>
         </div>
+        <div className="h-1 bg-accent" />
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[220px_1fr]">

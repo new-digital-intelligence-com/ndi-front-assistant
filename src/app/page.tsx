@@ -2,6 +2,7 @@ import AssistantApp from "@/components/AssistantApp";
 import { AccountPanel } from "@/components/AccountPanel";
 import { ChannelLinks } from "@/components/ChannelLinks";
 import { IntercomMessenger } from "@/components/IntercomMessenger";
+import { NdiLogo } from "@/components/NdiLogo";
 
 const helpTopics = [
   "What AI Employees are and what they do",
@@ -18,12 +19,13 @@ const helpTopics = [
 export default function Home() {
   return (
     <>
-      <header className="bg-brand text-white">
+      <header className="bg-white">
         <div className="mx-auto flex h-[3.25rem] max-w-[1600px] items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="rounded-md bg-white px-2 py-0.5 text-lg font-extrabold tracking-wider text-brand">NDI</span>
-            <span className="text-lg font-semibold">Assistant</span>
-            <span className="hidden truncate rounded-full bg-white/10 px-3 py-1 text-xs text-white/80 md:block">
+            <NdiLogo tagline={false} className="h-7 w-auto shrink-0" />
+            <span className="h-6 w-px shrink-0 bg-line" aria-hidden="true" />
+            <span className="text-lg font-semibold text-heading">Assistant</span>
+            <span className="hidden truncate rounded-full bg-surface px-3 py-1 text-xs text-muted md:block">
               A live demo of NDI&apos;s Multi-Channel Front Office Assistant
             </span>
           </div>
@@ -32,12 +34,15 @@ export default function Home() {
               href="https://new-digital-intelligence.com/contact"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden text-sm text-white/80 hover:text-white sm:block"
+              className="hidden text-sm text-muted hover:text-heading sm:block"
             >
               Contact NDI ↗
             </a>
             <form action="/api/logout" method="post">
-              <button type="submit" className="rounded-full border border-white/30 px-3 py-1 text-xs text-white/80 hover:text-white">
+              <button
+                type="submit"
+                className="rounded-full border border-line px-3 py-1 text-xs text-heading transition hover:border-heading"
+              >
                 Log out
               </button>
             </form>
@@ -78,7 +83,7 @@ export default function Home() {
 
       <IntercomMessenger />
 
-      <footer className="mt-auto bg-brand text-white">
+      <footer className="mt-auto bg-heading text-white/80">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between lg:px-6">
           <span>NDI – New Digital Intelligence · new-digital-intelligence.com</span>
           <span>Built by NDI with ElevenLabs Agents</span>

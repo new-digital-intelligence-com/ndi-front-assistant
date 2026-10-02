@@ -103,8 +103,10 @@ npm run lint
   public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
 - Values still to fill in the code once known: `SUPPORT_EMAIL`, `TELEGRAM_BOT`, `PHONE_LINE`
   (`src/components/ChannelLinks.tsx`, buttons hidden while empty) and `DEMO_LINE` (`src/components/admin/CallListPanel.tsx`)
-- Colours: neutral Tailwind tokens (`brand`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`) with NDI's
-  navy `#002a6c` and blue `#1190cb` (`src/app/globals.css`)
+- Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
+  Tailwind tokens (`brand`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`) in `src/app/globals.css`:
+  `accent` = the logo red, `brand` = `#e00000` (buttons, tabs, links: readable at 4.5:1), black and neutral greys.
+  The logo is drawn by `src/components/NdiLogo.tsx` (Archivo Black, like the logo's capitals); emails use the same colours
 - Times: Central European (Europe/Zurich)
 
 **Shared with CDA on purpose**: the ElevenLabs account, the Google Cloud project `cda-email-509312` (OAuth client;
