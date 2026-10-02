@@ -3,7 +3,7 @@
 Read this first when continuing the project. Last updated: **2 October 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
 date when a feature or a channel's status changes). Full channel-by-channel setup: [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
-`<APP_URL>` = `https://ndi-assistant.up.railway.app` (planned Railway address).
+`<APP_URL>` = `https://ndi-assistant.up.railway.app` (Railway, live since 2 Oct 2026).
 
 > **This repository is public.** Never write API keys, tokens, passwords or secrets into any committed file.
 
@@ -22,7 +22,7 @@ and model. The staff copilot is **Aida**.
 
 | Channel | Status | How |
 |---|---|---|
-| Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ⏳ Code ready, to deploy on Railway | Next.js on Railway |
+| Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
 | Telegram | ⏳ New bot to create | Native ElevenLabs Telegram trigger |
 | Email | ⏳ Mailbox to choose | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo, switched per demo | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
@@ -117,11 +117,12 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 
 ## 5. Open tasks (in order)
 
-1. **GitHub**: the user creates the public repository → add it as `origin` and push `main` (author HelmiDev03).
-2. **Supabase**: the team's shared "pocs" project (the team's rule), own schema `fo01_ndi`: run `supabase/schema.sql`,
-   add `fo01_ndi` to Data API → Exposed schemas, then `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SCHEMA=fo01_ndi`.
-3. **Railway**: new service from the repository, variables from `.env.local`, domain `ndi-assistant.up.railway.app`
-   (CHANNEL_SETUP.md §3). If the domain must differ, update `APP_URL`, both tools and the post-call webhook.
+1. ✅ **GitHub** (2 Oct 2026): public `github.com/new-digital-intelligence-com/ndi-front-assistant`, `main` (HelmiDev03).
+2. ✅ **Supabase** (2 Oct 2026): the team's shared "pocs" project, own schema `fo01_ndi` (25 tables, exposed in the
+   Data API), NDI's own secret key `sb_secret_…` in `SUPABASE_SERVICE_ROLE_KEY`. Checked read-only through the API.
+3. ✅ **Railway** (2 Oct 2026): team NDI → project POCs → service `[FO-01] ndi-front-assistant` (europe-west4),
+   from GitHub `main`, domain `ndi-assistant.up.railway.app`, 29 variables from `.env.local` (empty ones left out).
+   Checked: pages, protections, `daily jobs: scheduled`, staff admin reading Supabase (CHANNEL_SETUP.md §3).
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.

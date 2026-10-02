@@ -197,10 +197,24 @@ calls YouTube during a conversation.
 
 ## 3. Railway (hosting)
 
-The web app runs on **Railway** from the public GitHub repository (the user creates both). Vercel is not used.
+The web app runs on **Railway** from the public GitHub repository
+`github.com/new-digital-intelligence-com/ndi-front-assistant` (branch `main`). Vercel is not used.
+
+**Where it is:** Railway team **NDI** → project **POCs** (shared with the team's other PoCs, each its own service)
+→ service **`[FO-01] ndi-front-assistant`**, environment `production`, region europe-west4 (Amsterdam), builder
+Railpack. Created on 2 Oct 2026 with the Railway CLI, because the dashboard's repository list only shows the
+organisation's repositories its GitHub App was given (the CLI's `railway add --repo` could link it anyway):
+
+```bash
+railway link --workspace NDI --project POCs --environment production --service "[FO-01] ndi-front-assistant"
+railway deployment list          # status of the latest deployments
+railway logs                     # the running app's logs
+railway variables --set "KEY=value"   # one variable (redeploys)
+```
 
 **Set it up from zero**
-1. **railway.com** → New Project → **Deploy from GitHub repo** → pick the NDI repository (branch `main`).
+1. **railway.com** → the POCs project → **New → GitHub repo** → pick the NDI repository (branch `main`), or with the
+   CLI: `railway add --service "[FO-01] ndi-front-assistant" --repo new-digital-intelligence-com/ndi-front-assistant --branch main`.
 2. The service → **Variables** → **Raw Editor** → paste the `KEY=value` lines of `.env.local` (empty values may
    stay empty until their channel is set up) → **Update Variables**.
 3. The service → **Settings → Networking → Generate Domain**, and change the name to **`ndi-assistant`** →
