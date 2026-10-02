@@ -131,12 +131,14 @@ export function AvatarPanel({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 bg-surface p-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface p-3 sm:p-6">
       <div
         className={
           status === "idle"
             ? "hidden"
-            : `relative overflow-hidden rounded-xl bg-heading shadow-sm ${orientation === "vertical" ? "mx-auto w-full max-w-sm" : ""}`
+            : `relative mx-auto w-full overflow-hidden rounded-2xl bg-heading shadow-md ${
+                orientation === "vertical" ? "max-w-sm" : "max-w-3xl 2xl:max-w-4xl"
+              }`
         }
       >
         <video
@@ -154,10 +156,10 @@ export function AvatarPanel({
 
       {status === "idle" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl bg-white p-8 text-center shadow-sm">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand/10 text-4xl">🧑‍💼</div>
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand/10 text-5xl">🧑‍💼</div>
           <div>
-            <h2 className="text-xl font-bold text-heading">Talk to Clara face to face</h2>
-            <p className="mt-1 max-w-md text-muted">
+            <h2 className="text-2xl font-bold text-heading">Talk to Clara face to face</h2>
+            <p className="mt-2 max-w-md text-base text-muted sm:text-lg">
               Start a video call with Clara. She listens, answers out loud and uses the same NDI knowledge as the chat.
             </p>
           </div>
@@ -194,7 +196,7 @@ export function AvatarPanel({
           )}
         </div>
       ) : (
-        <>
+        <div className="mx-auto w-full max-w-3xl space-y-4 2xl:max-w-4xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted">
               Allow the microphone and just talk. Calls end after {Math.round(maxSeconds / 60)} minutes.
@@ -214,7 +216,7 @@ export function AvatarPanel({
               <div ref={transcriptEndRef} />
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

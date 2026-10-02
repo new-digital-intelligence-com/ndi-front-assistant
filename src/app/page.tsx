@@ -11,20 +11,23 @@ const helpTopics = [
   "NDI's offices and contacts",
 ];
 
+// The page is built around Clara's panel: on a computer it fills the window below the header (the
+// sidebar scrolls on its own beside it), on a phone it fills the screen and the rest follows below.
+// The header is 3.5rem high; the heights below take it and the page padding off the window.
+
 export default function Home() {
   return (
     <>
-      <div className="bg-ink px-4 py-1.5 text-center text-xs text-white/80">
-        A live demo of NDI&apos;s Multi-Channel Front Office Assistant
-      </div>
-
       <header className="bg-brand text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <span className="rounded-md bg-white px-2.5 py-1 text-xl font-extrabold tracking-wider text-brand">NDI</span>
+        <div className="mx-auto flex h-[3.25rem] max-w-[1600px] items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="rounded-md bg-white px-2 py-0.5 text-lg font-extrabold tracking-wider text-brand">NDI</span>
             <span className="text-lg font-semibold">Assistant</span>
+            <span className="hidden truncate rounded-full bg-white/10 px-3 py-1 text-xs text-white/80 md:block">
+              A live demo of NDI&apos;s Multi-Channel Front Office Assistant
+            </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-4">
             <a
               href="https://new-digital-intelligence.com/contact"
               target="_blank"
@@ -43,34 +46,23 @@ export default function Home() {
         <div className="h-1 bg-accent" />
       </header>
 
-      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-4 py-4 lg:grid-cols-[320px_1fr] lg:gap-6">
-        {/* On a phone the assistant comes first, so nobody scrolls past the sidebar to reach it.
-            The flex wrapper lets the panel stretch to the full height of the row instead of
-            stopping at its minimum and leaving empty space beside the sidebar. */}
-        <div className="order-1 flex min-w-0 lg:order-2">
+      <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-4 p-3 sm:p-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-5 lg:px-6 xl:grid-cols-[330px_minmax(0,1fr)]">
+        {/* On a phone the assistant comes first, so nobody scrolls past the sidebar to reach it. */}
+        <div className="order-1 flex h-[calc(100dvh-5rem)] min-h-[540px] min-w-0 sm:h-[calc(100dvh-5.5rem)] lg:order-2">
           <AssistantApp />
         </div>
 
-        <aside className="order-2 space-y-3 lg:order-1 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
+        <aside className="order-2 space-y-3 lg:order-1 lg:h-[calc(100dvh-5.5rem)] lg:min-h-[540px] lg:overflow-y-auto lg:pr-1">
           <section className="rounded-xl bg-white p-4 shadow-sm">
-            <h1 className="text-xl font-bold text-heading">Hi, I&apos;m Clara</h1>
-            <p className="mt-1 text-sm text-muted">
-              NDI&apos;s virtual assistant. Ask about our AI Employees, send a document, or just talk.
-            </p>
-            <details className="group mt-3">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-heading">
-                What I can help with
-                <span className="float-right text-muted transition group-open:rotate-180">⌄</span>
-              </summary>
-              <ul className="mt-2 space-y-1.5 text-sm text-muted">
-                {helpTopics.map((topic) => (
-                  <li key={topic} className="flex gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
-                    {topic}
-                  </li>
-                ))}
-              </ul>
-            </details>
+            <h2 className="font-semibold text-heading">What Clara can help with</h2>
+            <ul className="mt-3 space-y-2 text-sm text-muted">
+              {helpTopics.map((topic) => (
+                <li key={topic} className="flex gap-2.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  {topic}
+                </li>
+              ))}
+            </ul>
           </section>
           <ChannelLinks />
           <AccountPanel />
@@ -87,7 +79,7 @@ export default function Home() {
       <IntercomMessenger />
 
       <footer className="mt-auto bg-brand text-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between lg:px-6">
           <span>NDI – New Digital Intelligence · new-digital-intelligence.com</span>
           <span>Built by NDI with ElevenLabs Agents</span>
         </div>

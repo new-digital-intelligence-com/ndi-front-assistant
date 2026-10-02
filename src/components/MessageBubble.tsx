@@ -7,7 +7,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed shadow-sm ${
+        className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed shadow-sm sm:text-base ${
           isUser ? "rounded-br-sm bg-heading text-white" : "rounded-bl-sm bg-white text-ink"
         }`}
       >

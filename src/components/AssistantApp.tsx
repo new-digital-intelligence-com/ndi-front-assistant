@@ -20,11 +20,14 @@ import {
 } from "./types";
 
 const SUGGESTIONS = [
-  "What is an AI Employee?",
-  "How does NDI's pricing work?",
-  "Which AI Employees help with customer service?",
-  "I'd like to book a demo.",
+  { icon: "🤖", text: "What is an AI Employee?" },
+  { icon: "💶", text: "How does NDI's pricing work?" },
+  { icon: "🎧", text: "Which AI Employees help with customer service?" },
+  { icon: "📅", text: "I'd like to book a demo." },
 ];
+
+/** Messages and the live transcript sit in a column that stays easy to read on a wide screen. */
+const COLUMN = "mx-auto w-full max-w-3xl 2xl:max-w-4xl";
 
 type PendingMessage = { text: string; files: File[] };
 
@@ -58,7 +61,8 @@ function Assistant() {
   const sessionKindRef = useRef<AssistantMode | null>(null);
   const pendingRef = useRef<PendingMessage | null>(null);
   const skipGreetingRef = useRef(false);
-  const listEndRef = useRef<HTMLDivElement>(null);
+  /** The conversation box on screen (chat or voice transcript); new messages scroll it, not the page. */
+  const scrollBoxRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addMessage = useCallback((role: ChatMessage["role"], text: string, attachments?: Attachment[]) => {
@@ -95,8 +99,10 @@ function Assistant() {
   const connected = status === "connected";
   const busy = status === "connecting";
 
+  // Only once there is a conversation: the welcome screen stays at its top.
   useEffect(() => {
-    listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const box = scrollBoxRef.current;
+    if (box && (messages.length > 0 || awaitingReply)) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
   }, [messages, awaitingReply]);
 
   // Fallback: if the agent sends no greeting, still deliver the first message shortly after connecting.
@@ -240,16 +246,24 @@ function Assistant() {
   }
 
   return (
-    <section className="flex min-h-[640px] flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="flex rounded-full bg-line p-1" role="tablist" aria-label="Assistant mode">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-black/5">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-2.5 sm:px-5 sm:py-3">
+        <div className="hidden min-w-0 items-center gap-3 md:flex">
+          <ClaraBadge />
+          <div className="min-w-0 leading-tight">
+            <p className="font-semibold text-heading">Clara</p>
+            <p className="truncate text-xs text-muted">NDI&apos;s virtual assistant</p>
+          </div>
+          {(mode === "chat" || mode === "voice") && <StatusPill status={status} />}
+        </div>
+        <div className="grid w-full grid-cols-4 rounded-full bg-line p-1 md:flex md:w-auto" role="tablist" aria-label="Assistant mode">
           {(["chat", "voice", "avatar", "aida"] as const).map((item) => (
             <button
               key={item}
               role="tab"
               aria-selected={mode === item}
               onClick={() => switchMode(item)}
-              className={`rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-5 ${
+              className={`rounded-full px-2 py-2 text-sm font-semibold transition sm:px-5 sm:text-[15px] ${
                 mode === item ? "bg-brand text-white shadow" : "text-ink hover:text-heading"
               }`}
             >
@@ -257,7 +271,6 @@ function Assistant() {
             </button>
           ))}
         </div>
-        {(mode === "chat" || mode === "voice") && <StatusPill status={status} />}
       </div>
 
       {error && (
@@ -271,144 +284,149 @@ function Assistant() {
 
       {mode === "chat" ? (
         <>
-          <div className="flex-1 space-y-4 overflow-y-auto bg-surface px-4 py-5">
-            {messages.length === 0 && (
-              <div className="space-y-4">
-                <MessageBubble
-                  message={{
-                    id: "welcome",
-                    role: "agent",
-                    text: "Hello, I'm Clara, NDI's virtual assistant. Ask me anything about NDI and our AI Employees, or attach a PDF or a screenshot, for example a process description or an RFP.",
-                  }}
-                />
-                <div className="flex flex-wrap gap-2">
-                  {SUGGESTIONS.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => handleSend(suggestion)}
-                      disabled={busy}
-                      className="rounded-full border border-brand/40 bg-white px-3 py-1.5 text-sm text-ink transition hover:border-brand hover:text-brand disabled:opacity-50"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
+          <div ref={scrollBoxRef} className="min-h-0 flex-1 overflow-y-auto bg-surface px-3 py-5 sm:px-6 sm:py-8">
+            <div className={`${COLUMN} space-y-4`}>
+              {messages.length === 0 && (
+                <div className="flex flex-col items-center pb-4 pt-2 text-center sm:pt-8">
+                  <ClaraBadge large />
+                  <h1 className="mt-4 text-2xl font-bold text-heading sm:text-3xl">Hi, I&apos;m Clara</h1>
+                  <p className="mt-2 max-w-2xl text-base text-muted sm:text-lg">
+                    NDI&apos;s virtual assistant. Ask me anything about NDI and our AI Employees, or attach a PDF or a
+                    screenshot, for example a process description or an RFP.
+                  </p>
+                  <div className="mt-6 grid w-full gap-3 text-left sm:mt-10 sm:grid-cols-2">
+                    {SUGGESTIONS.map((suggestion) => (
+                      <button
+                        key={suggestion.text}
+                        onClick={() => handleSend(suggestion.text)}
+                        disabled={busy}
+                        className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-left text-[15px] font-medium text-heading shadow-sm transition hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-md disabled:opacity-50 sm:py-3.5"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-xl" aria-hidden="true">
+                          {suggestion.icon}
+                        </span>
+                        {suggestion.text}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {messages.map((message, index) => {
-              // 👍 / 👎 under each answer to a question (not under the greeting).
-              const asked = messages.slice(0, index).findLast((earlier) => earlier.role === "user");
-              return (
-                <div key={message.id}>
-                  <MessageBubble message={message} />
-                  {message.role === "agent" && asked && conversationId && message.text && (
-                    <AnswerFeedback conversationId={conversationId} messageId={message.id} question={asked.text} answer={message.text} />
-                  )}
-                </div>
-              );
-            })}
-            {(awaitingReply || busy) && <TypingIndicator />}
-            <div ref={listEndRef} />
+              )}
+              {messages.map((message, index) => {
+                // 👍 / 👎 under each answer to a question (not under the greeting).
+                const asked = messages.slice(0, index).findLast((earlier) => earlier.role === "user");
+                return (
+                  <div key={message.id}>
+                    <MessageBubble message={message} />
+                    {message.role === "agent" && asked && conversationId && message.text && (
+                      <AnswerFeedback conversationId={conversationId} messageId={message.id} question={asked.text} answer={message.text} />
+                    )}
+                  </div>
+                );
+              })}
+              {(awaitingReply || busy) && <TypingIndicator />}
+            </div>
           </div>
 
-          <div className="border-t border-line bg-white p-3">
-            {files.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {files.map((file, index) => (
-                  <span
-                    key={`${file.name}-${index}`}
-                    className="flex items-center gap-2 rounded-full bg-line px-3 py-1 text-xs text-ink"
-                  >
-                    {file.type === "application/pdf" ? "📄" : "🖼️"} {file.name}
-                    <button
-                      onClick={() => setFiles(files.filter((_, i) => i !== index))}
-                      aria-label={`Remove ${file.name}`}
-                      className="font-bold text-muted hover:text-brand"
+          <div className="border-t border-line bg-white px-3 py-3 sm:px-6 sm:py-4">
+            <div className={COLUMN}>
+              {files.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {files.map((file, index) => (
+                    <span
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-2 rounded-full bg-line px-3 py-1 text-xs text-ink"
                     >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <form
-              className="flex items-end gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                handleSend();
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_FILE_TYPES}
-                multiple
-                className="hidden"
-                onChange={(event) => handleFilesPicked(event.target.files)}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-xl text-ink transition hover:border-brand hover:text-brand"
-                aria-label="Attach an image or PDF"
-                title="Attach an image or PDF"
-              >
-                📎
-              </button>
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    handleSend();
-                  }
+                      {file.type === "application/pdf" ? "📄" : "🖼️"} {file.name}
+                      <button
+                        onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                        aria-label={`Remove ${file.name}`}
+                        className="font-bold text-muted hover:text-brand"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <form
+                className="flex items-end gap-2 rounded-2xl border border-line bg-white p-1.5 shadow-sm transition focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/10"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSend();
                 }}
-                rows={1}
-                placeholder="Type your question…"
-                className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-line px-4 py-2.5 text-[15px] outline-none focus:border-brand"
-              />
-              <button
-                type="submit"
-                disabled={busy || (!draft.trim() && files.length === 0)}
-                className="h-11 shrink-0 rounded-full bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-40"
               >
-                Send
-              </button>
-            </form>
-            {messages.length > 0 && (
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_FILE_TYPES}
+                  multiple
+                  className="hidden"
+                  onChange={(event) => handleFilesPicked(event.target.files)}
+                />
                 <button
-                  onClick={() => {
-                    endSession();
-                    setConversationId(null);
-                    setMessages([]);
-                  }}
-                  className="text-xs text-muted underline hover:text-brand"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl text-ink transition hover:bg-surface hover:text-brand"
+                  aria-label="Attach an image or PDF"
+                  title="Attach an image or PDF"
                 >
-                  Start a new conversation
+                  📎
                 </button>
-                {conversationId && (
-                  <EmailTranscriptForm
-                    key={conversationId}
-                    onSend={emailTranscript}
-                    note="The chat ends first, so the email has every message."
-                  />
-                )}
-              </div>
-            )}
+                <textarea
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  rows={1}
+                  placeholder="Type your question…"
+                  className="field-sizing-content max-h-48 min-h-11 flex-1 resize-none bg-transparent px-2 py-2.5 text-base outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={busy || (!draft.trim() && files.length === 0)}
+                  className="h-11 shrink-0 rounded-xl bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-40"
+                >
+                  Send
+                </button>
+              </form>
+              {messages.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <button
+                    onClick={() => {
+                      endSession();
+                      setConversationId(null);
+                      setMessages([]);
+                    }}
+                    className="text-xs text-muted underline hover:text-brand"
+                  >
+                    Start a new conversation
+                  </button>
+                  {conversationId && (
+                    <EmailTranscriptForm
+                      key={conversationId}
+                      onSend={emailTranscript}
+                      note="The chat ends first, so the email has every message."
+                    />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </>
       ) : mode === "voice" ? (
-        <div className="flex flex-1 flex-col">
-          <div className="flex flex-col items-center px-4 pt-6">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-col items-center px-4 pt-4 sm:pt-8">
             <VoiceOrb
               active={connected}
               isSpeaking={isSpeaking}
               getInputVolume={conversation.getInputVolume}
               getOutputVolume={conversation.getOutputVolume}
             />
-            <p className="text-sm text-muted">
+            <p className="text-base text-muted">
               {connected
                 ? isSpeaking
                   ? "Clara is speaking…"
@@ -449,21 +467,24 @@ function Assistant() {
               )}
             </div>
           </div>
-          <div className="mt-6 flex-1 space-y-3 overflow-y-auto border-t border-line bg-surface px-4 py-4">
-            {messages.length === 0 ? (
-              <p className="text-center text-sm text-muted">The live transcript will appear here.</p>
-            ) : (
-              messages.map((message) => <MessageBubble key={message.id} message={message} />)
-            )}
-            <div ref={listEndRef} />
+          <div ref={scrollBoxRef} className="mt-6 min-h-0 flex-1 overflow-y-auto border-t border-line bg-surface px-3 py-4 sm:px-6">
+            <div className={`${COLUMN} space-y-3`}>
+              {messages.length === 0 ? (
+                <p className="text-center text-sm text-muted">The live transcript will appear here.</p>
+              ) : (
+                messages.map((message) => <MessageBubble key={message.id} message={message} />)
+              )}
+            </div>
           </div>
           {conversationId && messages.length > 0 && (
-            <div className="border-t border-line bg-white px-4 py-3">
-              <EmailTranscriptForm
-                key={conversationId}
-                onSend={emailTranscript}
-                note={connected ? "The call ends first, so the email has everything that was said." : undefined}
-              />
+            <div className="border-t border-line bg-white px-3 py-3 sm:px-6">
+              <div className={COLUMN}>
+                <EmailTranscriptForm
+                  key={conversationId}
+                  onSend={emailTranscript}
+                  note={connected ? "The call ends first, so the email has everything that was said." : undefined}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -471,11 +492,25 @@ function Assistant() {
         <AvatarPanel language={callLanguage} onLanguageChange={setCallLanguage} />
       ) : (
         // A live call with NDI staff. From here someone is always a customer: the staff side is /admin.
-        <div className="flex-1 overflow-y-auto bg-surface p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-surface p-4 sm:p-8">
           <AidaJoin initialCode="" />
         </div>
       )}
     </section>
+  );
+}
+
+/** Clara's round badge: in the panel header, and large on the welcome screen. */
+function ClaraBadge({ large = false }: { large?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1190cb,#002a6c)] font-bold text-white shadow ${
+        large ? "h-16 w-16 text-3xl sm:h-20 sm:w-20 sm:text-4xl" : "h-10 w-10 text-lg"
+      }`}
+    >
+      C
+    </span>
   );
 }
 

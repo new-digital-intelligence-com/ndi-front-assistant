@@ -33,10 +33,10 @@ export function VoiceOrb({ active, isSpeaking, getInputVolume, getOutputVolume }
   }, [active, isSpeaking, getInputVolume, getOutputVolume]);
 
   return (
-    <div className="flex h-56 items-center justify-center">
+    <div className="flex h-48 items-center justify-center sm:h-64">
       <div
         ref={orbRef}
-        className={`h-36 w-36 rounded-full transition-[background] duration-500 ${
+        className={`h-32 w-32 rounded-full transition-[background] duration-500 sm:h-44 sm:w-44 ${
           active
             ? isSpeaking
               ? "bg-[radial-gradient(circle_at_35%_30%,#7cc8ee,#1190cb_55%,#002a6c)]"
