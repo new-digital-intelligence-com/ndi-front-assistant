@@ -452,7 +452,7 @@ Conversation ends → post-call webhook → one short note (max 700 characters) 
   *"AI SDR – Acme GmbH (Head of Sales), outbound to DACH, wants a demo in November"* → `customer_interests` (one row
   per topic, the part before the dash; the newest description wins). `customer_lookup` returns them as `interests`
 - **Anonymous people** are remembered per channel (same Telegram chat, same browser, same phone number); their
-  notes move to the account when they link. **Robots get no record**
+  notes and interests move to the account when they link. **Robots get no record**
 - **Stored**: no messages. `customer_conversations` (conversation → customer), `customer_notes`, `customer_interests`.
   Full transcripts stay in ElevenLabs
 

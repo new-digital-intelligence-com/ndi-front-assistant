@@ -369,9 +369,9 @@ export async function redeemLinkCode(rawCode: string, identity: Identity): Promi
 
 /**
  * A channel may already belong to an anonymous record, created while the person chatted or called
- * before they had an account. Its notes and conversations move to `customerId` and the record is
- * dropped, so nothing they told us before is lost. Returns "account" when the channel belongs to
- * someone else's account (left alone), "ok" otherwise.
+ * before they had an account. Its notes, conversations and interests move to `customerId` and the
+ * record is dropped, so nothing they told us before is lost. Returns "account" when the channel
+ * belongs to someone else's account (left alone), "ok" otherwise.
  */
 async function adoptAnonymousOwner(identity: Identity, customerId: string): Promise<"ok" | "account"> {
   const existing = await findByChannel(identity);
@@ -384,8 +384,28 @@ async function adoptAnonymousOwner(identity: Identity, customerId: string): Prom
       body: JSON.stringify({ customer_id: customerId }),
     });
   }
+  await moveInterests(existing.customer.id, customerId).catch((error) => console.error("moving interests failed", error));
   await rest(`customers?id=eq.${q(existing.customer.id)}`, { method: "DELETE", prefer: "return=minimal" });
   return "ok";
+}
+
+type Interest = { topic: string; description: string; updated_at: string };
+
+/** Interests move too. Where both records have the same topic, the newer description wins, as everywhere. */
+async function moveInterests(fromId: string, toId: string) {
+  const [theirs, ours] = await Promise.all(
+    [fromId, toId].map((id) => rest<Interest[]>(`customer_interests?customer_id=eq.${q(id)}&select=topic,description,updated_at`)),
+  );
+  const newer = theirs.filter((interest) => {
+    const own = ours.find((row) => row.topic === interest.topic);
+    return !own || Date.parse(interest.updated_at) > Date.parse(own.updated_at);
+  });
+  if (!newer.length) return;
+  await rest("customer_interests?on_conflict=customer_id,topic", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates,return=minimal",
+    body: JSON.stringify(newer.map((interest) => ({ ...interest, customer_id: toId }))),
+  });
 }
 
 /**
