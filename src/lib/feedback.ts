@@ -322,7 +322,7 @@ type DraftRow = {
 
 /**
  * Email draft mode: finds drafts staff have since sent, and compares what went out with Clara's
- * draft. Run when staff open the Knowledge tab and by the daily cron. A draft deleted without being
+ * draft. Run when staff open the Knowledge page and by the daily cron. A draft deleted without being
  * sent is simply forgotten.
  */
 export async function checkSentDrafts(): Promise<number> {

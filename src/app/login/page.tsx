@@ -13,18 +13,23 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const nextPath = safeNextPath(typeof next === "string" ? next : undefined);
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-heading px-4 py-12">
-      <div className="w-full max-w-sm rounded-2xl border-t-4 border-accent bg-white p-8 shadow-xl">
-        <NdiLogo className="h-24 w-auto" />
-        <p className="mt-4 text-lg font-semibold text-heading">Assistant</p>
-        <p className="mt-2 text-xs text-muted">A live demo of NDI&apos;s Multi-Channel Front Office Assistant</p>
-        {sitePasswordConfigured() ? (
-          <LoginForm nextPath={nextPath} />
-        ) : (
-          <p className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-brand-dark">
-            This demo is locked: the SITE_PASSWORD environment variable is not set.
+    <main className="bg-night-hero flex flex-1 items-center justify-center px-4 py-12">
+      <div className="animate-fade-up w-full max-w-sm">
+        <div className="rounded-3xl bg-white p-8 shadow-card">
+          <NdiLogo className="h-20 w-auto" />
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-heading">Meet Clara</h1>
+          <p className="mt-1 text-sm text-muted">
+            NDI&apos;s virtual assistant: a live demo of the Multi-Channel Front Office Assistant.
           </p>
-        )}
+          {sitePasswordConfigured() ? (
+            <LoginForm nextPath={nextPath} />
+          ) : (
+            <p className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-brand-dark">
+              This demo is locked: the SITE_PASSWORD environment variable is not set.
+            </p>
+          )}
+        </div>
+        <p className="mt-5 text-center text-xs text-white/50">NDI – New Digital Intelligence · new-digital-intelligence.com</p>
       </div>
     </main>
   );

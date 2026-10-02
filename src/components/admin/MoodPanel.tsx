@@ -156,12 +156,9 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
   return (
     <div className="space-y-4" onMouseLeave={() => setTip(null)}>
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
-        <div>
-          <h2 className="text-lg font-bold text-heading">😊 Customer mood</h2>
-          <p className="text-xs text-muted">
-            ElevenLabs scores every conversation with Clara when it ends; Claude rates emails and Aida calls as they happen.
-          </p>
-        </div>
+        <p className="max-w-xl text-sm text-muted">
+          ElevenLabs scores every conversation with Clara when it ends; Claude rates emails and Aida calls as they happen.
+        </p>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-full bg-line p-1" role="group" aria-label="Period">
             {([7, 30] as const).map((option) => (

@@ -33,11 +33,11 @@ const SECTIONS: { id: string; title: string }[] = [
 export default function DocsPage() {
   return (
     <div className="flex-1 bg-surface">
-      <header className="bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-8">
+      <header className="border-b border-line bg-white bg-[radial-gradient(700px_260px_at_100%_0%,rgb(254_1_0/0.07),transparent_70%)]">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
           <div className="flex flex-wrap items-end gap-4">
             <NdiLogo className="h-16 w-auto" />
-            <span className="text-lg font-semibold text-heading">Assistant · Documentation</span>
+            <span className="text-lg font-semibold tracking-tight text-heading">Assistant · Documentation</span>
           </div>
           <p className="mt-4 max-w-3xl text-ink">
             One AI assistant, <strong className="text-heading">Clara</strong>, answers NDI&apos;s customers on the website, the phone,
@@ -48,7 +48,6 @@ export default function DocsPage() {
             NDI (New Digital Intelligence) runs it for itself: a live example of NDI&apos;s Multi-Channel Front Office Assistant.
           </p>
         </div>
-        <div className="h-1 bg-accent" />
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[220px_1fr]">
@@ -68,7 +67,7 @@ export default function DocsPage() {
             <Link className="underline" href="/">
               /
             </Link>{" "}
-            and the staff page at{" "}
+            and the staff console at{" "}
             <Link className="underline" href="/admin">
               /admin
             </Link>{" "}
@@ -108,12 +107,13 @@ Hosted page / widget ───────────────┘         �
             <List
               items={[
                 <>
-                  <B>Customer site</B> (<code>/</code>, site password): chat, voice, avatar, the Aida tab, the customer account and
-                  links to every channel.
+                  <B>Customer site</B> (site password): the chat at <code>/</code>, a voice call at <code>/voice</code>, the video
+                  avatar at <code>/avatar</code> and a live call with staff at <code>/aida</code>, plus the customer account and links to
+                  every channel.
                 </>,
                 <>
-                  <B>Staff page</B> (<code>/admin</code>, staff password): Aida rooms, customers, mood, call list, knowledge and the
-                  email switch.
+                  <B>Staff console</B> (<code>/admin</code>, staff password): Aida rooms, customers, mood, call list, knowledge and
+                  replies, each at its own address (<code>/admin/rooms</code>, <code>/admin/customers</code> and so on).
                 </>,
                 <>
                   <B>This documentation</B> (<code>/docs</code>, open to everyone).
@@ -154,14 +154,18 @@ Hosted page / widget ───────────────┘         �
           </Section>
 
           <Section id="website" title="Website">
-            <P>The customer site (password protected) has four tabs, all talking to the same Clara:</P>
+            <P>
+              The customer site (password protected) has four pages, one for each way of talking to the same Clara. A menu on the
+              left switches between them (on a phone: a bar at the bottom). Moving to another page ends the conversation on
+              screen; the language chosen for a voice or avatar call is kept.
+            </P>
             <Table
-              head={["Tab", "What happens"]}
+              head={["Page", "What happens"]}
               rows={[
-                ["💬 Chat", "Typed chat. The customer can attach photos or PDFs (a process description, an RFP, a screenshot); each answer has 👍 / 👎 buttons."],
-                ["🎙️ Voice", "A spoken call with Clara in the browser, with a live transcript. English, German, Italian or French."],
-                ["🧑‍💼 Avatar", "The same conversation with a video face (NDI's Anam avatar) that listens and speaks."],
-                ["📞 Aida", "A live call with NDI staff: open a room or join one with a code (see Aida rooms)."],
+                ["💬 Chat (/)", "Typed chat. The customer can attach photos or PDFs (a process description, an RFP, a screenshot); each answer has 👍 / 👎 buttons."],
+                ["🎙️ Voice call (/voice)", "A spoken call with Clara in the browser, with a live transcript. English, German, Italian or French."],
+                ["🎥 Video avatar (/avatar)", "The same conversation with a video face (NDI's Anam avatar) that listens and speaks."],
+                ["📞 Live call (/aida)", "A live call with NDI staff, helped by Aida: open a room or join one with a code (see Aida rooms)."],
               ]}
             />
             <List
@@ -204,7 +208,7 @@ Hosted page / widget ───────────────┘         �
 7. The email is labelled in Gmail: Replied · Draft ready · Skipped · Failed · Upset customer`}</Flow>
             <List
               items={[
-                "Auto or draft: staff switch it on /admin → Email. In draft mode staff open the email, check Clara's draft and press Send.",
+                "Auto or draft: staff switch it on /admin/replies. In draft mode staff open the email, check Clara's draft and press Send.",
                 "What staff change in a draft is compared with what Clara wrote, and a real correction becomes a lesson (see Clara learns).",
                 "Clara reads up to 6,000 characters of an email; she cannot open attachments. Mail older than 24 hours is never answered.",
                 "The daily job renews Gmail's watch, so nothing is missed.",
@@ -226,7 +230,7 @@ Hosted page / widget ───────────────┘         �
               Clara writes. Photos and files are not passed on: Clara asks the customer to type the details.
             </P>
             <P>
-              Like email, each of the two has a switch on /admin → ✉️ Replies: <B>Send automatically</B>, or <B>Draft for staff</B>.
+              Like email, each of the two has a switch on /admin/replies: <B>Send automatically</B>, or <B>Draft for staff</B>.
               A draft waits there next to the customer&apos;s message; staff change it if needed and send it, or discard it. Meta
               only takes a reply within 24 hours of the customer&apos;s last message, so the page shows how long a draft can wait.
             </P>
@@ -294,8 +298,8 @@ End of every conversation   → post-call webhook  → one short note, their int
             <Table
               head={["", "Gets in with", "Sees"]}
               rows={[
-                ["Staff", "/admin → staff password → Aida rooms", "Everything, including Aida's drafts and the customer's mood"],
-                ["Customer", "The Aida tab on the site, or an invite link with the room code", "Talk, chat and transcript — never drafts, never moods"],
+                ["Staff", "/admin/rooms → staff password", "Everything, including Aida's drafts and the customer's mood"],
+                ["Customer", "The Live call page on the site (/aida), or an invite link with the room code", "Talk, chat and transcript — never drafts, never moods"],
               ]}
             />
             <List
@@ -311,16 +315,21 @@ End of every conversation   → post-call webhook  → one short note, their int
           </Section>
 
           <Section id="admin" title="Admin page">
-            <P>The staff side, at /admin, behind its own staff password (the customer site password does not open it).</P>
+            <P>
+              The staff console, at /admin, behind its own staff password (the customer site password does not open it). A menu
+              on the left opens each section at its own address (on a phone: the Menu button). A section stays open in the
+              background once visited, so moving to Customers does not drop a staff member out of an Aida call or a hand-over.
+              The sign-in belongs to one browser tab: a section opened in a new tab asks for the staff password again.
+            </P>
             <Table
-              head={["Tab", "What staff do"]}
+              head={["Section", "What staff do"]}
               rows={[
-                ["📞 Aida rooms", "Create, join and close rooms; read and email closed ones."],
-                ["👥 Customers", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, the AI Employees they asked about, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
-                ["😊 Mood", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
-                ["📲 Call list", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
-                ["📚 Knowledge", "Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
-                ["✉️ Replies", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
+                ["📞 Aida rooms (/admin/rooms)", "Create, join and close rooms; read and email closed ones."],
+                ["👥 Customers (/admin/customers)", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, the AI Employees they asked about, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
+                ["😊 Mood (/admin/mood)", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
+                ["📲 Call list (/admin/calls)", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
+                ["📚 Knowledge (/admin/knowledge)", "Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
+                ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
               ]}
             />
             <P>The Claude insights are written only when a staff member clicks, and nothing is stored.</P>
@@ -345,7 +354,7 @@ End of every conversation   → post-call webhook  → one short note, their int
               items={[
                 "For any number, staff can tick “Hand the call over to a colleague” and give the colleague's name and phone number, and if they like when Clara should hand over (for example “when they want a demo”).",
                 "When that moment comes, Clara says she is connecting the customer, who hears hold music while the colleague's phone rings from NDI's number. The colleague hears who is waiting and what Clara learnt, and presses any key to take the call. Clara then leaves the call: it is the customer and the colleague (a Twilio conference).",
-                "While they talk, /admin shows the conversation live (Twilio transcribes both voices) with Aida's suggestions for what the colleague could say next, what Clara learnt and what NDI already knows about the customer.",
+                "While they talk, /admin/calls shows the conversation live (Twilio transcribes both voices) with Aida's suggestions for what the colleague could say next, what Clara learnt and what NDI already knows about the customer.",
                 "If the colleague does not take the call, the customer hears that NDI will call back. Afterwards the talk becomes one short note in the customer's memory, and the list moves on to the next number.",
               ]}
             />
@@ -356,7 +365,7 @@ End of every conversation   → post-call webhook  → one short note, their int
             <H3>Questions she could not answer</H3>
             <List
               items={[
-                "After every conversation, ElevenLabs' analysis lists the questions Clara could not answer from NDI's knowledge. They appear on /admin → 📚 Knowledge with the channel.",
+                "After every conversation, ElevenLabs' analysis lists the questions Clara could not answer from NDI's knowledge. They appear on /admin/knowledge with the channel.",
                 "✨ Group and suggest answers: Claude merges questions that ask the same thing and suggests wording, marking [check: …] wherever an NDI fact is needed; it never invents one.",
                 "Approve and teach Clara: the answer goes into the “NDI approved FAQ”, which is always in Clara's (and Aida's) context, so it works from her very next conversation.",
               ]}
@@ -392,14 +401,14 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["5. Clara reacts", "When a customer sounds frustrated, Clara apologises once, slows down, gives one clear next step and offers a person. Her promise of a follow-up is recorded and reaches staff through the alert."],
               ]}
             />
-            <H3>The 😊 Mood tab on /admin</H3>
+            <H3>The Mood page (/admin/mood)</H3>
             <List
               items={[
                 "The share of positive, neutral and negative conversations and the average frustration, for 7 or 30 days.",
                 "Mood by channel, and conversations per day.",
                 "The upset emails (sender, subject, why, Open in Gmail) and the frustrated lines in Aida rooms, listed one by one.",
                 "Unhappy conversations: frustration of 60% or more, a very negative moment, or a promised follow-up. Each shows the customer, the channel, the message where it turned, a small mood curve and a Mark followed up button.",
-                "Import past conversations fills in the last 30 days; opening the tab and a daily job bring in new ones (reading from ElevenLabs is free, Claude's rating costs a fraction of a cent).",
+                "Import past conversations fills in the last 30 days; opening the page and a daily job bring in new ones (reading from ElevenLabs is free, Claude's rating costs a fraction of a cent).",
               ]}
             />
             <P>

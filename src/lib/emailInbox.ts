@@ -305,7 +305,7 @@ async function handleIncoming(gmailId: string) {
           text: withoutQuotedHistory(email.text),
           receivedAt: email.receivedAt,
           mood,
-        }).catch((error) => console.error("email mood not added to the Mood tab", error))
+        }).catch((error) => console.error("email mood not added to the Mood page", error))
       : Promise.resolve(),
   ]);
 }

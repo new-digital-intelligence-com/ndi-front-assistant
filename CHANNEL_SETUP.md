@@ -42,14 +42,14 @@ second agent, Aida, drafts answers for staff).
 | Channel | Status | How it reaches Clara |
 |---|---|---|
 | Website `<APP_URL>` (Chat, Voice, Avatar, Aida) | ✅ Live on Railway (2 Oct 2026) | Next.js app on Railway, site password |
-| Admin `<APP_URL>/admin` | ✅ Live | Staff page, Aida staff password |
+| Admin `<APP_URL>/admin` | ✅ Live | Staff console, one address per section, Aida staff password |
 | Docs `<APP_URL>/docs` | ✅ Live | Public documentation page, no password |
 | Telegram | ✅ **@ndi2026bot** (tested 2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (tested 2 Oct 2026) | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram **@new_digital_intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
 | Facebook Messenger, Page **New Digital Intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
 | Phone | ⏳ New Twilio number to buy | Imported into ElevenLabs natively |
-| Video avatar (Avatar tab) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
+| Video avatar (`/avatar`) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
 | Slack, WhatsApp | Not built | Section 16 |
 | Alexa | Removed | Not part of NDI's assistant |
@@ -57,7 +57,7 @@ second agent, Aida, drafts answers for staff).
 
 ```
  Website chat / voice / files ─────────►┐
- Avatar tab ─► Anam (video face) ───────►│
+ Avatar page ─► Anam (video face) ──────►│
  Telegram bot ──────────────────────────►│   ElevenLabs agent "Clara"
  Email ─► Gmail ─► web app ─────────────►│   Gemini 3.7 Flash · NDI knowledge (RAG)
  Instagram / Messenger ─► web app ──────►│
@@ -66,7 +66,7 @@ second agent, Aida, drafts answers for staff).
                                              │ 2 tools + post-call webhook
                                              ▼
  web app (Railway) ── Supabase: customers, notes, email log, Aida rooms, Instagram/Messenger threads
- Aida tab (customers) + /admin (staff) ── LiveKit calls, Aida drafts for staff
+ Live call page (customers) + /admin (staff) ── LiveKit calls, Aida drafts for staff
 ```
 
 **Words used in this guide**
@@ -163,7 +163,7 @@ a date or a finished product for them.
 2. **Attach** every synced document to **Clara and to Aida** (both, so Aida's drafts say the same as Clara), usage
    mode *auto* (RAG). RAG settings are already like CDA's: embedding `multilingual_e5_large_instruct`, 50,000
    characters, 20 chunks.
-3. The web app adds **"NDI approved FAQ"** itself (answers staff approve on `/admin` → 📚 Knowledge, usage mode
+3. The web app adds **"NDI approved FAQ"** itself (answers staff approve on `/admin/knowledge`, usage mode
    *prompt*). Don't edit or attach it by hand. It needs at least one other document on each agent first.
 
 Rules learnt on CDA: never "crawl entire website"; a synced document must also be **attached** to the agent.
@@ -349,7 +349,7 @@ normal reply in the same email thread.
 **Using it**
 - **Labels in Gmail** (under "Clara"): **Replied** · **Draft ready** (open the email, check the draft, press Send) ·
   **Skipped** (a robot or newsletter) · **Failed** (answer it by hand) · **Upset customer**.
-- **Switch auto / draft**: `/admin` → **✉️ Replies** tab. It is read for every reply.
+- **Switch auto / draft**: `/admin/replies`. It is read for every reply.
 
 **Good to know**
 - Each email is a separate conversation for Clara; earlier messages are quoted in the email itself.
@@ -401,13 +401,13 @@ photos or files. The Meta app must stay **Published**. Don't put "CDA" in any Me
 
 ### Auto or draft (like email)
 
-Each channel has its own switch on `/admin` → **✉️ Replies**: **Send automatically**, or **Draft for staff**
+Each channel has its own switch on `/admin/replies`: **Send automatically**, or **Draft for staff**
 (`instagram_mode` / `messenger_mode`, placeholders on the **Aida** agent like `email_mode`, `src/lib/replyMode.ts`;
 anything unreadable counts as draft). In draft mode Clara's answer is not sent: it waits in `social_drafts` with the
 customer's latest message (kept on the thread only in draft mode), and staff change it if needed and **Send** it, or
 **Discard** it (`src/lib/socialDrafts.ts`). Meta only takes a reply within **24 hours** of the customer's last
 message: the page shows the time, and Meta's refusal is shown in plain words. What staff changed counts in the
-weekly "sent unchanged" line and, when a fact changed, waits under /admin → 📚 Knowledge → **Instagram & Messenger
+weekly "sent unchanged" line and, when a fact changed, waits under `/admin/knowledge` → **Instagram & Messenger
 corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 ---
@@ -433,22 +433,27 @@ corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 ## 9. Website
 
-**What the customer does:** opens `<APP_URL>`, types the **site password**, and uses one of four tabs. The website
-talks to Clara directly through ElevenLabs' SDK.
+**What the customer does:** opens `<APP_URL>`, types the **site password**, and uses one of four pages, picked in
+the menu on the left (on a phone: the bar at the bottom). The website talks to Clara directly through ElevenLabs' SDK.
 
-| Tab | What happens |
+| Page | What happens |
 |---|---|
-| 💬 **Chat** | Typed chat with Clara; the customer can attach photos or PDFs (3 per message, 10 MB each) |
-| 🎙️ **Voice** | A spoken call with Clara in the browser, with a live transcript |
-| 🧑‍💼 **Avatar** | A video call with Clara's face (below) |
-| 📞 **Aida** | A live call with NDI staff: join with a code or open a room (section 11) |
+| 💬 **Chat** `/` | Typed chat with Clara; the customer can attach photos or PDFs (3 per message, 10 MB each) |
+| 🎙️ **Voice call** `/voice` | A spoken call with Clara in the browser, with a live transcript |
+| 🎥 **Video avatar** `/avatar` | A video call with Clara's face (below) |
+| 📞 **Live call** `/aida` | A live call with NDI staff, helped by Aida: join with a code or open a room (section 11) |
+
+**How it is built:** the four pages share one layout (`src/app/(site)/layout.tsx` → `src/components/site/SiteShell.tsx`,
+the list of pages in `src/components/site/modes.ts`). The layout holds the assistant, keyed by the page, so moving
+to another page ends the conversation on screen (as the old tabs did) while the call language stays. A direct link
+such as `<APP_URL>/avatar` opens that page after the password, which is handy for a demo.
 
 **Voice and Avatar language:** an **English | Deutsch | Italiano | Français** switch above the start button sets the
 language Clara starts in (`src/components/LanguagePicker.tsx`). During the call she follows the customer by herself.
 
 Also on the page: **Your NDI account** (link channels with a code, section 10), buttons that open Email, Telegram,
 Instagram, Messenger and the phone line (each appears once its value is filled in, `src/components/ChannelLinks.tsx`),
-and **Email me this conversation**. The staff page `/admin` is not linked from here.
+and **Email me this conversation**. The staff console `/admin` is not linked from here.
 
 ### Video avatar (Anam)
 
@@ -460,7 +465,7 @@ the web app tells Anam `conversationConfigOverride: { agent: { language } }`, an
    `ANAM_MAX_SESSION_SECONDS=180`. Done 2 Oct 2026: NDI's own Anam account (not CDA's) and its custom avatar
    **Elena** (at an office desk, the NDI logo on the wall; model `cara-4`, which the app asks for).
 2. Clara's user input audio format is already **PCM 16000 Hz** (Anam needs it).
-3. **Test:** Avatar tab → Start video call → ask a question.
+3. **Test:** `/avatar` → Start video call → ask a question.
 
 Anam's **free plan** gives 30 minutes a month and **3-minute calls**, with a watermark.
 
@@ -524,8 +529,8 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 
 | | Gets in with | Sees |
 |---|---|---|
-| **Staff** | `/admin` → Aida staff password → **Aida rooms** tab | Everything, including Aida's drafts |
-| **Customer** | The **📞 Aida** tab on the site, or an invite link `/aida/join?code=…` (no password) | Talk, chat and transcript — **never** drafts |
+| **Staff** | `/admin/rooms` → Aida staff password | Everything, including Aida's drafts |
+| **Customer** | The **📞 Live call** page on the site (`/aida`), or an invite link `/aida/join?code=…` (no password) | Talk, chat and transcript — **never** drafts |
 
 - **LiveKit**: for now NDI uses **CDA's LiveKit project** (values copied from CDA; free "Build" plan, 5,000
   participant-minutes a month, shared). Rooms are named `aida-<random id>`, so the two apps never meet. A separate
@@ -540,21 +545,26 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 
 ## 12. Admin page
 
-`<APP_URL>/admin` — staff only, **Aida staff password** (the site password does not open it). Six tabs:
+`<APP_URL>/admin` — staff only, **Aida staff password** (the site password does not open it). Six sections, each at its
+own address, in a dark menu on the left (on a phone: the Menu button). `/admin` opens `/admin/rooms` (a redirect in
+`next.config.ts`). The sections live in the admin layout (`src/app/admin/layout.tsx` →
+`src/components/admin/AdminShell.tsx`, the list in `src/components/admin/sections.ts`) and stay mounted once
+visited, so moving to Customers does not drop a staff member out of an Aida call or a hand-over. The sign-in belongs
+to one browser tab: a section opened in a new tab asks for the password again.
 
-| Tab | What staff do |
+| Section | What staff do |
 |---|---|
-| 📞 **Aida rooms** | Create, join, close rooms; read and email closed ones |
-| 👥 **Customers** | Numbers, a searchable list, one customer's channels, activity and timeline; ✨ Ask Claude (summary, topics, AI Employees asked about, mood, open issues, next step) |
-| 😊 **Mood** | How customers felt on every channel (7 / 30 days), and the unhappy conversations to follow up |
-| 📲 **Call list** | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
-| 📚 **Knowledge** | Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
-| ✉️ **Replies** | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
+| 📞 **Aida rooms** `/admin/rooms` | Create, join, close rooms; read and email closed ones |
+| 👥 **Customers** `/admin/customers` | Numbers, a searchable list, one customer's channels, activity and timeline; ✨ Ask Claude (summary, topics, AI Employees asked about, mood, open issues, next step) |
+| 😊 **Mood** `/admin/mood` | How customers felt on every channel (7 / 30 days), and the unhappy conversations to follow up |
+| 📲 **Call list** `/admin/calls` | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
+| 📚 **Knowledge** `/admin/knowledge` | Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
+| ✉️ **Replies** `/admin/replies` | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
 
 - **Claude insights** (Claude Haiku, `ANTHROPIC_MODEL`, only when a staff member clicks, nothing stored)
 - **Customer mood**: ElevenLabs' sentiment for voice and website; Claude rates Custom Channel conversations (email,
   Instagram, Messenger). Upset (frustration ≥ 0.6, sentiment ≤ −0.5, or one message ≥ 0.7) or `needs_follow_up` →
-  one email to **`STAFF_ALERT_EMAIL`** with a link to `<APP_URL>/admin`. Upset emails always become drafts,
+  one email to **`STAFF_ALERT_EMAIL`** with a link to `<APP_URL>/admin/mood`. Upset emails always become drafts,
   labelled **Clara/Upset customer**. Times are shown in Central European time (Europe/Zurich)
 - **Call list**: Clara phones one number at a time from the number attached to her in ElevenLabs (section 8), up to
   3 tries, with a greeting written from the instructions: *"Hello Helmi, this is Clara, the virtual assistant from
@@ -566,7 +576,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
      Twilio conference `ndi-handover-<item>`, and Twilio's live transcription of both voices in the call's language.
   2. The colleague's phone rings from NDI's number (25 s). They hear who is waiting and Clara's summary, and press any
      key to join (`/accept`); a voicemail cannot press a key. Customer and colleague talk; Clara is gone.
-  3. Every finished sentence arrives at `/transcript` (`handover_lines`); `/admin` opens the live view by itself:
+  3. Every finished sentence arrives at `/transcript` (`handover_lines`); `/admin/calls` opens the live view by itself:
      the conversation, Aida's suggestions (Aida runs in that browser while they talk), what Clara learnt and what NDI
      knows about the customer.
   4. No answer → the customer hears *"nobody from the NDI team can take the call right now; NDI will call you back"*
@@ -583,12 +593,12 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 
 | Item | Value |
 |---|---|
-| Repository | Public GitHub repository created by the user, branch `main` → Railway deploys automatically |
-| Stack | Next.js 16 (read `node_modules/next/dist/docs/`), React 19, Tailwind 4, `@elevenlabs/react`, LiveKit, Anam SDK |
+| Repository | Public GitHub repository `new-digital-intelligence-com/ndi-front-assistant`, branch `main` → deploy on Railway with the command in section 3 (no automatic deploys yet) |
+| Stack | Next.js 16 (read `node_modules/next/dist/docs/`), React 19, Tailwind 4, `lucide-react` icons, `@elevenlabs/react`, LiveKit, Anam SDK |
 | Run | `npm install` · `npm run dev` · `npm run build` (before `npx tsc --noEmit`) · `npm run lint` |
 | Commits | Author **HelmiDev03**; pushed straight to `main` |
 
-**Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin`, `/demos` and
+**Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin` and its sections, `/demos` and
 `/aida/join` (they ask for their own proof, or show only public data) and the routes that check their own secret:
 
 | Routes | Called by | Protected by |
@@ -603,7 +613,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `/api/email/gmail-watch` | By hand, to restart the Gmail watch | `Bearer CRON_SECRET` or the push secret |
 | `/api/instagram/webhook`, `/api/messenger/webhook` | Meta | `?token=` `INSTAGRAM_WEBHOOK_SECRET` / `MESSENGER_WEBHOOK_SECRET` (+ Meta signature if `META_APP_SECRET` is set) |
 | `/api/instagram/reply`, `/api/messenger/reply` | ElevenLabs (replies) | HMAC signature (`INSTAGRAM_CHANNEL_SIGNING_SECRET` / `MESSENGER_CHANNEL_SIGNING_SECRET`) |
-| `/api/email/mode`, `/api/admin/*` | `/admin` | Aida staff token |
+| `/api/email/mode`, `/api/admin/*` | `/admin/...` | Aida staff token |
 | `/api/aida/*` | Aida rooms | Staff token, room ticket, or nothing for customers (each route checks) |
 | `/docs` | Anyone | Nothing: public page, no secrets |
 | `/demos` | Anyone, and ElevenLabs (Clara's knowledge) | Nothing: public YouTube titles and links only |
@@ -686,7 +696,7 @@ cron secret, Gmail push secret, post-call webhook secret.
 | "Approve and teach Clara" fails with "has only 0 other documents" | Attach the Google Drive documents to Clara and Aida first |
 | Clara's tools fail / no memory | Is `APP_URL` the real Railway address? Are `AGENT_TOOL_SECRET` and the workspace secret `NDI_AGENT_TOOL_SECRET` the same? Railway logs for `customer-lookup` |
 | Email: no reply and no Clara label | Open `/api/email/gmail-watch` with the push secret, then the Railway logs for `gmail-push` |
-| Email labelled **Failed** | Reason on `/admin` → Email. "invalid_grant" → run the Gmail consent again |
+| Email labelled **Failed** | Reason on `/admin/replies`. "invalid_grant" → run the Gmail consent again |
 | Instagram or Messenger: no answer | Do Meta's Callback URLs point at this app (section 7)? Meta app **Published**? Custom Channel values on Railway? Railway logs for `instagram` / `messenger` |
 | Daily jobs never run | Railway logs: "daily jobs: scheduled" at start? `CRON_SECRET` set? `DAILY_JOBS` not `off`? |
 | Avatar call won't start | Browser console (F12) and Railway logs; check `ANAM_*`, input format PCM 16000 Hz, 3-minute limit |

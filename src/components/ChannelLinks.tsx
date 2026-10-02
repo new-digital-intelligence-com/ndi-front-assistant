@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 // Still to come (CHANNEL_SETUP.md): while one of these is empty, its button is not shown.
@@ -84,23 +85,23 @@ const channels: Channel[] = [
 
 export function ChannelLinks() {
   return (
-    <section className="rounded-xl bg-white p-4 shadow-sm">
-      <h2 className="font-semibold text-heading">Message Clara on your app</h2>
-      <ul className="mt-2 space-y-1.5">
+    <section className="rounded-2xl bg-surface p-4">
+      <h2 className="text-sm font-semibold text-heading">Message Clara on your app</h2>
+      <ul className="mt-2.5 space-y-1.5">
         {channels.filter((channel) => !channel.hidden).map((channel) => (
           <li key={channel.name}>
             <a
               href={channel.href}
               target={channel.href.startsWith("http") ? "_blank" : undefined}
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-line p-2.5 transition hover:border-brand hover:bg-surface"
+              className="group flex items-center gap-3 rounded-xl bg-white p-2 shadow-sm transition hover:-translate-y-px hover:shadow-md"
             >
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white ${channel.iconClassName}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${channel.iconClassName}`}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-5 w-5"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2}
@@ -111,13 +112,11 @@ export function ChannelLinks() {
                   {channel.icon}
                 </svg>
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-heading">{channel.name}</span>
-                <span className="block text-xs text-muted wrap-anywhere">{channel.detail}</span>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block text-[13px] font-semibold text-heading">{channel.name}</span>
+                <span className="block text-[11px] text-muted wrap-anywhere">{channel.detail}</span>
               </span>
-              <span className="text-muted" aria-hidden="true">
-                ↗
-              </span>
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-muted transition group-hover:text-brand" aria-hidden="true" />
             </a>
           </li>
         ))}

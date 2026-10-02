@@ -22,9 +22,9 @@ and model. The staff copilot is **Aida**.
 
 | Channel | Status | How |
 |---|---|---|
-| Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
+| Website `<APP_URL>` (`/` chat, `/voice`, `/avatar`, `/aida` live call) + `/admin/...` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
 | Telegram | ✅ **@ndi2026bot**, linked to Clara, tested by the user (2 Oct 2026) | Native ElevenLabs Telegram trigger |
-| Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on /admin → ✉️ Replies | Gmail push → web app → Custom Channel "NDI email" |
+| Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on `/admin/replies` | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. ✅ Switched to NDI and tested by the user (2 Oct 2026) | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ NDI's own Anam account + avatar "Elena" set (2 Oct 2026); first test by the user | Anam joined to Clara |
@@ -105,9 +105,16 @@ npm run lint
   public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
 - Values still to fill in the code once known: `PHONE_LINE` (`src/components/ChannelLinks.tsx`, its button hidden
   while empty) and `DEMO_LINE` (`src/components/admin/CallListPanel.tsx`); `SUPPORT_EMAIL` and `TELEGRAM_BOT` are set
+- **Design and routing** (the user's request, 2 Oct 2026: "modern, not like CDA", "routing where there are many
+  panels"): the customer site is an app with a side menu (on a phone: a bar at the bottom) and one address per way of
+  talking: `/` chat, `/voice`, `/avatar`, `/aida` (`src/app/(site)`, `src/components/site/`). The staff console has a
+  dark side menu and one address per section: `/admin/rooms`, `/customers`, `/mood`, `/calls`, `/knowledge`,
+  `/replies` (`src/app/admin`, `src/components/admin/AdminShell.tsx` + `sections.ts`; `/admin` redirects in
+  `next.config.ts`). Both shells live in layouts, so state survives moving between pages (CHANNEL_SETUP.md §9, §12).
+  Icons: `lucide-react`. Cards everywhere take `shadow-sm` (redefined in `globals.css`), big panels `shadow-card`
 - Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
-  Tailwind tokens (`brand`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`) in `src/app/globals.css`:
-  `accent` = the logo red, `brand` = `#e00000` (buttons, tabs, links: readable at 4.5:1), black and neutral greys.
+  Tailwind tokens (`brand`, `brand-soft`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`, `night`) in `src/app/globals.css`:
+  `accent` = the logo red, `brand` = `#e00000` (buttons, menus, links: readable at 4.5:1), black and neutral greys.
   The logo is drawn by `src/components/NdiLogo.tsx` (Archivo Black, like the logo's capitals); emails use the same colours
 - Times: Central European (Europe/Zurich)
 
@@ -136,13 +143,13 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 6. ✅ **Email** (contact@new-digital-intelligence.com, 2 Oct 2026): NDI's own Google Cloud project `ndi-front-assistant`
    (owned by contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
    subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`, Custom Channel "NDI email" (3 values on Railway),
-   Gmail watch started (renewed daily). The user tested a reply. Auto or draft: /admin → ✉️ Replies.
+   Gmail watch started (renewed daily). The user tested a reply. Auto or draft: `/admin/replies`.
 7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
    `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** (built 2 Oct 2026,
    `src/lib/handover.ts`, CHANNEL_SETUP.md §12; tested only with fakes so far: the first real test is the user's).
 8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
    (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
-   input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (Avatar tab).
+   input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (`/avatar`).
    Anam's free plan: 30 minutes a month, 3-minute calls, watermark.
 9. **Instagram/Messenger** (CDA's accounts, the user's decision): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
    on Clara (2 Oct 2026; secret order checked, 6 values on Railway); tokens checked (NDI's Instagram token refreshed,

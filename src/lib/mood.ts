@@ -353,7 +353,7 @@ async function alertOnce(conversationId: string, send: () => Promise<boolean>) {
 
 /**
  * An email's mood, from Claude's rating when it arrived: stored at once, so an upset email is on the
- * Mood tab straight away (ElevenLabs never scores email conversations).
+ * Mood page straight away (ElevenLabs never scores email conversations).
  */
 export async function recordEmailMood(input: {
   conversationId: string;
@@ -386,7 +386,7 @@ export async function recordEmailMood(input: {
   });
 }
 
-/** Staff were emailed about this conversation (shown as "Staff emailed" on the Mood tab). */
+/** Staff were emailed about this conversation (shown as "Staff emailed" on the Mood page). */
 export async function markAlerted(conversationId: string) {
   await rest(`conversation_moods?conversation_id=eq.${q(conversationId)}&alerted_at=is.null`, {
     method: "PATCH",

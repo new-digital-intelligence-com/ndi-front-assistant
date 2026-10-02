@@ -14,15 +14,14 @@ export default async function AidaJoinPage({ searchParams }: PageProps<"/aida/jo
 
   return (
     <>
-      <header className="bg-white">
-        <div className="mx-auto flex h-[3.25rem] max-w-6xl items-center gap-3 px-4">
+      <header className="sticky top-0 z-10 border-b border-line bg-white/85 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <NdiLogo tagline={false} className="h-7 w-auto shrink-0" />
           <span className="h-6 w-px shrink-0 bg-line" aria-hidden="true" />
-          <span className="text-lg font-semibold text-heading">Customer call</span>
+          <span className="text-lg font-semibold tracking-tight text-heading">Customer call</span>
         </div>
-        <div className="h-1 bg-accent" />
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+      <main className="animate-fade-up mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-10">
         <AidaJoin initialCode={typeof code === "string" ? code : ""} />
       </main>
     </>

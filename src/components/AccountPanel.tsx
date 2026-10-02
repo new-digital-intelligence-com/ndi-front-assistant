@@ -88,8 +88,8 @@ export function AccountPanel() {
 
   if (signedIn === null) {
     return (
-      <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-heading">Your NDI account</h2>
+      <section className="rounded-2xl bg-surface p-4">
+        <h2 className="text-sm font-semibold text-heading">Your NDI account</h2>
         <p className="mt-2 text-sm text-muted">Loading…</p>
       </section>
     );
@@ -97,20 +97,20 @@ export function AccountPanel() {
 
   if (!signedIn) {
     return (
-      <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-heading">Your NDI account</h2>
-        <p className="mt-1 text-sm text-muted">
+      <section className="rounded-2xl bg-surface p-4">
+        <h2 className="text-sm font-semibold text-heading">Your NDI account</h2>
+        <p className="mt-1 text-[13px] leading-snug text-muted">
           Link Telegram, Instagram, your phone number and your email addresses, so Clara knows you on all of
           them and remembers what you asked before.
         </p>
 
         {/* Collapsed by default: the form is long, and most visitors only want to chat. */}
         <details className="mt-3">
-          <summary className="cursor-pointer list-none rounded-lg bg-brand px-3 py-2 text-center text-sm font-semibold text-white">
+          <summary className="cursor-pointer list-none rounded-xl bg-brand px-3 py-2.5 text-center text-sm font-semibold text-white shadow-glow transition hover:bg-brand-dark">
             Create account or sign in
           </summary>
 
-          <div className="mt-3 flex gap-1 rounded-lg bg-surface p-1 text-sm">
+          <div className="mt-3 flex gap-1 rounded-xl bg-white p-1 text-sm shadow-sm">
             {(["signup", "signin"] as const).map((option) => (
               <button
                 key={option}
@@ -119,8 +119,8 @@ export function AccountPanel() {
                   setMode(option);
                   setError(null);
                 }}
-                className={`flex-1 rounded-md px-3 py-1.5 font-medium ${
-                  mode === option ? "bg-white text-heading shadow-sm" : "text-muted"
+                className={`flex-1 rounded-lg px-3 py-1.5 font-semibold transition ${
+                  mode === option ? "bg-brand-soft text-brand-dark" : "text-muted hover:text-heading"
                 }`}
               >
                 {option === "signup" ? "Create account" : "Sign in"}
@@ -141,7 +141,7 @@ export function AccountPanel() {
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Your name"
                 autoComplete="name"
-                className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
               />
             )}
             <input
@@ -151,7 +151,7 @@ export function AccountPanel() {
               required
               placeholder="Email address"
               autoComplete="email"
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
             />
             <input
               value={password}
@@ -161,13 +161,13 @@ export function AccountPanel() {
               minLength={8}
               placeholder="Password (8 characters or more)"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
             />
-            {error && <p className="text-sm text-brand">{error}</p>}
+            {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-brand-dark">{error}</p>}
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="w-full rounded-xl bg-brand px-3 py-2 text-sm font-semibold text-white shadow-glow transition hover:bg-brand-dark disabled:opacity-60 disabled:shadow-none"
             >
               {mode === "signup" ? "Create account" : "Sign in"}
             </button>
@@ -178,9 +178,9 @@ export function AccountPanel() {
   }
 
   return (
-    <section className="rounded-xl bg-white p-4 shadow-sm">
+    <section className="rounded-2xl bg-surface p-4">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="font-semibold text-heading">Your channels</h2>
+        <h2 className="text-sm font-semibold text-heading">Your channels</h2>
         <button
           type="button"
           onClick={async () => {
@@ -193,13 +193,13 @@ export function AccountPanel() {
           Sign out
         </button>
       </div>
-      <p className="mt-1 text-sm text-muted">Clara recognises you on each of these.</p>
+      <p className="mt-1 text-[13px] leading-snug text-muted">Clara recognises you on each of these.</p>
 
       <ul className="mt-3 space-y-2">
         {channels.map((channel) => (
           <li
             key={`${channel.channel}:${channel.channel_key}`}
-            className="flex items-center justify-between gap-2 rounded-lg bg-surface px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-sm shadow-sm"
           >
             <span className="min-w-0">
               <span className="font-medium text-heading">{CHANNEL_LABELS[channel.channel] ?? channel.channel}</span>
@@ -220,7 +220,7 @@ export function AccountPanel() {
         {channels.length === 0 && <li className="text-sm text-muted">No channels linked yet.</li>}
       </ul>
 
-      <div className="mt-4 rounded-lg border border-dashed border-black/15 p-3">
+      <div className="mt-4 rounded-xl border border-dashed border-black/15 bg-white p-3">
         {code ? (
           <>
             <p className="text-sm text-muted">Send this code to Clara from the channel you want to add:</p>
@@ -245,7 +245,7 @@ export function AccountPanel() {
               setBusy(false);
               if (body.code) setCode(body.code);
             }}
-            className="w-full rounded-lg border border-brand px-3 py-2 text-sm font-semibold text-brand disabled:opacity-60"
+            className="w-full rounded-xl border border-brand/40 bg-white px-3 py-2 text-sm font-semibold text-brand transition hover:bg-brand-soft disabled:opacity-60"
           >
             + Add a channel
           </button>
@@ -256,7 +256,7 @@ export function AccountPanel() {
       <div className="mt-2">
         {addingPhone ? (
           <form
-            className="space-y-2 rounded-lg border border-dashed border-black/15 p-3"
+            className="space-y-2 rounded-xl border border-dashed border-black/15 bg-white p-3"
             onSubmit={async (event) => {
               event.preventDefault();
               setBusy(true);
@@ -286,15 +286,15 @@ export function AccountPanel() {
               countryCallingCodeEditable={false}
               flags={flags}
               placeholder="Your phone number"
-              className="rounded-lg border border-black/10 px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-white px-3 py-2 text-sm"
               numberInputProps={{ className: "min-w-0 flex-1 bg-transparent outline-none" }}
             />
-            {error && <p className="text-sm text-brand">{error}</p>}
+            {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-brand-dark">{error}</p>}
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={busy || !phone}
-                className="flex-1 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="flex-1 rounded-xl bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
               >
                 Save number
               </button>
@@ -304,7 +304,7 @@ export function AccountPanel() {
                   setAddingPhone(false);
                   setError(null);
                 }}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm text-muted"
+                className="rounded-xl border border-line bg-white px-3 py-2 text-sm text-muted"
               >
                 Cancel
               </button>
@@ -314,7 +314,7 @@ export function AccountPanel() {
           <button
             type="button"
             onClick={() => setAddingPhone(true)}
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-heading"
+            className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-heading transition hover:border-heading"
           >
             + Add your phone number
           </button>

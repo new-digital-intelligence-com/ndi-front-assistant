@@ -65,7 +65,7 @@ export function moodAlertStatus(): MoodAlertStatus {
 
 function adminLink(): string | null {
   const base = appUrl();
-  return base ? `${base}/admin` : null;
+  return base ? `${base}/admin/mood` : null;
 }
 
 /** NDI's home time (Zug, Cologne, Milan, Paris), in the British date format. */
@@ -131,7 +131,7 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
       : `[NDI assistant] ${heading} (${channelName(alert.channel)})`;
   const link = adminLink();
 
-  const text = [heading, "", ...rows.map(([name, value]) => `${name}: ${value}`), "", link ? `Open /admin → 😊 Mood: ${link}` : ""]
+  const text = [heading, "", ...rows.map(([name, value]) => `${name}: ${value}`), "", link ? `Open the Mood page: ${link}` : ""]
     .join("\n")
     .trim();
   const html = `<div style="font-family:Arial,sans-serif;max-width:620px;color:#262626;border-top:4px solid #fe0100;padding-top:12px">
@@ -142,7 +142,7 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
         `<tr><td style="padding:6px 10px;color:#525252;vertical-align:top;white-space:nowrap">${escapeHtml(name)}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>`,
     )
     .join("")}</table>
-${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#e00000">Open /admin → 😊 Mood</a></p>` : ""}
+${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#e00000">Open the Mood page</a></p>` : ""}
 <p style="margin-top:18px;color:#999999;font-size:12px">Sent by NDI's assistant Clara. Mood scores come from ElevenLabs and Claude.</p>
 </div>`;
 

@@ -30,16 +30,17 @@ export async function proxy(request: NextRequest) {
   // live transcript. Each URL carries a key made from the Twilio Auth Token (src/lib/twilio.ts).
   if (pathname.startsWith("/api/twilio/")) return NextResponse.next();
 
-  // Aida has its own staff password, separate from this one. Its pages and routes are open here and
-  // every route decides for itself: the Aida staff token makes you an employee, a signed room ticket
-  // proves you are in the room, and anyone else is a customer.
-  if (pathname === "/aida" || pathname === "/aida/join" || pathname.startsWith("/api/aida/")) {
+  // Aida has its own staff password, separate from this one. The invite page and the routes are open
+  // here and every route decides for itself: the Aida staff token makes you an employee, a signed room
+  // ticket proves you are in the room, and anyone else is a customer. (/aida itself is the customer
+  // site's "Live call" page, behind this password like the rest of the site.)
+  if (pathname === "/aida/join" || pathname.startsWith("/api/aida/")) return NextResponse.next();
+
+  // The staff console (/admin and its sections) is behind the Aida staff password, not this one: the
+  // console asks for it, and every /api/admin/* route refuses a request without a valid staff token.
+  if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname.startsWith("/api/admin/")) {
     return NextResponse.next();
   }
-
-  // The staff admin page is behind the Aida staff password, not this one: the page asks for it,
-  // and every /api/admin/* route refuses a request without a valid staff token.
-  if (pathname === "/admin" || pathname.startsWith("/api/admin/")) return NextResponse.next();
 
   const isApi = pathname.startsWith("/api/");
   if (!sitePasswordConfigured()) {

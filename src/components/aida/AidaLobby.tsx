@@ -1,5 +1,6 @@
 "use client";
 
+import { LockKeyhole } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AidaHistory } from "./AidaHistory";
 import { AidaRoom } from "./AidaRoom";
@@ -61,42 +62,53 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <form onSubmit={submit} className="space-y-3 rounded-xl bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-heading">NDI staff</h1>
-        <p className="text-sm text-muted">
-          Enter the staff password to manage Aida rooms, email replies and customers.
-        </p>
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Your name"
-          maxLength={40}
-          autoComplete="name"
-          autoFocus
-          className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Aida staff password"
-          autoComplete="current-password"
-          className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-        />
-        {error && <p className="text-sm text-brand">{error}</p>}
+      <form onSubmit={submit} className="space-y-4 rounded-3xl bg-white p-7 shadow-card">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+            <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-heading">NDI staff</h1>
+            <p className="text-sm text-muted">Aida rooms, customers, call lists and replies.</p>
+          </div>
+        </div>
+        <label className="block">
+          <span className="text-sm font-semibold text-heading">Your name</span>
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="How customers and colleagues see you"
+            maxLength={40}
+            autoComplete="name"
+            autoFocus
+            className="mt-1 w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-semibold text-heading">Staff password</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Aida staff password"
+            autoComplete="current-password"
+            className="mt-1 w-full rounded-xl border border-line px-3.5 py-2.5 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
+          />
+        </label>
+        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-brand-dark">{error}</p>}
         <button
           type="submit"
           disabled={busy || !password || !name.trim()}
-          className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-xl bg-brand px-3 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-brand-dark disabled:opacity-60 disabled:shadow-none"
         >
-          Sign in as staff
+          {busy ? "Signing in…" : "Sign in as staff"}
         </button>
       </form>
     </div>
   );
 }
 
-/** The "Aida rooms" tab of the admin page: create, join, close and read rooms as NDI staff. */
+/** The Aida rooms section of the staff console (/admin/rooms): create, join, close and read rooms as NDI staff. */
 export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut: () => void }) {
   const [joined, setJoined] = useState<JoinedRoom | null>(null);
   const [name, setName] = useState("");
@@ -213,7 +225,7 @@ export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut
       <div className="space-y-4">
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
           <div>
-            <h1 className="text-xl font-bold text-heading">Aida rooms</h1>
+            <h2 className="text-lg font-bold text-heading">Start or join a room</h2>
             <p className="mt-1 text-sm text-muted">
               Live calls with a customer. Aida listens and drafts answers that only NDI staff see; you approve
               what gets sent.

@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnamClient } from "@anam-ai/js-sdk";
+import { PhoneOff, RectangleHorizontal, RectangleVertical, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { EmailTranscriptForm, postEmail } from "./EmailTranscriptForm";
 import { LanguagePicker } from "./LanguagePicker";
@@ -12,9 +13,9 @@ const START_ERROR = "Could not start the video call. Please try again.";
 
 type CallStatus = "idle" | "connecting" | "connected";
 
-const ORIENTATIONS: { value: AvatarOrientation; label: string }[] = [
-  { value: "horizontal", label: "▭ Horizontal" },
-  { value: "vertical", label: "▯ Vertical" },
+const ORIENTATIONS: { value: AvatarOrientation; label: string; icon: typeof RectangleHorizontal }[] = [
+  { value: "horizontal", label: "Horizontal", icon: RectangleHorizontal },
+  { value: "vertical", label: "Vertical", icon: RectangleVertical },
 ];
 
 export function AvatarPanel({
@@ -131,12 +132,12 @@ export function AvatarPanel({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface p-3 sm:p-6">
+    <div className="bg-dots flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface/60 p-3 sm:p-6">
       <div
         className={
           status === "idle"
             ? "hidden"
-            : `relative mx-auto w-full overflow-hidden rounded-2xl bg-heading shadow-md ${
+            : `relative mx-auto w-full overflow-hidden rounded-3xl bg-heading shadow-card ${
                 orientation === "vertical" ? "max-w-sm" : "max-w-3xl 2xl:max-w-4xl"
               }`
         }
@@ -155,10 +156,12 @@ export function AvatarPanel({
       </div>
 
       {status === "idle" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl bg-white p-8 text-center shadow-sm">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand/10 text-5xl">🧑‍💼</div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 rounded-3xl bg-white p-8 text-center shadow-sm">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[linear-gradient(140deg,#ff4a3d,#fe0100_45%,#a30000)] text-white shadow-glow ring-8 ring-brand-soft">
+            <Video className="h-10 w-10" aria-hidden="true" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold text-heading">Talk to Clara face to face</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-heading sm:text-3xl">Talk to Clara face to face</h2>
             <p className="mt-2 max-w-md text-base text-muted sm:text-lg">
               Start a video call with Clara. She listens, answers out loud and uses the same NDI knowledge as the chat.
             </p>
@@ -170,22 +173,23 @@ export function AvatarPanel({
                   key={option.value}
                   onClick={() => setOrientation(option.value)}
                   aria-pressed={orientation === option.value}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
                     orientation === option.value ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
                   }`}
                 >
+                  <option.icon className="h-4 w-4" aria-hidden="true" />
                   {option.label}
                 </button>
               ))}
             </div>
             <LanguagePicker value={language} onChange={onLanguageChange} />
           </div>
-          {error && <p className="text-sm text-brand-dark">{error}</p>}
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-brand-dark">{error}</p>}
           <button
             onClick={() => void start()}
-            className="rounded-full bg-brand px-8 py-3 font-semibold text-white shadow transition hover:bg-brand-dark"
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-8 py-3 font-semibold text-white shadow-glow transition hover:bg-brand-dark"
           >
-            Start video call
+            <Video className="h-5 w-5" aria-hidden="true" /> Start video call
           </button>
           {conversationId && messages.length > 0 && (
             <EmailTranscriptForm
@@ -203,9 +207,9 @@ export function AvatarPanel({
             </p>
             <button
               onClick={() => void stop()}
-              className="rounded-full bg-heading px-6 py-2.5 font-semibold text-white transition hover:bg-black"
+              className="inline-flex items-center gap-2 rounded-full bg-heading px-6 py-2.5 font-semibold text-white transition hover:bg-black"
             >
-              End video call
+              <PhoneOff className="h-4 w-4" aria-hidden="true" /> End video call
             </button>
           </div>
           {messages.length > 0 && (
