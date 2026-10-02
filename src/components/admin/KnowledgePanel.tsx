@@ -14,7 +14,7 @@ type Group = { question: string; answer: string; ids: number[] };
 type FeedbackItem = {
   id: number;
   kind: "feedback" | "correction" | "style";
-  source: "chat" | "said" | "aida" | "email";
+  source: "chat" | "said" | "aida" | "email" | "social";
   channel: string | null;
   question: string | null;
   original_answer: string | null;
@@ -28,7 +28,7 @@ type State = {
   gaps: Gap[];
   feedback: FeedbackItem[];
   score: Score;
-  drafts: { email: DraftCounts; aida: DraftCounts };
+  drafts: { email: DraftCounts; aida: DraftCounts; social: DraftCounts };
   faq: Faq[];
   published: Published;
 };
@@ -58,19 +58,31 @@ function sourceLabel(item: FeedbackItem): string {
   if (item.source === "said") return `💬 Said by the customer · ${item.channel ? CHANNELS[item.channel] ?? item.channel : "unknown channel"}`;
   const style = item.kind === "style";
   if (item.source === "aida") return style ? "✏️ Staff reworded Aida's draft · style only" : "✏️ Staff corrected Aida's draft";
+  if (item.source === "social") {
+    const where = CHANNELS[item.channel ?? ""] ?? "Instagram or Messenger";
+    return style ? `✏️ Staff reworded Clara's ${where} draft · style only` : `✏️ Staff corrected Clara's ${where} draft`;
+  }
   return style ? "✏️ Staff reworded Clara's email draft · style only" : "✏️ Staff corrected Clara's email draft";
 }
 
 const UNFINISHED = /\[check/i;
 
-type FeedbackTab = "customer" | "aida" | "email";
+type FeedbackTab = "customer" | "aida" | "email" | "social";
 
 /** Customer feedback (👎 in the chat, complaints said in any conversation) and the two kinds of staff correction. */
 const FEEDBACK_TABS: { id: FeedbackTab; label: string; sources: FeedbackItem["source"][] }[] = [
   { id: "customer", label: "💬 Customer feedback", sources: ["chat", "said"] },
   { id: "aida", label: "📞 Aida corrections", sources: ["aida"] },
   { id: "email", label: "✉️ Email corrections", sources: ["email"] },
+  { id: "social", label: "📷 Instagram & Messenger corrections", sources: ["social"] },
 ];
+
+/** Each staff-corrections tab's weekly line: whose drafts, and what not sending one is called. */
+const DRAFT_LINES: Record<Exclude<FeedbackTab, "customer">, { title: string; key: "aida" | "email" | "social"; notSent: "declined" | "discarded" }> = {
+  aida: { title: "📞 Aida's drafts in rooms", key: "aida", notSent: "declined" },
+  email: { title: "✉️ Clara's email drafts", key: "email", notSent: "discarded" },
+  social: { title: "📷 Clara's Instagram and Messenger drafts", key: "social", notSent: "discarded" },
+};
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -355,12 +367,9 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
         )}
         {feedbackTab !== "customer" && (
           <div className="rounded-lg bg-surface px-3 py-2 text-xs">
-            <p className="font-semibold text-heading">
-              {feedbackTab === "aida" ? "📞 Aida's drafts in rooms" : "✉️ Clara's email drafts"}, this week
-            </p>
+            <p className="font-semibold text-heading">{DRAFT_LINES[feedbackTab].title}, this week</p>
             <p className="text-muted">
-              {(feedbackTab === "aida" ? draftLine(state.drafts?.aida, "declined") : draftLine(state.drafts?.email, "discarded")) ??
-                "None yet."}
+              {draftLine(state.drafts?.[DRAFT_LINES[feedbackTab].key], DRAFT_LINES[feedbackTab].notSent) ?? "None yet."}
             </p>
             <p className="mt-1 text-muted">
               Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Clara.{" "}

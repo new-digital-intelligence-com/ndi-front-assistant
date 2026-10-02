@@ -71,13 +71,6 @@ export default function Home() {
           </section>
           <ChannelLinks />
           <AccountPanel />
-          <p className="rounded-xl border-l-4 border-brand bg-white px-4 py-3 text-sm text-muted shadow-sm">
-            <strong className="text-heading">Prefer a person?</strong> Write to{" "}
-            <a href="mailto:mail@new-digital-intelligence.com" className="font-semibold text-brand underline">
-              mail@new-digital-intelligence.com
-            </a>
-            .
-          </p>
         </aside>
       </main>
 

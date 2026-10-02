@@ -199,6 +199,35 @@ create index if not exists instagram_threads_conversation_idx on instagram_threa
 
 alter table instagram_threads enable row level security;
 
+-- Draft mode for Instagram and Messenger (src/lib/socialDrafts.ts): when a channel's switch on /admin is
+-- "Draft for staff", Clara's answer is not sent but kept here for staff to send, edit or discard (Meta
+-- only takes a reply within 24 hours of the customer's last message). In draft mode the thread also
+-- keeps the customer's latest message, so staff see what the draft answers; in auto mode no message
+-- text is kept.
+alter table messenger_threads add column if not exists last_message text;
+alter table instagram_threads add column if not exists last_message text;
+
+create table if not exists social_drafts (
+  id              bigint generated always as identity primary key,
+  channel         text not null,                     -- instagram | messenger
+  psid            text not null,                     -- the person's Instagram- or Page-scoped id
+  customer_name   text,
+  conversation_id text,
+  ref             text unique,                       -- <channel>:<conversation>.<response ids>: a repeated delivery is stored once
+  question        text,                              -- the customer's message the draft answers
+  reply           text not null,                     -- Clara's draft
+  status          text not null default 'pending',   -- pending | sending | sent | discarded | failed
+  sent_text       text,                              -- what staff sent, after any edit
+  error           text,                              -- why sending failed
+  decided_by      text,
+  decided_at      timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists social_drafts_status_idx on social_drafts (status, created_at desc);
+
+alter table social_drafts enable row level security;
+
 -- Tokens the web app renews itself: the Instagram token (60 days) is refreshed every 7 days by the
 -- daily cron. Only the service role key can read this table.
 create table if not exists channel_tokens (
@@ -336,7 +365,7 @@ create table if not exists knowledge_feedback (
                                                 -- chat:<conversation>:<message>, said:<conversation>,
                                                 -- aida:<room>:<draft>, email:<gmail id>
   kind             text not null,               -- feedback | correction (a fact changed) | style (reworded only)
-  source           text not null,               -- chat (👎 button) | said (in the conversation) | aida | email
+  source           text not null,               -- chat (👎 button) | said (in the conversation) | aida | email | social
   channel          text,
   conversation_id  text,
   question         text,                        -- what the customer asked
@@ -376,8 +405,8 @@ alter table feedback_ratings   enable row level security;
 -- text: it is the "right first time" score on /admin → 📚 Knowledge.
 create table if not exists draft_outcomes (
   id         bigint generated always as identity primary key,
-  ref        text unique,                       -- email:<gmail id> or aida:<room>:<draft>
-  source     text not null,                     -- email | aida
+  ref        text unique,                       -- email:<gmail id>, aida:<room>:<draft> or social:<draft id>
+  source     text not null,                     -- email | aida | social (Instagram and Messenger)
   outcome    text not null,                     -- unchanged | polished | corrected | declined | discarded
   created_at timestamptz not null default now()
 );

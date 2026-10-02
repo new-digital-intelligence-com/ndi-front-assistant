@@ -25,7 +25,7 @@ and model. The staff copilot is **Aida**.
 | Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
 | Telegram | ✅ **@ndi2026bot**, linked to Clara (2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ⏳ contact@new-digital-intelligence.com: Gmail access + Pub/Sub done; Custom Channel next | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo, switched per demo | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
+| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ New Anam avatar (the user sets it up) | Anam joined to Clara |
 | Intercom | Optional | Needs NDI's own Intercom workspace |

@@ -30,7 +30,7 @@ export type FeedbackItem = {
   id: number;
   /** feedback from a customer; correction = staff changed a fact; style = staff only reworded the draft. */
   kind: "feedback" | "correction" | "style";
-  source: "chat" | "said" | "aida" | "email";
+  source: "chat" | "said" | "aida" | "email" | "social";
   channel: string | null;
   conversation_id: string | null;
   question: string | null;
@@ -113,7 +113,7 @@ export function editKind(draft: string, sent: string): "unchanged" | "polished" 
 // --- storing ------------------------------------------------------------------------------------------
 
 /** One outcome per draft, for the "right first time" score. Only a statistic: never stops the rest. */
-async function saveOutcome(ref: string, source: "email" | "aida", outcome: DraftOutcome) {
+async function saveOutcome(ref: string, source: "email" | "aida" | "social", outcome: DraftOutcome) {
   await rest("draft_outcomes?on_conflict=ref", {
     method: "POST",
     prefer: "resolution=ignore-duplicates,return=minimal",
@@ -225,7 +225,7 @@ export async function recordSaidFeedback(conversationId: string, results: Result
 /** A draft staff changed before sending: a card, marked as a changed fact or as rewording only. */
 async function recordCorrection(input: {
   ref: string;
-  source: "aida" | "email";
+  source: "aida" | "email" | "social";
   channel: string;
   conversationId: string | null;
   question: string | null;
@@ -275,6 +275,30 @@ export async function aidaDraftSent(roomId: string, draftRef: string, sent: stri
 /** An Aida room: staff declined draft `draftRef`. */
 export async function aidaDraftDeclined(roomId: string, draftRef: string) {
   await saveOutcome(`aida:${roomId}:${draftRef}`, "aida", "declined");
+}
+
+type SocialDraft = { id: number; channel: string; conversation_id: string | null; question: string | null; reply: string };
+
+/** An Instagram or Messenger draft (src/lib/socialDrafts.ts): staff sent `sent`. Compared with what Clara wrote. */
+export async function socialDraftSent(draft: SocialDraft, sent: string) {
+  const kind = editKind(draft.reply, sent);
+  await saveOutcome(`social:${draft.id}`, "social", kind);
+  if (kind === "unchanged") return;
+  await recordCorrection({
+    ref: `social:${draft.id}`,
+    source: "social",
+    channel: draft.channel,
+    conversationId: draft.conversation_id,
+    question: draft.question,
+    original: draft.reply,
+    corrected: sent,
+    styleOnly: kind === "polished",
+  });
+}
+
+/** An Instagram or Messenger draft staff did not send. */
+export async function socialDraftDiscarded(draftId: number) {
+  await saveOutcome(`social:${draftId}`, "social", "discarded");
 }
 
 /** An email reply as typed, without the quoted email below it ("On … wrote:", "> …"). */
@@ -369,8 +393,8 @@ export async function weekScore(): Promise<{ likes: number; dislikes: number }> 
 
 export type DraftCounts = Record<DraftOutcome, number> & { total: number };
 
-/** What happened to Clara's email drafts and Aida's drafts in the last 7 days. */
-export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCounts }> {
+/** What happened to Clara's email, Instagram and Messenger drafts and Aida's drafts in the last 7 days. */
+export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCounts; social: DraftCounts }> {
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const rows = await rest<{ source: string; outcome: DraftOutcome }[]>(
     `draft_outcomes?created_at=gt.${q(since)}&select=source,outcome&limit=10000`,
@@ -390,7 +414,7 @@ export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCou
       discarded: of("discarded"),
     };
   };
-  return { email: count("email"), aida: count("aida") };
+  return { email: count("email"), aida: count("aida"), social: count("social") };
 }
 
 export async function closeFeedback(ids: number[], status: "answered" | "dismissed", faqId?: number) {

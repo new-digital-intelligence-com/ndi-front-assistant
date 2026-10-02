@@ -349,7 +349,7 @@ normal reply in the same email thread.
 **Using it**
 - **Labels in Gmail** (under "Clara"): **Replied** · **Draft ready** (open the email, check the draft, press Send) ·
   **Skipped** (a robot or newsletter) · **Failed** (answer it by hand) · **Upset customer**.
-- **Switch auto / draft**: `/admin` → **Email** tab. It is read for every reply.
+- **Switch auto / draft**: `/admin` → **✉️ Replies** tab. It is read for every reply.
 
 **Good to know**
 - Each email is a separate conversation for Clara; earlier messages are quoted in the email itself.
@@ -398,6 +398,17 @@ other way round). Both apps refresh the same Instagram token every 7 days and ke
 A person's messages stay in **one conversation for 10 minutes**. "Typing…" shows while Clara writes. Answers are
 plain text (Instagram: up to 1,000 characters; Messenger: split into messages of up to 2,000); Clara cannot see
 photos or files. The Meta app must stay **Published**. Don't put "CDA" in any Meta account or Page name.
+
+### Auto or draft (like email)
+
+Each channel has its own switch on `/admin` → **✉️ Replies**: **Send automatically**, or **Draft for staff**
+(`instagram_mode` / `messenger_mode`, placeholders on the **Aida** agent like `email_mode`, `src/lib/replyMode.ts`;
+anything unreadable counts as draft). In draft mode Clara's answer is not sent: it waits in `social_drafts` with the
+customer's latest message (kept on the thread only in draft mode), and staff change it if needed and **Send** it, or
+**Discard** it (`src/lib/socialDrafts.ts`). Meta only takes a reply within **24 hours** of the customer's last
+message: the page shows the time, and Meta's refusal is shown in plain words. What staff changed counts in the
+weekly "sent unchanged" line and, when a fact changed, waits under /admin → 📚 Knowledge → **Instagram & Messenger
+corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 ---
 
@@ -545,7 +556,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | 😊 **Mood** | How customers felt on every channel (7 / 30 days), and the unhappy conversations to follow up |
 | 📲 **Call list** | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
 | 📚 **Knowledge** | Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
-| ✉️ **Email** | Send automatically / Draft for staff, and the latest emails with what happened to each |
+| ✉️ **Replies** | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
 
 - **Claude insights** (Claude Haiku, `ANTHROPIC_MODEL`, only when a staff member clicks, nothing stored)
 - **Customer mood**: ElevenLabs' sentiment for voice and website; Claude rates Custom Channel conversations (email,

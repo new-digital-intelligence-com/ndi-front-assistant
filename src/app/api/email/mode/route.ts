@@ -1,6 +1,6 @@
 import { isStaffRequest } from "@/lib/aidaStaff";
 import { emailChannelConfigured, recentEmails } from "@/lib/emailInbox";
-import { getEmailMode, setEmailMode } from "@/lib/emailMode";
+import { getEmailMode, setEmailMode } from "@/lib/replyMode";
 import { mailboxAddress } from "@/lib/gmail";
 import { isUpsetEmail } from "@/lib/mood";
 

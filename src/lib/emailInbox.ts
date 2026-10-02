@@ -14,7 +14,7 @@
 // subject, never the text.
 
 import { customerForChannel, forgetRobotSender, rememberConversation } from "./customers";
-import { getEmailMode } from "./emailMode";
+import { getEmailMode } from "./replyMode";
 import { withoutQuotedHistory } from "./feedback";
 import { isUpsetEmail, markAlerted, rateMessage, recordEmailMood, type QuickMood } from "./mood";
 import { sendMoodAlert } from "./moodAlert";

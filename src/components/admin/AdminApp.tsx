@@ -8,6 +8,7 @@ import { CallListPanel } from "./CallListPanel";
 import { CustomersPanel } from "./CustomersPanel";
 import { KnowledgePanel } from "./KnowledgePanel";
 import { MoodPanel } from "./MoodPanel";
+import { SocialRepliesCard } from "./SocialRepliesCard";
 
 type AdminTab = "rooms" | "customers" | "mood" | "calls" | "knowledge" | "email";
 
@@ -17,7 +18,7 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: "mood", label: "😊 Mood" },
   { id: "calls", label: "📲 Call list" },
   { id: "knowledge", label: "📚 Knowledge" },
-  { id: "email", label: "✉️ Email" },
+  { id: "email", label: "✉️ Replies" },
 ];
 
 /**
@@ -112,8 +113,9 @@ export function AdminApp() {
         </div>
       )}
       {opened.has("email") && (
-        <div className={tab === "email" ? "max-w-xl" : "hidden"}>
+        <div className={tab === "email" ? "max-w-3xl space-y-4" : "hidden"}>
           <EmailModeCard staffToken={staffToken} />
+          <SocialRepliesCard staffToken={staffToken} onSignOut={signOut} />
         </div>
       )}
     </div>

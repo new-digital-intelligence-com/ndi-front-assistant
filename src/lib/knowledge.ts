@@ -69,7 +69,7 @@ export type KnowledgeState = {
   gaps: Gap[];
   feedback: FeedbackItem[];
   score: { likes: number; dislikes: number };
-  drafts: { email: DraftCounts; aida: DraftCounts };
+  drafts: { email: DraftCounts; aida: DraftCounts; social: DraftCounts };
   faq: Faq[];
   published: Published;
 };

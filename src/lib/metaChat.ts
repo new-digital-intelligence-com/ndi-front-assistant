@@ -1,20 +1,22 @@
 // Messenger and Instagram direct messages, handled by the web app:
 //
 //   message        → Meta webhook → /api/<channel>/webhook → Clara via that channel's Custom Channel trigger
-//   Clara's answer → /api/<channel>/reply → that channel's Send API
+//   Clara's answer → /api/<channel>/reply → that channel's Send API, or a draft for staff (draft mode)
 //
 // A person's messages continue one ElevenLabs conversation for 10 minutes. Supabase keeps one row
 // per person (messenger_threads / instagram_threads): their conversation and the last answer sent,
-// so a repeated delivery never sends twice. No message text is stored.
+// so a repeated delivery never sends twice. In auto mode no message text is stored; in draft mode the
+// person's latest message is kept, so staff see what Clara's draft answers (src/lib/socialDrafts.ts).
 //
 // The two channels differ only in the settings below (src/lib/messenger.ts, src/lib/instagram.ts).
 // They are the same Instagram account and Facebook Page as the CDA demo: Meta's webhooks point at
-// one of the two apps at a time, switched before a demo (CHANNEL_SETUP.md, section 5).
+// one of the two apps at a time, switched before a demo (CHANNEL_SETUP.md, section 7).
 
 import { hasValidWebhookSignature, secretMatches } from "./agentAuth";
 import { constantTimeEqual, sha256Hex } from "./auth";
-import { customerForChannel, rememberConversation } from "./customers";
+import { customerForChannel, findByChannel, rememberConversation } from "./customers";
 import { plainReply } from "./emailParse";
+import { getReplyMode } from "./replyMode";
 import { supabaseConfigured, supabaseRest as rest } from "./supabase";
 
 export type MetaChannel = {
@@ -107,7 +109,7 @@ async function passToAssistant(ch: MetaChannel, id: string, mid: string, text: s
   // "…" while Clara writes. Cosmetic, so a failure is ignored.
   void graphPost(ch, ch.sendPath(), { recipient: { id }, sender_action: "typing_on" }).catch(() => {});
 
-  const [thread] = await rest<Thread[]>(`${ch.table}?psid=eq.${q(id)}&select=*`);
+  const [[thread], mode] = await Promise.all([rest<Thread[]>(`${ch.table}?psid=eq.${q(id)}&select=*`), getReplyMode(ch.channel)]);
   const customer = await customerForChannel({ channel: ch.channel, key: id, name: thread ? undefined : await senderName(ch, id) }, false);
 
   const continueId =
@@ -125,7 +127,13 @@ async function passToAssistant(ch: MetaChannel, id: string, mid: string, text: s
     rest(`${ch.table}?on_conflict=psid`, {
       method: "POST",
       prefer: "resolution=merge-duplicates,return=minimal",
-      body: JSON.stringify({ psid: id, conversation_id: conversationId, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        psid: id,
+        conversation_id: conversationId,
+        updated_at: new Date().toISOString(),
+        // Draft mode: what staff will see next to Clara's draft. Auto mode keeps no text.
+        last_message: mode === "draft" ? text.slice(0, 1000) : null,
+      }),
     }),
     rememberConversation(conversationId, customer.id, ch.channel),
   ]);
@@ -181,6 +189,39 @@ function chunks(text: string, max: number): string[] {
   return parts;
 }
 
+/** Sends text to the person, split into messages the platform accepts: Clara's answer, or staff's (a draft). */
+export async function sendToPerson(ch: MetaChannel, id: string, text: string) {
+  for (const part of chunks(text, ch.maxText)) {
+    await graphPost(ch, ch.sendPath(), {
+      recipient: { id },
+      ...(ch.messagingType ? { messaging_type: "RESPONSE" } : {}),
+      message: { text: part },
+    });
+  }
+}
+
+/** Draft mode: Clara's answer waits on /admin with the person's message, once per answer. */
+async function keepAsDraft(ch: MetaChannel, id: string, conversationId: string | null, key: string, text: string) {
+  const [[thread], owner] = await Promise.all([
+    rest<{ last_message: string | null }[]>(`${ch.table}?psid=eq.${q(id)}&select=last_message&limit=1`),
+    findByChannel({ channel: ch.channel, key: id }).catch(() => null),
+  ]);
+  await rest("social_drafts?on_conflict=ref", {
+    method: "POST",
+    prefer: "resolution=ignore-duplicates,return=minimal",
+    body: JSON.stringify({
+      channel: ch.channel,
+      psid: id,
+      customer_name: owner?.customer.name ?? null,
+      conversation_id: conversationId,
+      ref: `${ch.channel}:${key}`,
+      question: thread?.last_message ?? null,
+      reply: text,
+    }),
+  });
+  return { outcome: "kept as a draft for staff" };
+}
+
 function recipientFrom(ch: MetaChannel, ids: string[] | undefined): string | undefined {
   for (const id of ids ?? []) {
     if (typeof id !== "string") continue;
@@ -218,6 +259,8 @@ export async function handleMetaReply(ch: MetaChannel, payload: MetaReply): Prom
   const responseIds = answers.map((item) => String(item.event?.response_id ?? "")).join(".");
   const key = `${payload.conversation_id ?? ""}.${responseIds || (payload.user_message_ids ?? []).join(".")}`.replace(/[^\w.-]/g, "");
 
+  if ((await getReplyMode(ch.channel)) === "draft") return keepAsDraft(ch, id, payload.conversation_id ?? null, key, text);
+
   await rest(`${ch.table}?on_conflict=psid`, {
     method: "POST",
     prefer: "resolution=ignore-duplicates,return=minimal",
@@ -231,13 +274,7 @@ export async function handleMetaReply(ch: MetaChannel, payload: MetaReply): Prom
   if (!claimed.length) return { outcome: "already sent" };
 
   try {
-    for (const part of chunks(text, ch.maxText)) {
-      await graphPost(ch, ch.sendPath(), {
-        recipient: { id },
-        ...(ch.messagingType ? { messaging_type: "RESPONSE" } : {}),
-        message: { text: part },
-      });
-    }
+    await sendToPerson(ch, id, text);
     return { outcome: "sent" };
   } catch (error) {
     await rest(`${ch.table}?psid=eq.${q(id)}`, {

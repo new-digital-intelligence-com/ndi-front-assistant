@@ -230,6 +230,11 @@ Intercom / hosted page / widget ────┘         ▼
               Clara writes. Photos and files are not passed on: Clara asks the customer to type the details.
             </P>
             <P>
+              Like email, each of the two has a switch on /admin → ✉️ Replies: <B>Send automatically</B>, or <B>Draft for staff</B>.
+              A draft waits there next to the customer&apos;s message; staff change it if needed and send it, or discard it. Meta
+              only takes a reply within 24 hours of the customer&apos;s last message, so the page shows how long a draft can wait.
+            </P>
+            <P>
               Instagram @new_digital_intelligence and the Facebook Page “New Digital Intelligence” are shared with NDI&apos;s CDA demo:
               Meta sends their messages to one of the two demos at a time, switched before a demo.
             </P>
@@ -323,7 +328,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["😊 Mood", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
                 ["📲 Call list", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
                 ["📚 Knowledge", "Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
-                ["✉️ Email", "Send Clara's email answers automatically, or leave them as drafts; the latest emails and what happened to each."],
+                ["✉️ Replies", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
               ]}
             />
             <P>The Claude insights are written only when a staff member clicks, and nothing is stored.</P>
