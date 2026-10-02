@@ -24,8 +24,8 @@ and model. The staff copilot is **Aida**.
 |---|---|---|
 | Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
 | Telegram | ✅ **@ndi2026bot**, linked to Clara (2 Oct 2026) | Native ElevenLabs Telegram trigger |
-| Email | ⏳ contact@new-digital-intelligence.com: Gmail access + Pub/Sub done; Custom Channel next | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
+| Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on /admin → ✉️ Replies | Gmail push → web app → Custom Channel "NDI email" |
+| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. NDI's side ready (2 Oct 2026); Meta points at CDA until the switch | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ New Anam avatar (the user sets it up) | Anam joined to Clara |
 | Intercom | Optional | Needs NDI's own Intercom workspace |
@@ -92,7 +92,7 @@ npm run lint
   `NDI_AGENT_TOOL_SECRET` `8MesPm8j0zm9MlKnLKCq` = `AGENT_TOOL_SECRET`)
 - Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
   (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
-- **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only, `email_mode` placeholder)
+- **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only; its placeholders `email_mode`, `instagram_mode`, `messenger_mode` are the auto/draft switches)
 - Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, plus the URL document
   "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, auto-sync, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
   attached to Clara **and** Aida on their live branches
@@ -103,8 +103,8 @@ npm run lint
 - Same structure as CDA; see CHANNEL_SETUP.md §13 for routes and who may call them
 - Railway: `src/instrumentation.ts` + `src/lib/dailyJobs.ts` replace Vercel Cron; `src/lib/appUrl.ts` gives the
   public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
-- Values still to fill in the code once known: `SUPPORT_EMAIL`, `TELEGRAM_BOT`, `PHONE_LINE`
-  (`src/components/ChannelLinks.tsx`, buttons hidden while empty) and `DEMO_LINE` (`src/components/admin/CallListPanel.tsx`)
+- Values still to fill in the code once known: `PHONE_LINE` (`src/components/ChannelLinks.tsx`, its button hidden
+  while empty) and `DEMO_LINE` (`src/components/admin/CallListPanel.tsx`); `SUPPORT_EMAIL` and `TELEGRAM_BOT` are set
 - Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
   Tailwind tokens (`brand`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`) in `src/app/globals.css`:
   `accent` = the logo red, `brand` = `#e00000` (buttons, tabs, links: readable at 4.5:1), black and neutral greys.
@@ -119,10 +119,12 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 ## 5. Open tasks (in order)
 
 1. ✅ **GitHub** (2 Oct 2026): public `github.com/new-digital-intelligence-com/ndi-front-assistant`, `main` (HelmiDev03).
-2. ✅ **Supabase** (2 Oct 2026): the team's shared "pocs" project, own schema `fo01_ndi` (25 tables, exposed in the
+2. ✅ **Supabase** (2 Oct 2026): the team's shared "pocs" project, own schema `fo01_ndi` (26 tables, exposed in the
    Data API), NDI's own secret key `sb_secret_…` in `SUPABASE_SERVICE_ROLE_KEY`. Checked read-only through the API.
+   When `supabase/schema.sql` changes, the user runs it again in the SQL editor (safe: everything is "if not exists");
+   until then the new feature fails (on 2 Oct 2026 the Instagram & Messenger card stayed empty for that reason).
 3. ✅ **Railway** (2 Oct 2026): team NDI → project POCs → service `[FO-01] ndi-front-assistant` (europe-west4),
-   from GitHub `main`, domain `ndi-assistant.up.railway.app`, 29 variables from `.env.local` (empty ones left out).
+   from GitHub `main`, domain `ndi-assistant.up.railway.app`, the variables from `.env.local` (empty ones left out; 43 on 2 Oct 2026).
    Checked: pages, protections, `daily jobs: scheduled`, staff admin reading Supabase (CHANNEL_SETUP.md §3).
    **Pushes do not deploy by themselves** until a GitHub organisation owner gives Railway's GitHub App access to the
    repository (the user is a member, not an owner): after each push, deploy the commit with the `railway api`
@@ -131,16 +133,18 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.
 5. ✅ **Telegram**: bot **@ndi2026bot** linked to Clara; `TELEGRAM_BOT` in ChannelLinks.
-6. **Email** (contact@new-digital-intelligence.com): ✅ NDI's own Google Cloud project `ndi-front-assistant` (owned by
-   contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
-   subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`. Next: Custom Channel "NDI email" → its 3 values →
-   Railway variables → start the watch → test.
+6. ✅ **Email** (contact@new-digital-intelligence.com, 2 Oct 2026): NDI's own Google Cloud project `ndi-front-assistant`
+   (owned by contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
+   subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`, Custom Channel "NDI email" (3 values on Railway),
+   Gmail watch started (renewed daily). The user tested a reply. Auto or draft: /admin → ✉️ Replies.
 7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
    `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** (built 2 Oct 2026,
    `src/lib/handover.ts`, CHANNEL_SETUP.md §12; tested only with fakes so far: the first real test is the user's).
 8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
-9. **Instagram/Messenger**: Custom Channels "NDI Instagram" and "NDI Messenger" → variables; switch the 2 Meta
-   Callback URLs when NDI should answer (CHANNEL_SETUP.md §7).
+9. **Instagram/Messenger** (CDA's accounts, the user's decision): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
+   on Clara (2 Oct 2026; secret order checked, 6 values on Railway); tokens checked (NDI's Instagram token refreshed,
+   valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. Next: the
+   user switches the 2 Meta Callback URLs when NDI should answer (CHANNEL_SETUP.md §7) and tests with a DM.
 10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
     API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
     links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check

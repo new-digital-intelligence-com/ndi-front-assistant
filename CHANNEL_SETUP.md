@@ -387,7 +387,7 @@ switch only changes the address:
 Good to know: each app has its own database, so a person who wrote to CDA's Ellie is new to Clara (and the
 other way round). Both apps refresh the same Instagram token every 7 days and keep their own copy.
 
-### Before the first switch to NDI
+### Before the first switch to NDI (✅ done 2 Oct 2026)
 
 1. **ElevenLabs** → Clara → Channels → **Custom Channel** → Add trigger → new connection `NDI Instagram` →
    Reply Webhook URL `<APP_URL>/api/instagram/reply` → copy the 3 values → `INSTAGRAM_CHANNEL_INBOUND_URL`,
