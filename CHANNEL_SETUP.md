@@ -133,10 +133,13 @@ Operating mode: AGENT (summary of the request, never claims a meeting is booked)
 client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
 - the **AI Employee catalog** and the **latest company presentation** — as PDF copies, because ElevenLabs cannot read PowerPoint
 - the **SARAA factsheet**
-- three PDFs written for Clara on 2 Oct 2026 from public sources only (website, LinkedIn, YouTube, privacy policy,
-  the presentation and the catalog's overview): **NDI Company Knowledge Base**, **NDI Frequently Asked Questions**
-  and, optionally, **NDI Public Demo Videos**. They and their HTML sources are in `knowledge-base/` on the
-  developer's machine (git-ignored; `knowledge-base/README.md` says how to rebuild them)
+- two PDFs written for Clara on 2 Oct 2026 from public sources only (website, LinkedIn, YouTube, privacy policy,
+  the presentation and the catalog's overview): **NDI Company Knowledge Base** and **NDI Frequently Asked
+  Questions**. They and their HTML sources are in `knowledge-base/` on the developer's machine (git-ignored;
+  `knowledge-base/README.md` says how to rebuild them)
+- the **demo videos page** `<APP_URL>/demos`, added as an ElevenLabs **URL document** (see "Demo videos" below), so
+  new YouTube videos reach Clara by themselves. Adding the YouTube channel link itself does not work: ElevenLabs
+  extracted 0 characters from it in a test (YouTube builds its pages with JavaScript)
 
 Best kept in **one approved folder with one owner at NDI**, and Clara reads nothing else (never the whole shared drive).
 
@@ -160,6 +163,31 @@ a date or a finished product for them.
    *prompt*). Don't edit or attach it by hand. It needs at least one other document on each agent first.
 
 Rules learnt on CDA: never "crawl entire website"; a synced document must also be **attached** to the agent.
+
+### Demo videos (`/demos`, kept up to date by itself)
+
+```
+YouTube channel ──(at most once an hour)──► <APP_URL>/demos ──► ElevenLabs URL document ──► Clara's answers
+```
+
+`src/lib/demoVideos.ts` reads NDI's YouTube channel (@NewDigitalIntelligence-j5c) with the **YouTube Data API**:
+public data only, 2–3 of the free 10,000 daily quota units per read, kept for an hour so visitors never reach
+YouTube. The page lists the newest video of each AI Employee (titles that start with a catalog code such as
+`FO-01`) and the NDI company videos; client-specific and investor videos are left out. Every hour the app's
+scheduler calls `/api/cron/demos`: when the list changed, it asks ElevenLabs to re-read the page
+(`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara knows a new video within about an hour. Clara never
+calls YouTube during a conversation.
+
+**Set it up (after the app is live on Railway)**
+1. **Google Cloud** (any NDI project, e.g. `cda-email-509312`) → APIs & Services → **Enable** "YouTube Data API v3"
+   → Credentials → **Create credentials → API key** → edit it: **API restrictions → YouTube Data API v3** only;
+   application restrictions: none (Railway has no fixed IP). → Railway variable `YOUTUBE_API_KEY`.
+2. Check `<APP_URL>/demos`: it lists the demos (without the key it only shows the channel link).
+3. **ElevenLabs** → Knowledge Base → **Add URL** `<APP_URL>/demos`, auto-sync on (daily, as a backup) → attach it to
+   **Clara and Aida** → copy the document ID → Railway variable `ELEVENLABS_DEMOS_DOCUMENT_ID`. (Claude can do this
+   step with the API.)
+4. From then on the hourly check refreshes it whenever the videos change. Railway logs show
+   "demo videos: 200 {…"changed":true…}" when that happens.
 
 ---
 
@@ -485,8 +513,8 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | Run | `npm install` · `npm run dev` · `npm run build` (before `npx tsc --noEmit`) · `npm run lint` |
 | Commits | Author **HelmiDev03**; pushed straight to `main` |
 
-**Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin` and
-`/aida/join` (they ask for their own proof) and the routes that check their own secret:
+**Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin`, `/demos` and
+`/aida/join` (they ask for their own proof, or show only public data) and the routes that check their own secret:
 
 | Routes | Called by | Protected by |
 |---|---|---|
@@ -495,12 +523,14 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `/api/email/gmail-push` | Google Pub/Sub | `?token=` `GMAIL_PUSH_SECRET` |
 | `/api/email/assistant-reply` | ElevenLabs (email replies) | HMAC signature (`EMAIL_CHANNEL_SIGNING_SECRET`) |
 | `/api/cron/daily` | The app's own daily jobs (`src/lib/dailyJobs.ts`) | `Bearer CRON_SECRET` |
+| `/api/cron/demos` | The app's own scheduler, hourly: refreshes the demo videos document when YouTube changed | `Bearer CRON_SECRET` |
 | `/api/email/gmail-watch` | By hand, to restart the Gmail watch | `Bearer CRON_SECRET` or the push secret |
 | `/api/instagram/webhook`, `/api/messenger/webhook` | Meta | `?token=` `INSTAGRAM_WEBHOOK_SECRET` / `MESSENGER_WEBHOOK_SECRET` (+ Meta signature if `META_APP_SECRET` is set) |
 | `/api/instagram/reply`, `/api/messenger/reply` | ElevenLabs (replies) | HMAC signature (`INSTAGRAM_CHANNEL_SIGNING_SECRET` / `MESSENGER_CHANNEL_SIGNING_SECRET`) |
 | `/api/email/mode`, `/api/admin/*` | `/admin` | Aida staff token |
 | `/api/aida/*` | Aida rooms | Staff token, room ticket, or nothing for customers (each route checks) |
 | `/docs` | Anyone | Nothing: public page, no secrets |
+| `/demos` | Anyone, and ElevenLabs (Clara's knowledge) | Nothing: public YouTube titles and links only |
 | `/api/elevenlabs/*`, `/api/anam/session`, `/api/account`, `/api/transcript/email` | Customer site | Site password |
 
 ### Environment variables (`.env.local` and Railway → Variables)
@@ -528,6 +558,8 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `MESSENGER_CHANNEL_INBOUND_URL`, `MESSENGER_CHANNEL_INBOUND_SECRET`, `MESSENGER_CHANNEL_SIGNING_SECRET` | "NDI Messenger" Custom Channel |
 | `META_APP_SECRET` (optional) | Also check Meta's signature on Instagram and Messenger webhooks |
 | `NEXT_PUBLIC_INTERCOM_APP_ID` (optional) | NDI's Intercom workspace; without it there is no bubble |
+| `YOUTUBE_API_KEY` | YouTube Data API key for `/demos` (public data only; restricted to YouTube Data API v3) |
+| `ELEVENLABS_DEMOS_DOCUMENT_ID` | The ElevenLabs URL document that reads `<APP_URL>/demos`; refreshed when the videos change |
 
 ---
 

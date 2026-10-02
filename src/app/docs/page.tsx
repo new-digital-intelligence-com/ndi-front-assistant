@@ -248,6 +248,11 @@ Intercom / hosted page / widget ────┘         ▼
                   <B>Widget</B>: ElevenLabs&apos; chat bubble, which any website can add with two lines of HTML.
                 </>,
                 <>
+                  <B>Demo videos</B>: the public page <code>/demos</code> lists NDI&apos;s demo videos from YouTube. Clara&apos;s
+                  knowledge reads it, and the app asks for a fresh read within an hour of a new video, so Clara can share the
+                  right link.
+                </>,
+                <>
                   <B>Not built yet</B>: Slack and WhatsApp.
                 </>,
               ]}

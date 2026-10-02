@@ -126,7 +126,11 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
 9. **Instagram/Messenger**: Custom Channels "NDI Instagram" and "NDI Messenger" → variables; switch the 2 Meta
    Callback URLs when NDI should answer (CHANNEL_SETUP.md §7).
-10. Optional: Intercom (own workspace), Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`.
+10. **Demo videos** (after Railway): YouTube Data API key → `YOUTUBE_API_KEY`; add `<APP_URL>/demos` as an ElevenLabs
+    URL document (auto-sync on), attach to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
+    then refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos"). Test once what ElevenLabs
+    extracts from the live page (free: create, read `/content`).
+11. Optional: Intercom (own workspace), Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`.
 
 ---
 
