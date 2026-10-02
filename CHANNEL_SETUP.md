@@ -132,13 +132,20 @@ Operating mode: AGENT (summary of the request, never claims a meeting is booked)
 **What goes in (decided 2 Oct 2026).** Clara is public: anything in her knowledge can be repeated to anyone. So only
 client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
 - the **AI Employee catalog** and the **latest company presentation** — as PDF copies, because ElevenLabs cannot read PowerPoint
-- the **SARAA factsheet** and the **partner programme one-pager** (partner-facing)
+- the **SARAA factsheet**
 
-**What never goes in:** client project folders, contracts and contract templates, pricing, costing and business-case
-tools, HR and company operations, internal policies and audits, CRM exports and prospect lists, sales and meeting
-recordings, partner contracts and commission terms, investor material, demo access details. The FAQ, flyers and
-one-pagers in the website's download folder are out of date and stay out until NDI updates them (an FAQ cleaned for
-customers can be added once NDI has approved it).
+Best kept in **one approved folder with one owner at NDI**, and Clara reads nothing else (never the whole shared drive).
+
+**What never goes in:** client project folders, contracts and contract templates (a person sends NDAs, contracts and
+the DPA), pricing, costing and business-case tools, HR and company operations, internal policies and audits, CRM
+exports and prospect lists, sales and meeting recordings, partner material (the partner programme is not on the
+website yet), investor material, demo access details, other companies' documents, the internal product master sheet,
+the old website texts (the site was relaunched in 2026). The FAQ, flyers and one-pagers in the website's download
+folder are out of date and stay out until NDI updates them (an FAQ cleaned for customers can be added once NDI has
+approved it).
+
+Some catalog AI Employees are marked **"Demo Coming Soon"**: Clara's and Aida's prompts say never to promise a demo,
+a date or a finished product for them.
 
 1. ElevenLabs → Knowledge Base → **Google Drive** → connect → pick the files (PDF or Google Docs; Sheets and
    Slides are not supported by the Drive sync) → auto sync on.
