@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
 /**
  * If a signed-in customer was in the room, the call becomes part of what we remember about them,
- * so Ellie and Aida can refer to it on any channel next time.
+ * so Clara and Aida can refer to it on any channel next time.
  */
 async function rememberCall(room: AidaRoom) {
   const customerId = await roomCustomerId(room.id);

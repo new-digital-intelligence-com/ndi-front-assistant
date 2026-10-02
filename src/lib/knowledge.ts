@@ -1,11 +1,11 @@
-// Knowledge gaps: Ellie learns from the questions she could not answer, under staff control.
+// Knowledge gaps: Clara learns from the questions she could not answer, under staff control.
 //
 //   conversation ends → ElevenLabs' post-call analysis fills "unanswered_question" → post-call
 //   webhook → knowledge_gaps → /admin "Knowledge" tab: Claude groups repeats and suggests wording
-//   → staff edit and approve → knowledge_faq → published to Ellie as one document,
+//   → staff edit and approve → knowledge_faq → published to Clara as one document,
 //   "CDA approved FAQ", which is always in her context (usage mode "prompt")
 //
-// Nothing reaches Ellie without a staff member approving it. Claude's suggestion is only a starting
+// Nothing reaches Clara without a staff member approving it. Claude's suggestion is only a starting
 // point: where it would need a CDA fact it cannot know, it writes [check: …], and an answer still
 // holding such a marker cannot be approved.
 
@@ -17,12 +17,12 @@ import { supabaseRest as rest } from "./supabase";
 const q = encodeURIComponent;
 const API = "https://api.elevenlabs.io/v1/convai";
 export const DOC_NAME = "CDA approved FAQ";
-/** Ellie's live branch ("Main", 100% of traffic). */
+/** Clara's live branch ("Main", 100% of traffic). */
 const BRANCH_ID = process.env.ELEVENLABS_BRANCH_ID || "agtbrch_9301m2p375xzetbbsyymxnbnsf1s";
 const MAX_GAPS_PER_CONVERSATION = 5;
 const MAX_QUESTION = 300;
 const MAX_ANSWER = 1_500;
-/** Ellie's other documents; far fewer on the agent means something is wrong, so nothing is changed. */
+/** Clara's other documents; far fewer on the agent means something is wrong, so nothing is changed. */
 const MIN_OTHER_DOCUMENTS = 5;
 
 export type Gap = { id: number; conversation_id: string | null; channel: string | null; question: string; created_at: string };
@@ -166,7 +166,7 @@ function clean(question: unknown, answer: unknown): { question: string; answer: 
   const q1 = typeof question === "string" ? question.trim().slice(0, MAX_QUESTION) : "";
   const a1 = typeof answer === "string" ? answer.trim().slice(0, MAX_ANSWER) : "";
   if (q1.length < 6) return "Write the question.";
-  if (a1.length < 2) return "Write the answer Ellie should give.";
+  if (a1.length < 2) return "Write the answer Clara should give.";
   if (UNFINISHED.test(a1)) return "Replace every [check: …] with the real fact before approving.";
   return { question: q1, answer: a1 };
 }
@@ -231,7 +231,7 @@ export async function deleteFaq(id: unknown): Promise<void> {
   await publish();
 }
 
-// --- publishing to Ellie ------------------------------------------------------------------------------
+// --- publishing to Clara ------------------------------------------------------------------------------
 
 type KnowledgeRef = { type: string; name: string; id: string; usage_mode?: string };
 
@@ -267,8 +267,8 @@ function documentText(entries: Faq[]): string {
 type AgentKnowledge = { conversation_config: { agent: { prompt: { knowledge_base?: KnowledgeRef[] } } }; branch_id?: string | null };
 
 /**
- * The agents that get the approved answers: Ellie, and Aida, whose drafts for staff should say the
- * same. Each is changed on its live branch; for Ellie that is known, for Aida it is read.
+ * The agents that get the approved answers: Clara, and Aida, whose drafts for staff should say the
+ * same. Each is changed on its live branch; for Clara that is known, for Aida it is read.
  */
 function agentsToTeach(): { id: string; branch: string | null }[] {
   const agents = [{ id: process.env.ELEVENLABS_AGENT_ID ?? "", branch: BRANCH_ID as string | null }];
@@ -277,7 +277,7 @@ function agentsToTeach(): { id: string; branch: string | null }[] {
 }
 
 /**
- * Rebuilds the document from every approved answer and swaps it in on Ellie and Aida: a new document
+ * Rebuilds the document from every approved answer and swaps it in on Clara and Aida: a new document
  * is created, each agent's list gets it in place of the old one, and the old one is deleted. Only
  * the entry named "CDA approved FAQ" is touched; every other document is kept exactly as it is.
  */

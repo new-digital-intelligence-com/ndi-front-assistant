@@ -62,8 +62,8 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
   return (
     <div className="mx-auto w-full max-w-md">
       <form onSubmit={submit} className="space-y-3 rounded-xl bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-cda-dark">CDA staff</h1>
-        <p className="text-sm text-cda-text">
+        <h1 className="text-xl font-bold text-heading">CDA staff</h1>
+        <p className="text-sm text-muted">
           Enter the staff password to manage Aida rooms, email replies and customers.
         </p>
         <input
@@ -73,7 +73,7 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
           maxLength={40}
           autoComplete="name"
           autoFocus
-          className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-line px-3 py-2 text-sm"
         />
         <input
           type="password"
@@ -81,13 +81,13 @@ export function StaffSignIn({ onSignedIn }: { onSignedIn: (token: string) => voi
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Aida staff password"
           autoComplete="current-password"
-          className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-line px-3 py-2 text-sm"
         />
-        {error && <p className="text-sm text-cda-red">{error}</p>}
+        {error && <p className="text-sm text-brand">{error}</p>}
         <button
           type="submit"
           disabled={busy || !password || !name.trim()}
-          className="w-full rounded-lg bg-cda-red px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
           Sign in as staff
         </button>
@@ -213,14 +213,14 @@ export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut
       <div className="space-y-4">
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm">
           <div>
-            <h1 className="text-xl font-bold text-cda-dark">Aida rooms</h1>
-            <p className="mt-1 text-sm text-cda-text">
+            <h1 className="text-xl font-bold text-heading">Aida rooms</h1>
+            <p className="mt-1 text-sm text-muted">
               Live calls with a customer. Aida listens and drafts answers that only CDA staff see; you approve
               what gets sent.
             </p>
           </div>
 
-          <label className="block text-sm font-semibold text-cda-dark">
+          <label className="block text-sm font-semibold text-heading">
             Your name
             <input
               ref={nameInputRef}
@@ -232,63 +232,63 @@ export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut
               maxLength={40}
               placeholder="e.g. Sarah"
               className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm font-normal ${
-                nameMissing ? "border-cda-red ring-2 ring-cda-red/30" : "border-cda-grey"
+                nameMissing ? "border-brand ring-2 ring-brand/30" : "border-line"
               }`}
             />
-            {nameMissing && <span className="mt-1 block text-sm font-normal text-cda-red">Enter your name to join or create a room.</span>}
+            {nameMissing && <span className="mt-1 block text-sm font-normal text-brand">Enter your name to join or create a room.</span>}
           </label>
 
           <form
-            className="space-y-2 border-t border-cda-grey pt-4"
+            className="space-y-2 border-t border-line pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               void enter("/api/aida/rooms", { title: title.trim() });
             }}
           >
-            <p className="text-sm font-semibold text-cda-dark">Start a new room</p>
+            <p className="text-sm font-semibold text-heading">Start a new room</p>
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               maxLength={60}
               placeholder="Room name (optional)"
-              className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
             />
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-lg bg-cda-red px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
               Create room
             </button>
           </form>
 
           <form
-            className="space-y-2 border-t border-cda-grey pt-4"
+            className="space-y-2 border-t border-line pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               void enter("/api/aida/join", { code });
             }}
           >
-            <p className="text-sm font-semibold text-cda-dark">Join with a code</p>
+            <p className="text-sm font-semibold text-heading">Join with a code</p>
             <div className="flex gap-2">
               <input
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
                 placeholder="4F2-K9M"
                 maxLength={8}
-                className="min-w-0 flex-1 rounded-lg border border-cda-grey px-3 py-2 text-sm uppercase tracking-widest"
+                className="min-w-0 flex-1 rounded-lg border border-line px-3 py-2 text-sm uppercase tracking-widest"
               />
               <button
                 type="submit"
                 disabled={busy || !code.trim()}
-                className="rounded-lg border border-cda-red px-4 py-2 text-sm font-semibold text-cda-red disabled:opacity-60"
+                className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand disabled:opacity-60"
               >
                 Join
               </button>
             </div>
           </form>
 
-          {error && <p className="text-sm text-cda-red">{error}</p>}
+          {error && <p className="text-sm text-brand">{error}</p>}
         </section>
       </div>
 
@@ -311,7 +311,7 @@ export function Lobby({ staffToken, onSignOut }: { staffToken: string; onSignOut
           onClose={(roomCode) => void closeRoom(roomCode)}
         />
         <ClosedRoomList rooms={rooms.closed} onView={setViewing} />
-        <p className="text-xs text-cda-text">
+        <p className="text-xs text-muted">
           To test as a customer, open the room&apos;s invite link in a new tab. Staff sign-in only applies to
           this tab, so the new tab joins as the customer.
         </p>
@@ -339,23 +339,23 @@ function RoomList({
 }) {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="font-semibold text-cda-dark">
-        {heading} <span className="text-sm font-normal text-cda-text">({rooms.length})</span>
+      <h2 className="font-semibold text-heading">
+        {heading} <span className="text-sm font-normal text-muted">({rooms.length})</span>
       </h2>
       {rooms.length === 0 ? (
-        <p className="mt-2 text-sm text-cda-text">{empty}</p>
+        <p className="mt-2 text-sm text-muted">{empty}</p>
       ) : (
         <ul className="mt-3 space-y-2">
           {rooms.map((room) => (
             <li
               key={room.code}
               className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 ${
-                highlight ? "border border-cda-red/40 bg-red-50/50" : "bg-cda-grey-light"
+                highlight ? "border border-brand/40 bg-red-50/50" : "bg-surface"
               }`}
             >
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-cda-dark">{room.title ?? "Untitled room"}</span>
-                <span className="block text-xs text-cda-text">
+                <span className="block truncate text-sm font-semibold text-heading">{room.title ?? "Untitled room"}</span>
+                <span className="block text-xs text-muted">
                   {room.code} · started by {room.createdByName ?? "someone"} ·{" "}
                   {new Date(room.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
@@ -365,7 +365,7 @@ function RoomList({
                   type="button"
                   disabled={busy}
                   onClick={() => onClose(room.code)}
-                  className="rounded-full border border-cda-grey bg-white px-3 py-1.5 text-xs font-semibold text-cda-text disabled:opacity-60"
+                  className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-semibold text-muted disabled:opacity-60"
                 >
                   Close
                 </button>
@@ -373,7 +373,7 @@ function RoomList({
                   type="button"
                   disabled={busy}
                   onClick={() => onJoin(room.code)}
-                  className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                  className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
                 >
                   Join
                 </button>
@@ -390,18 +390,18 @@ function RoomList({
 function ClosedRoomList({ rooms, onView }: { rooms: OpenRoom[]; onView: (code: string) => void }) {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
-      <h2 className="font-semibold text-cda-dark">
-        Closed rooms <span className="text-sm font-normal text-cda-text">({rooms.length})</span>
+      <h2 className="font-semibold text-heading">
+        Closed rooms <span className="text-sm font-normal text-muted">({rooms.length})</span>
       </h2>
       {rooms.length === 0 ? (
-        <p className="mt-2 text-sm text-cda-text">No closed rooms yet.</p>
+        <p className="mt-2 text-sm text-muted">No closed rooms yet.</p>
       ) : (
         <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
           {rooms.map((room) => (
-            <li key={room.code} className="flex items-center justify-between gap-3 rounded-lg bg-cda-grey-light px-3 py-2">
+            <li key={room.code} className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2">
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-cda-dark">{room.title ?? "Untitled room"}</span>
-                <span className="block text-xs text-cda-text">
+                <span className="block truncate text-sm font-semibold text-heading">{room.title ?? "Untitled room"}</span>
+                <span className="block text-xs text-muted">
                   {room.code} · {room.createdByRole === "customer" ? "customer" : "staff"} room by{" "}
                   {room.createdByName ?? "someone"} · ended{" "}
                   {new Date(room.closedAt).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
@@ -410,7 +410,7 @@ function ClosedRoomList({ rooms, onView }: { rooms: OpenRoom[]; onView: (code: s
               <button
                 type="button"
                 onClick={() => onView(room.code)}
-                className="shrink-0 rounded-full border border-cda-grey bg-white px-4 py-1.5 text-xs font-semibold text-cda-dark"
+                className="shrink-0 rounded-full border border-line bg-white px-4 py-1.5 text-xs font-semibold text-heading"
               >
                 View
               </button>

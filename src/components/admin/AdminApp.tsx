@@ -22,7 +22,7 @@ const TABS: { id: AdminTab; label: string }[] = [
 
 /**
  * The staff side of the demo (/admin), behind the Aida staff password rather than the site
- * password: Aida rooms, who the customers are, call lists Ellie phones, what Ellie could not answer
+ * password: Aida rooms, who the customers are, call lists Clara phones, what Clara could not answer
  * (and the answers staff approve for her), how customers felt (😊 Mood), and the email reply switch. The sign-in is kept per
  * browser tab, so an invite link opened in another tab joins as a customer.
  *
@@ -76,14 +76,14 @@ export function AdminApp() {
               aria-selected={tab === item.id}
               onClick={() => open(item.id)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                tab === item.id ? "bg-cda-red text-white shadow" : "text-cda-ink hover:text-cda-dark"
+                tab === item.id ? "bg-brand text-white shadow" : "text-ink hover:text-heading"
               }`}
             >
               {item.label}
             </button>
           ))}
         </div>
-        <button type="button" onClick={signOut} className="text-xs text-cda-text underline">
+        <button type="button" onClick={signOut} className="text-xs text-muted underline">
           Sign out
         </button>
       </div>

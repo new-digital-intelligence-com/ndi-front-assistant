@@ -1,14 +1,14 @@
-// Feedback on Ellie's answers, from four places, all ending on /admin (📚 Knowledge → Feedback):
+// Feedback on Clara's answers, from four places, all ending on /admin (📚 Knowledge → Feedback):
 //
 //   1. 👍 / 👎 under each answer in the website chat (a 👎 asks "What was wrong?")
 //   2. What customers say about an answer on any channel ("that's wrong", "perfect, thanks"),
 //      picked up by ElevenLabs' post-call analysis (the feedback_* data collection items)
 //   3. Aida rooms: staff changed Aida's draft before sending it
-//   4. Email draft mode: staff changed Ellie's draft before sending it
+//   4. Email draft mode: staff changed Clara's draft before sending it
 //
 // Every rating counts towards the weekly score. Negative feedback and real corrections wait for
 // staff, who turn them into an approved answer ("CDA approved FAQ") or dismiss them. Nothing
-// reaches Ellie without that approval: an edit fixes one reply for one customer, and often carries
+// reaches Clara without that approval: an edit fixes one reply for one customer, and often carries
 // their name or order, so making it the answer for everyone is a separate decision.
 
 import { listEvents } from "./aida";
@@ -67,7 +67,7 @@ function commonWords(a: string[], b: string[]): number {
 const numbersIn = (text: string) => [...new Set(text.match(/\d[\d\s]*\d|\d/g)?.map((n) => n.replace(/\s/g, "")) ?? [])].sort().join(",");
 
 const GREETING = /^(hi|hello|hey|dear|good (morning|afternoon|evening)|thank(s| you)|many thanks)\b/i;
-const SIGN_OFF = /\b(regards|wishes|cheers|sincerely|best|thanks|thank you|ellie|assistant|team|care)\b/i;
+const SIGN_OFF = /\b(regards|wishes|cheers|sincerely|best|thanks|thank you|clara|assistant|team|care)\b/i;
 const wordCount = (sentence: string) => sentence.split(/\s+/).filter(Boolean).length;
 
 /** The message without its greeting and sign-off, which staff change for style, not for facts. */
@@ -291,13 +291,13 @@ type DraftRow = {
   gmail_id: string;
   thread_id: string;
   draft_id: string;
-  ellie_reply: string | null;
+  assistant_reply: string | null;
   subject: string | null;
   conversation_id: string | null;
 };
 
 /**
- * Email draft mode: finds drafts staff have since sent, and compares what went out with Ellie's
+ * Email draft mode: finds drafts staff have since sent, and compares what went out with Clara's
  * draft. Run when staff open the Knowledge tab and by the daily cron. A draft deleted without being
  * sent is simply forgotten.
  */
@@ -305,7 +305,7 @@ export async function checkSentDrafts(): Promise<number> {
   const since = new Date(Date.now() - DRAFT_FOLLOW_DAYS * 86_400_000).toISOString();
   const rows = await rest<DraftRow[]>(
     `email_messages?status=eq.draft&draft_id=not.is.null&reply_checked_at=is.null&created_at=gt.${q(since)}` +
-      `&select=gmail_id,thread_id,draft_id,ellie_reply,subject,conversation_id&order=created_at.desc&limit=${DRAFTS_PER_CHECK}`,
+      `&select=gmail_id,thread_id,draft_id,assistant_reply,subject,conversation_id&order=created_at.desc&limit=${DRAFTS_PER_CHECK}`,
   );
   let found = 0;
   for (const row of rows) {
@@ -318,9 +318,9 @@ export async function checkSentDrafts(): Promise<number> {
         .sort((a, b) => Number(a.internalDate ?? 0) - Number(b.internalDate ?? 0))[0];
       if (!sent) {
         await saveOutcome(`email:${row.gmail_id}`, "email", "discarded");
-      } else if (row.ellie_reply) {
+      } else if (row.assistant_reply) {
         const sentText = withoutQuotedHistory(parseGmailMessage(sent).text);
-        const kind = editKind(row.ellie_reply, sentText);
+        const kind = editKind(row.assistant_reply, sentText);
         await saveOutcome(`email:${row.gmail_id}`, "email", kind);
         if (kind !== "unchanged") {
           const asked = customerEmail ? withoutQuotedHistory(parseGmailMessage(customerEmail).text) : "";
@@ -331,7 +331,7 @@ export async function checkSentDrafts(): Promise<number> {
             channel: "email",
             conversationId: row.conversation_id,
             question: question || null,
-            original: row.ellie_reply,
+            original: row.assistant_reply,
             corrected: sentText,
             styleOnly: kind === "polished",
           })) found++;
@@ -369,7 +369,7 @@ export async function weekScore(): Promise<{ likes: number; dislikes: number }> 
 
 export type DraftCounts = Record<DraftOutcome, number> & { total: number };
 
-/** What happened to Ellie's email drafts and Aida's drafts in the last 7 days. */
+/** What happened to Clara's email drafts and Aida's drafts in the last 7 days. */
 export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCounts }> {
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const rows = await rest<{ source: string; outcome: DraftOutcome }[]>(

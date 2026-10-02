@@ -1,5 +1,5 @@
 -- Customer memory shared by every channel (Telegram, Instagram, email, website, Slack), Aida
--- rooms, and the email channel's record of what Ellie did with each email.
+-- rooms, and the email channel's record of what Clara did with each email.
 -- Run this once in the Supabase project: SQL Editor -> New query -> paste -> Run.
 --
 -- A customer is a person. Every way of reaching them - a Telegram chat, an Instagram sender id, an
@@ -115,7 +115,7 @@ alter table aida_rooms  enable row level security;
 alter table aida_events enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Email: mail to the CDA mailbox arrives through Gmail push, Ellie answers through a Custom
+-- Email: mail to the CDA mailbox arrives through Gmail push, Clara answers through a Custom
 -- Channel, and the web app sends her reply or leaves it as a Gmail draft (src/lib/emailInbox.ts).
 -- ---------------------------------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ create table if not exists email_messages (
   references_header text,
   status            text not null default 'new',  -- new | waiting | replying | sent | draft | skipped | failed
   reason            text,                         -- why it was skipped or failed
-  conversation_id   text unique,                  -- Ellie's conversation for this email
+  conversation_id   text unique,                  -- Clara's conversation for this email
   mode              text,                         -- auto | draft, as it was when the reply came back
   received_at       timestamptz,
   created_at        timestamptz not null default now(),
@@ -154,7 +154,7 @@ alter table email_messages enable row level security;
 alter table gmail_state    enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Messenger: one row per person writing to the Facebook Page (src/lib/messenger.ts). Which Ellie
+-- Messenger: one row per person writing to the Facebook Page (src/lib/messenger.ts). Which Clara
 -- conversation they are in (continued for 10 minutes) and the last answer sent, so a repeated
 -- delivery never sends twice. No message text.
 -- ---------------------------------------------------------------------------------------------
@@ -193,7 +193,7 @@ create table if not exists channel_tokens (
 
 alter table channel_tokens enable row level security;
 
--- Alexa: Ellie's answer, kept only until the skill reads it out (seconds; anything older than
+-- Alexa: Clara's answer, kept only until the skill reads it out (seconds; anything older than
 -- 15 minutes is deleted). src/lib/alexa.ts
 create table if not exists alexa_replies (
   message_id      text primary key,               -- alexa|<Amazon request id>
@@ -205,7 +205,7 @@ create table if not exists alexa_replies (
 alter table alexa_replies enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Call lists: staff enter phone numbers with instructions on /admin, and Ellie phones them one by
+-- Call lists: staff enter phone numbers with instructions on /admin, and Clara phones them one by
 -- one from the Twilio number, up to 3 tries each (src/lib/outboundCalls.ts). current_item is the
 -- call in progress; claiming it with a conditional update is what keeps it to one call at a time.
 -- ---------------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ create table if not exists call_list_items (
   position        int not null,
   phone           text not null,                   -- +447…, as dialled
   name            text,
-  instructions    text not null default '',        -- for Ellie, never read out
+  instructions    text not null default '',        -- for Clara, never read out
   status          text not null default 'waiting', -- waiting | calling | reached | failed | stopped
   attempts        int not null default 0,
   next_attempt_at timestamptz,
@@ -244,10 +244,10 @@ alter table call_lists      enable row level security;
 alter table call_list_items enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Knowledge gaps: questions Ellie could not answer (ElevenLabs' post-call data collection item
+-- Knowledge gaps: questions Clara could not answer (ElevenLabs' post-call data collection item
 -- "unanswered_question", on every channel), and the answers CDA staff approve for them on /admin.
--- Approved answers are published to Ellie's knowledge as one document, "CDA approved FAQ"
--- (src/lib/knowledge.ts). Nothing reaches Ellie without a staff member approving it.
+-- Approved answers are published to Clara's knowledge as one document, "CDA approved FAQ"
+-- (src/lib/knowledge.ts). Nothing reaches Clara without a staff member approving it.
 -- ---------------------------------------------------------------------------------------------
 
 create table if not exists knowledge_gaps (
@@ -286,7 +286,7 @@ alter table knowledge_faq     enable row level security;
 alter table knowledge_publish enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Feedback: what customers think of Ellie's answers, and where staff corrected a draft. Negative
+-- Feedback: what customers think of Clara's answers, and where staff corrected a draft. Negative
 -- feedback and real corrections wait on /admin (📚 Knowledge → Feedback) for staff to turn into an
 -- approved answer; every rating counts towards the weekly 👍 / 👎 score (src/lib/feedback.ts).
 -- ---------------------------------------------------------------------------------------------
@@ -301,7 +301,7 @@ create table if not exists knowledge_feedback (
   channel          text,
   conversation_id  text,
   question         text,                        -- what the customer asked
-  original_answer  text,                        -- what Ellie or Aida answered
+  original_answer  text,                        -- what Clara or Aida answered
   comment          text,                        -- feedback: what the customer said about it
   corrected_answer text,                        -- correction: what staff sent instead
   status           text not null default 'open', -- open | answered | dismissed
@@ -324,15 +324,15 @@ create table if not exists feedback_ratings (
 
 create index if not exists feedback_ratings_recent_idx on feedback_ratings (created_at desc);
 
--- Email draft mode: Ellie's draft is kept so that what staff finally send can be compared with it.
+-- Email draft mode: Clara's draft is kept so that what staff finally send can be compared with it.
 alter table email_messages add column if not exists draft_id         text;
-alter table email_messages add column if not exists ellie_reply      text;
+alter table email_messages add column if not exists assistant_reply      text;
 alter table email_messages add column if not exists reply_checked_at timestamptz;
 
 alter table knowledge_feedback enable row level security;
 alter table feedback_ratings   enable row level security;
 
--- What staff did with each draft Ellie (email draft mode) or Aida (rooms) wrote: sent unchanged,
+-- What staff did with each draft Clara (email draft mode) or Aida (rooms) wrote: sent unchanged,
 -- polished (style only), corrected (a fact changed), declined / discarded. Only the outcome, no
 -- text: it is the "right first time" score on /admin → 📚 Knowledge.
 create table if not exists draft_outcomes (
@@ -347,9 +347,9 @@ create index if not exists draft_outcomes_recent_idx on draft_outcomes (created_
 
 alter table draft_outcomes enable row level security;
 
--- The CDA appliances a customer has told Ellie about: model, type and purchase date, from the
+-- The CDA appliances a customer has told Clara about: model, type and purchase date, from the
 -- post-call analysis item "appliance" (a receipt, a photo of the rating plate, or what they said).
--- customer_lookup gives them back to Ellie on every channel, so she never asks for the model twice.
+-- customer_lookup gives them back to Clara on every channel, so she never asks for the model twice.
 create table if not exists customer_appliances (
   id          bigint generated always as identity primary key,
   customer_id uuid not null references customers (id) on delete cascade,
@@ -382,7 +382,7 @@ create table if not exists conversation_moods (
   low_point         text,                       -- excerpt of the message where the mood was lowest
   title             text,                       -- ElevenLabs' short title for the conversation
   summary           text,
-  follow_up         boolean not null default false, -- Ellie promised a CDA follow-up or the customer asked for a person
+  follow_up         boolean not null default false, -- Clara promised a CDA follow-up or the customer asked for a person
   started_at        timestamptz not null,
   alerted_at        timestamptz,                -- when staff were emailed about it
   handled_at        timestamptz,                -- when staff marked it followed up
@@ -395,8 +395,8 @@ create index if not exists conversation_moods_customer_idx on conversation_moods
 
 alter table conversation_moods enable row level security;
 
--- Email: the mood of the incoming email, checked by Claude before Ellie sees it. An upset email is
--- never answered automatically: it becomes a Gmail draft for staff, labelled "Ellie/Upset customer".
+-- Email: the mood of the incoming email, checked by Claude before Clara sees it. An upset email is
+-- never answered automatically: it becomes a Gmail draft for staff, labelled "Clara/Upset customer".
 alter table email_messages add column if not exists mood_label       text;  -- positive | neutral | negative
 alter table email_messages add column if not exists mood_frustration real;
 alter table email_messages add column if not exists mood_reason      text;

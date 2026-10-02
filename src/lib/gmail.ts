@@ -1,5 +1,5 @@
 // The CDA mailbox through the Gmail API, signed in once with Google OAuth (scope gmail.modify):
-// read new inbox mail, send or draft replies in the customer's thread, and put Ellie's labels on
+// read new inbox mail, send or draft replies in the customer's thread, and put Clara's labels on
 // the customer's email. Server side only; the refresh token is as good as the mailbox password.
 
 import type { GmailMessage } from "./emailParse";
@@ -146,20 +146,20 @@ export async function createDraft(raw: string, threadId: string): Promise<string
   return draft.id;
 }
 
-// --- Ellie's labels ----------------------------------------------------------------------------
+// --- Clara's labels ----------------------------------------------------------------------------
 
 export type Outcome = "replied" | "draft" | "skipped" | "failed";
 
-/** Shown in Gmail's side bar under "Ellie", so staff see at a glance what happened to each email. */
+/** Shown in Gmail's side bar under "Clara", so staff see at a glance what happened to each email. */
 const LABELS: Record<Outcome, { name: string; color: { backgroundColor: string; textColor: string } }> = {
-  replied: { name: "Ellie/Replied", color: { backgroundColor: "#16a766", textColor: "#ffffff" } },
-  draft: { name: "Ellie/Draft ready", color: { backgroundColor: "#ffad47", textColor: "#ffffff" } },
-  skipped: { name: "Ellie/Skipped", color: { backgroundColor: "#cccccc", textColor: "#000000" } },
-  failed: { name: "Ellie/Failed", color: { backgroundColor: "#fb4c2f", textColor: "#ffffff" } },
+  replied: { name: "Clara/Replied", color: { backgroundColor: "#16a766", textColor: "#ffffff" } },
+  draft: { name: "Clara/Draft ready", color: { backgroundColor: "#ffad47", textColor: "#ffffff" } },
+  skipped: { name: "Clara/Skipped", color: { backgroundColor: "#cccccc", textColor: "#000000" } },
+  failed: { name: "Clara/Failed", color: { backgroundColor: "#fb4c2f", textColor: "#ffffff" } },
 };
 
 /** Put next to the outcome on an email whose writer was upset (😊 Mood); labelOutcome never removes it. */
-const UPSET_LABEL = { name: "Ellie/Upset customer", color: { backgroundColor: "#cc3a21", textColor: "#ffffff" } };
+const UPSET_LABEL = { name: "Clara/Upset customer", color: { backgroundColor: "#cc3a21", textColor: "#ffffff" } };
 const ALL_LABELS = [...Object.values(LABELS), UPSET_LABEL];
 
 let labelIds: Map<string, string> | null = null;
@@ -176,8 +176,8 @@ async function createLabel(name: string, color?: { backgroundColor: string; text
   }
 }
 
-async function ellieLabelIds(): Promise<Map<string, string>> {
-  const wanted = ["Ellie", ...ALL_LABELS.map((label) => label.name)];
+async function assistantLabelIds(): Promise<Map<string, string>> {
+  const wanted = ["Clara", ...ALL_LABELS.map((label) => label.name)];
   if (labelIds && wanted.every((name) => labelIds?.has(name))) return labelIds;
 
   const load = async () => {
@@ -198,12 +198,12 @@ async function ellieLabelIds(): Promise<Map<string, string>> {
 }
 
 /**
- * Puts the outcome label on the customer's email and takes any other Ellie label off it (a reply
+ * Puts the outcome label on the customer's email and takes any other Clara label off it (a reply
  * that failed and then worked should not stay "Failed"). A sent reply also marks the email read;
  * a draft leaves it unread so staff notice it.
  */
 export async function labelOutcome(gmailId: string, outcome: Outcome) {
-  const ids = await ellieLabelIds();
+  const ids = await assistantLabelIds();
   const add = [ids.get(LABELS[outcome].name)].filter((id): id is string => Boolean(id));
   const remove = (Object.keys(LABELS) as Outcome[])
     .filter((other) => other !== outcome)
@@ -216,9 +216,9 @@ export async function labelOutcome(gmailId: string, outcome: Outcome) {
   });
 }
 
-/** Marks the email "Ellie/Upset customer", on top of its outcome label. */
+/** Marks the email "Clara/Upset customer", on top of its outcome label. */
 export async function labelUpset(gmailId: string) {
-  const id = (await ellieLabelIds()).get(UPSET_LABEL.name);
+  const id = (await assistantLabelIds()).get(UPSET_LABEL.name);
   if (!id) return;
   await gmail(`messages/${encodeURIComponent(gmailId)}/modify`, {
     method: "POST",

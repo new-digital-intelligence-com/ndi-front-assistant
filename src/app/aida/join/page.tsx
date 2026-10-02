@@ -13,12 +13,12 @@ export default async function AidaJoinPage({ searchParams }: PageProps<"/aida/jo
 
   return (
     <>
-      <header className="bg-cda-dark text-white">
+      <header className="bg-heading text-white">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4">
-          <span className="rounded-md bg-cda-red px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
+          <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
           <span className="text-lg font-semibold">Customer call</span>
         </div>
-        <div className="h-1 bg-cda-red" />
+        <div className="h-1 bg-brand" />
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         <AidaJoin initialCode={typeof code === "string" ? code : ""} />

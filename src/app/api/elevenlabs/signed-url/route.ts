@@ -12,7 +12,7 @@ export async function GET() {
       include_conversation_id: "true",
     });
 
-    // Tie this conversation to the visitor now, so Ellie's lookup recognises them.
+    // Tie this conversation to the visitor now, so Clara's lookup recognises them.
     const conversationId = conversationIdFromSignedUrl(signed_url);
     await registerWebsiteConversation(conversationId);
 

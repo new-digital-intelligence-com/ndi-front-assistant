@@ -11,15 +11,15 @@ const VIDEO_SIZES: Record<AvatarOrientation, { videoWidth: number; videoHeight: 
   vertical: { videoWidth: 768, videoHeight: 1152 },
 };
 
-// Creates a short-lived Anam session token for Ellie's face. Anam's engine joins the ElevenLabs agent
-// through the signed URL, so Ellie keeps her prompt, voice and knowledge. Both API keys stay on the server.
+// Creates a short-lived Anam session token for Clara's face. Anam's engine joins the ElevenLabs agent
+// through the signed URL, so Clara keeps her prompt, voice and knowledge. Both API keys stay on the server.
 export async function POST(request: Request) {
   if (!(await hasValidSession())) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { orientation, language } = (await request.json().catch(() => ({}))) as { orientation?: string; language?: string };
   const videoSize = VIDEO_SIZES[orientation === "vertical" ? "vertical" : "horizontal"];
-  // Polish uses Ellie's "pl" preset in ElevenLabs. Anam passes the override on when it joins Ellie.
+  // Polish uses Clara's "pl" preset in ElevenLabs. Anam passes the override on when it joins Clara.
   const languageOverride = language === "pl" ? { conversationConfigOverride: { agent: { language: "pl" } } } : {};
 
   const apiKey = process.env.ANAM_API_KEY;
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       include_conversation_id: "true",
     });
 
-    // Tie this avatar call to the visitor, so Ellie recognises them here too.
+    // Tie this avatar call to the visitor, so Clara recognises them here too.
     const conversationId = conversationIdFromSignedUrl(signed_url);
     await registerWebsiteConversation(conversationId);
 

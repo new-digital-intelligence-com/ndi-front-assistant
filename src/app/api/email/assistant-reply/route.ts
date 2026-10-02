@@ -1,7 +1,7 @@
 import { hasValidWebhookSignature } from "@/lib/agentAuth";
-import { handleEllieReply, type ReplyWebhook } from "@/lib/emailInbox";
+import { handleAssistantReply, type ReplyWebhook } from "@/lib/emailInbox";
 
-// The "Reply Webhook URL" of Ellie's email Custom Channel trigger: ElevenLabs posts her answer
+// The "Reply Webhook URL" of Clara's email Custom Channel trigger: ElevenLabs posts her answer
 // here after every email. Signed with that trigger's own Outbound Signing Secret. Instagram has
 // a Custom Channel trigger of its own, whose replies go to Make and never come here.
 export async function POST(request: Request) {
@@ -19,10 +19,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    return Response.json({ ok: true, ...(await handleEllieReply(payload)) });
+    return Response.json({ ok: true, ...(await handleAssistantReply(payload)) });
   } catch (error) {
     // 500 so ElevenLabs delivers it again; the email is already marked failed in the meantime.
-    console.error("ellie-reply failed", error);
+    console.error("assistant-reply failed", error);
     return Response.json({ error: "The reply could not be sent" }, { status: 500 });
   }
 }

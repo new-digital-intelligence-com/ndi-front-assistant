@@ -4,7 +4,7 @@
 // Instagram sender id, a website cookie - is a row in customer_channels, so one person can have
 // several of the same kind with no special case.
 //
-// Ellie never asks anyone to identify themselves. A channel becomes linked either automatically
+// Clara never asks anyone to identify themselves. A channel becomes linked either automatically
 // (its id is inside the conversation id) or because the person signed in on the website and sent
 // the short code from that channel.
 
@@ -85,7 +85,7 @@ export async function resolveIdentity(body: Record<string, unknown>): Promise<Id
     if (requester) return { channel: "email", key: requester.email, name: requester.name };
   }
 
-  // Asked side by side: Ellie is silent until this answers, and on a phone call that is heard.
+  // Asked side by side: Clara is silent until this answers, and on a phone call that is heard.
   const [sender, messenger, instagram, record] = await Promise.all([
     emailSender(conversationId),
     threadSender("messenger_threads", conversationId),
@@ -141,7 +141,7 @@ function instagramSender(record: ConversationRecord | null): string | null {
   return typeof id === "string" && /^\d{5,30}$/.test(id) ? id : null;
 }
 
-/** An email that reached Ellie through Gmail push: the web app noted who sent it (src/lib/emailInbox.ts). */
+/** An email that reached Clara through Gmail push: the web app noted who sent it (src/lib/emailInbox.ts). */
 async function emailSender(conversationId: string): Promise<{ email: string; name?: string } | null> {
   if (!conversationId) return null;
   try {
@@ -157,7 +157,7 @@ async function emailSender(conversationId: string): Promise<{ email: string; nam
 }
 
 /**
- * True for a conversation the web app may still be about to register: an email is handed to Ellie
+ * True for a conversation the web app may still be about to register: an email is handed to Clara
  * a moment before the push handler records which conversation it became. Telegram and Freshdesk
  * carry their id in the conversation id, so they never need to wait.
  */
@@ -233,7 +233,7 @@ export async function customerForChannel(identity: Identity, verified: boolean):
 }
 
 /**
- * Ellie decided an email came from a robot. The record made for its sender a moment earlier is
+ * Clara decided an email came from a robot. The record made for its sender a moment earlier is
  * dropped again, but only if that is all it is: no account, no notes, no other channel and no other
  * conversation.
  */
@@ -330,7 +330,7 @@ const CODE_TTL_MINUTES = 30;
 
 export async function createLinkCode(customerId: string): Promise<{ code: string; expiresAt: string }> {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
-  const code = `CDA-${Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("")}`;
+  const code = `NDI-${Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("")}`;
   const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60_000).toISOString();
   await rest("link_codes", {
     method: "POST",
@@ -398,7 +398,7 @@ async function adoptAnonymousOwner(identity: Identity, customerId: string): Prom
 }
 
 /**
- * The customer's own phone number, added on the website while signed in. Ellie then knows them when
+ * The customer's own phone number, added on the website while signed in. Clara then knows them when
  * they call, and when CDA calls them. Not proven (no code is sent to the phone), so it is stored as
  * unverified, and a number that belongs to someone else's account is refused.
  */

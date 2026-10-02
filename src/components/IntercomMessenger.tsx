@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // Intercom's chat bubble on the customer page. ElevenLabs answers every conversation started in it
-// as Ellie (Intercom integration, "Intercom Conversation" trigger), and staff see the same
+// as Clara (Intercom integration, "Intercom Conversation" trigger), and staff see the same
 // conversations in Intercom's inbox. The App ID is public by design: every site that runs Intercom
 // has it in its page.
 const INTERCOM_APP_ID = "zrrcz82c";

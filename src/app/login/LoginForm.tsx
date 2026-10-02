@@ -28,7 +28,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
       <label className="block">
-        <span className="text-sm font-semibold text-cda-dark">Password</span>
+        <span className="text-sm font-semibold text-heading">Password</span>
         <input
           type="password"
           value={password}
@@ -36,14 +36,14 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
           autoFocus
           autoComplete="current-password"
           required
-          className="mt-1 w-full rounded-lg border border-cda-grey px-3 py-2.5 outline-none focus:border-cda-red"
+          className="mt-1 w-full rounded-lg border border-line px-3 py-2.5 outline-none focus:border-brand"
         />
       </label>
-      {error && <p className="text-sm text-cda-red-dark">{error}</p>}
+      {error && <p className="text-sm text-brand-dark">{error}</p>}
       <button
         type="submit"
         disabled={submitting || !password}
-        className="w-full rounded-full bg-cda-red py-2.5 font-semibold text-white transition hover:bg-cda-red-dark disabled:opacity-50"
+        className="w-full rounded-full bg-brand py-2.5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
       >
         {submitting ? "Checking…" : "Open demo"}
       </button>

@@ -42,9 +42,9 @@ export function MoodMeter({
 }) {
   if (lines.length === 0) {
     return (
-      <div className="rounded-lg border border-cda-grey px-3 py-2">
-        <p className="text-xs font-semibold text-cda-dark">Customer mood</p>
-        <p className="text-xs text-cda-text">Appears here as the customer talks or types.</p>
+      <div className="rounded-lg border border-line px-3 py-2">
+        <p className="text-xs font-semibold text-heading">Customer mood</p>
+        <p className="text-xs text-muted">Appears here as the customer talks or types.</p>
       </div>
     );
   }
@@ -55,10 +55,10 @@ export function MoodMeter({
   const upset = upsetMood(latest);
 
   return (
-    <div className={`rounded-lg border px-3 py-2 ${upset ? "border-cda-red/50 bg-red-50/60" : "border-cda-grey"}`}>
+    <div className={`rounded-lg border px-3 py-2 ${upset ? "border-brand/50 bg-red-50/60" : "border-line"}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-cda-dark">Customer mood</p>
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-cda-dark">
+        <p className="text-xs font-semibold text-heading">Customer mood</p>
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-heading">
           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: moodColor(latest) }} aria-hidden="true" />
           {moodWord(latest)}
         </p>
@@ -66,7 +66,7 @@ export function MoodMeter({
 
       <div className="mt-2 flex items-center gap-2">
         <div
-          className="h-2 flex-1 overflow-hidden rounded-full bg-cda-grey"
+          className="h-2 flex-1 overflow-hidden rounded-full bg-line"
           role="meter"
           aria-label="Customer frustration"
           aria-valuemin={0}
@@ -75,12 +75,12 @@ export function MoodMeter({
         >
           <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(frustration, 3)}%`, backgroundColor: fill }} />
         </div>
-        <span className="w-24 shrink-0 text-right text-[11px] text-cda-text">Frustration {frustration}%</span>
+        <span className="w-24 shrink-0 text-right text-[11px] text-muted">Frustration {frustration}%</span>
       </div>
 
       {lines.length > 1 && (
         <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-[11px] text-cda-text">Earlier</span>
+          <span className="text-[11px] text-muted">Earlier</span>
           {lines.slice(-RECENT).map((line) => (
             <span
               key={line.id}
@@ -89,12 +89,12 @@ export function MoodMeter({
               title={`${moodWord(line.mood)} · frustration ${Math.round(line.mood.frustration * 100)}%: “${line.text.slice(0, 80)}”`}
             />
           ))}
-          <span className="text-[11px] text-cda-text">now</span>
+          <span className="text-[11px] text-muted">now</span>
         </div>
       )}
 
       {upset && (
-        <p className="mt-2 text-xs text-cda-red-dark">
+        <p className="mt-2 text-xs text-brand-dark">
           {aidaAdapts
             ? "Aida will open her next draft with an apology and offer to escalate."
             : "Apologise, keep it short, and offer to escalate or call back."}

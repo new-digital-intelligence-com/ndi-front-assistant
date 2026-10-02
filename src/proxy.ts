@@ -19,13 +19,13 @@ export async function proxy(request: NextRequest) {
   // HMAC signature, the cron secret, or the Aida staff token for the staff switch.
   if (pathname.startsWith("/api/email/")) return NextResponse.next();
 
-  // Messenger and Instagram: Meta posts messages (secret in the URL) and ElevenLabs posts Ellie's
+  // Messenger and Instagram: Meta posts messages (secret in the URL) and ElevenLabs posts Clara's
   // replies (HMAC signature). The daily cron sends the cron secret. Each route checks its own proof.
   if (pathname.startsWith("/api/messenger/") || pathname.startsWith("/api/instagram/") || pathname.startsWith("/api/cron/")) {
     return NextResponse.next();
   }
 
-  // Alexa: Amazon signs every request to /api/alexa, and ElevenLabs signs Ellie's answers to
+  // Alexa: Amazon signs every request to /api/alexa, and ElevenLabs signs Clara's answers to
   // /api/alexa/reply. Both routes check their signature.
   if (pathname === "/api/alexa" || pathname.startsWith("/api/alexa/")) return NextResponse.next();
 

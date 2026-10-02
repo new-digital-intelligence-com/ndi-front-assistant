@@ -4,7 +4,7 @@
 
 import { constantTimeEqual, sha256Hex } from "./auth";
 
-export const AGENT_SECRET_HEADER = "x-cda-agent-secret";
+export const AGENT_SECRET_HEADER = "x-ndi-agent-secret";
 
 /** Replay window for signed webhooks, matching ElevenLabs' own examples. */
 const MAX_SIGNATURE_AGE_SECONDS = 30 * 60;

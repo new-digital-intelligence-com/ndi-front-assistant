@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 const SUPPORT_EMAIL = "cda_domestic_appliances@new-digital-intelligence.com";
-/** Ellie's phone line (Twilio, answered by ElevenLabs). */
+/** Clara's phone line (Twilio, answered by ElevenLabs). */
 const PHONE_LINE = { display: "+44 7576 593472", dial: "+447576593472" };
 
 type Channel = {
@@ -15,7 +15,7 @@ type Channel = {
 const channels: Channel[] = [
   {
     name: "Phone",
-    detail: `${PHONE_LINE.display} · call Ellie`,
+    detail: `${PHONE_LINE.display} · call Clara`,
     href: `tel:${PHONE_LINE.dial}`,
     iconClassName: "bg-[#16a34a]",
     icon: (
@@ -76,7 +76,7 @@ const channels: Channel[] = [
 export function ChannelLinks() {
   return (
     <section className="rounded-xl bg-white p-4 shadow-sm">
-      <h2 className="font-semibold text-cda-dark">Message Ellie on your app</h2>
+      <h2 className="font-semibold text-heading">Message Clara on your app</h2>
       <ul className="mt-2 space-y-1.5">
         {channels.map((channel) => (
           <li key={channel.name}>
@@ -84,7 +84,7 @@ export function ChannelLinks() {
               href={channel.href}
               target={channel.href.startsWith("http") ? "_blank" : undefined}
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-cda-grey p-2.5 transition hover:border-cda-red hover:bg-cda-grey-light"
+              className="flex items-center gap-3 rounded-lg border border-line p-2.5 transition hover:border-brand hover:bg-surface"
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white ${channel.iconClassName}`}
@@ -103,10 +103,10 @@ export function ChannelLinks() {
                 </svg>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-cda-dark">{channel.name}</span>
-                <span className="block text-xs text-cda-text wrap-anywhere">{channel.detail}</span>
+                <span className="block text-sm font-semibold text-heading">{channel.name}</span>
+                <span className="block text-xs text-muted wrap-anywhere">{channel.detail}</span>
               </span>
-              <span className="text-cda-text" aria-hidden="true">
+              <span className="text-muted" aria-hidden="true">
                 ↗
               </span>
             </a>

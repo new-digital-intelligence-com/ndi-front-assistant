@@ -1,5 +1,5 @@
 // The email channel's pure helpers: reading a Gmail message, deciding whether a person wrote it,
-// and building Ellie's reply. No network and no imports, so they can be tried on real messages
+// and building Clara's reply. No network and no imports, so they can be tried on real messages
 // on their own.
 
 export type GmailHeader = { name: string; value: string };
@@ -39,7 +39,7 @@ export type IncomingEmail = {
   headers: Map<string, string>;
 };
 
-/** Ellie is handed at most this much of an email; long threads quote everything before them. */
+/** Clara is handed at most this much of an email; long threads quote everything before them. */
 export const MAX_EMAIL_TEXT = 6000;
 
 // --- reading a message -------------------------------------------------------------------------
@@ -188,7 +188,7 @@ const GMAIL_CATEGORIES: Record<string, string> = {
 
 /**
  * Why an email should not get a reply, or null when it looks like a person wrote it. These are
- * cheap rules that run before Ellie is involved; she makes the final call on anything they let
+ * cheap rules that run before Clara is involved; she makes the final call on anything they let
  * through (see the "Email only" rule in her prompt).
  */
 export function automatedReason(email: IncomingEmail, ownAddress: string | null): string | null {
@@ -216,12 +216,12 @@ export function automatedReason(email: IncomingEmail, ownAddress: string | null)
   return null;
 }
 
-// --- what Ellie is given, and what comes back ---------------------------------------------------
+// --- what Clara is given, and what comes back ---------------------------------------------------
 
-/** The marker Ellie's prompt looks for: it tells her this message is an email. */
+/** The marker Clara's prompt looks for: it tells her this message is an email. */
 export const EMAIL_MARKER = "[Email to CDA customer care]";
 
-export function textForEllie(email: IncomingEmail): string {
+export function textForAssistant(email: IncomingEmail): string {
   const sender = email.fromName ? `${email.fromName} <${email.fromEmail}>` : email.fromEmail;
   const body = email.text.length > MAX_EMAIL_TEXT
     ? `${email.text.slice(0, MAX_EMAIL_TEXT)}\n[... the rest of the email was cut]`
@@ -232,13 +232,13 @@ export function textForEllie(email: IncomingEmail): string {
   return `${EMAIL_MARKER}\nFrom: ${sender}\nSubject: ${email.subject || "(no subject)"}\n\n${body}${attachments}`;
 }
 
-/** Ellie's answer when an email was not written by someone who wants help from CDA. */
+/** Clara's answer when an email was not written by someone who wants help from CDA. */
 export function isSkip(reply: string): boolean {
   return /^\W*skip\W*$/i.test(reply.trim());
 }
 
 /**
- * Ellie is handed the email under a small header ([Email to CDA customer care], From, Subject) and
+ * Clara is handed the email under a small header ([Email to CDA customer care], From, Subject) and
  * sometimes copies that header to the top of her answer. The customer should only see the answer.
  */
 function withoutEchoedHeader(reply: string): string {

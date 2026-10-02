@@ -13,13 +13,13 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const nextPath = safeNextPath(typeof next === "string" ? next : undefined);
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-cda-dark px-4 py-12">
+    <main className="flex flex-1 items-center justify-center bg-heading px-4 py-12">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl">
         <div className="flex items-center gap-3">
-          <span className="rounded-md bg-cda-red px-2.5 py-1 text-xl font-extrabold tracking-wider text-white">CDA</span>
-          <span className="text-lg font-semibold text-cda-dark">Customer Assistant</span>
+          <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider text-white">CDA</span>
+          <span className="text-lg font-semibold text-heading">Customer Assistant</span>
         </div>
-        <p className="mt-2 text-xs text-cda-text">
+        <p className="mt-2 text-xs text-muted">
           NDI demo · not an official CDA website ·{" "}
           <Link href="/docs" className="underline">
             How this demo works
@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         {sitePasswordConfigured() ? (
           <LoginForm nextPath={nextPath} />
         ) : (
-          <p className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-cda-red-dark">
+          <p className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-brand-dark">
             This demo is locked: the SITE_PASSWORD environment variable is not set.
           </p>
         )}

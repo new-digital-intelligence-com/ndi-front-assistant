@@ -90,8 +90,8 @@ export function AccountPanel() {
   if (signedIn === null) {
     return (
       <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-cda-dark">Your CDA account</h2>
-        <p className="mt-2 text-sm text-cda-text">Loading…</p>
+        <h2 className="font-semibold text-heading">Your CDA account</h2>
+        <p className="mt-2 text-sm text-muted">Loading…</p>
       </section>
     );
   }
@@ -99,19 +99,19 @@ export function AccountPanel() {
   if (!signedIn) {
     return (
       <section className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-cda-dark">Your CDA account</h2>
-        <p className="mt-1 text-sm text-cda-text">
-          Link Telegram, Instagram, your phone number and your email addresses, so Ellie knows you on all of
+        <h2 className="font-semibold text-heading">Your CDA account</h2>
+        <p className="mt-1 text-sm text-muted">
+          Link Telegram, Instagram, your phone number and your email addresses, so Clara knows you on all of
           them and remembers what you asked before.
         </p>
 
         {/* Collapsed by default: the form is long, and most visitors only want to chat. */}
         <details className="mt-3">
-          <summary className="cursor-pointer list-none rounded-lg bg-cda-red px-3 py-2 text-center text-sm font-semibold text-white">
+          <summary className="cursor-pointer list-none rounded-lg bg-brand px-3 py-2 text-center text-sm font-semibold text-white">
             Create account or sign in
           </summary>
 
-          <div className="mt-3 flex gap-1 rounded-lg bg-cda-grey-light p-1 text-sm">
+          <div className="mt-3 flex gap-1 rounded-lg bg-surface p-1 text-sm">
             {(["signup", "signin"] as const).map((option) => (
               <button
                 key={option}
@@ -121,7 +121,7 @@ export function AccountPanel() {
                   setError(null);
                 }}
                 className={`flex-1 rounded-md px-3 py-1.5 font-medium ${
-                  mode === option ? "bg-white text-cda-dark shadow-sm" : "text-cda-text"
+                  mode === option ? "bg-white text-heading shadow-sm" : "text-muted"
                 }`}
               >
                 {option === "signup" ? "Create account" : "Sign in"}
@@ -164,11 +164,11 @@ export function AccountPanel() {
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
             />
-            {error && <p className="text-sm text-cda-red">{error}</p>}
+            {error && <p className="text-sm text-brand">{error}</p>}
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-lg bg-cda-red px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
               {mode === "signup" ? "Create account" : "Sign in"}
             </button>
@@ -181,7 +181,7 @@ export function AccountPanel() {
   return (
     <section className="rounded-xl bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="font-semibold text-cda-dark">Your channels</h2>
+        <h2 className="font-semibold text-heading">Your channels</h2>
         <button
           type="button"
           onClick={async () => {
@@ -189,22 +189,22 @@ export function AccountPanel() {
             setCode(null);
             await refresh();
           }}
-          className="text-xs text-cda-text underline"
+          className="text-xs text-muted underline"
         >
           Sign out
         </button>
       </div>
-      <p className="mt-1 text-sm text-cda-text">Ellie recognises you on each of these.</p>
+      <p className="mt-1 text-sm text-muted">Clara recognises you on each of these.</p>
 
       <ul className="mt-3 space-y-2">
         {channels.map((channel) => (
           <li
             key={`${channel.channel}:${channel.channel_key}`}
-            className="flex items-center justify-between gap-2 rounded-lg bg-cda-grey-light px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-2 rounded-lg bg-surface px-3 py-2 text-sm"
           >
             <span className="min-w-0">
-              <span className="font-medium text-cda-dark">{CHANNEL_LABELS[channel.channel] ?? channel.channel}</span>
-              <span className="block truncate text-xs text-cda-text">{describe(channel)}</span>
+              <span className="font-medium text-heading">{CHANNEL_LABELS[channel.channel] ?? channel.channel}</span>
+              <span className="block truncate text-xs text-muted">{describe(channel)}</span>
             </span>
             <button
               type="button"
@@ -212,21 +212,21 @@ export function AccountPanel() {
                 await act({ channel: channel.channel, channel_key: channel.channel_key }, "DELETE");
                 await refresh();
               }}
-              className="shrink-0 text-xs text-cda-text underline"
+              className="shrink-0 text-xs text-muted underline"
             >
               Remove
             </button>
           </li>
         ))}
-        {channels.length === 0 && <li className="text-sm text-cda-text">No channels linked yet.</li>}
+        {channels.length === 0 && <li className="text-sm text-muted">No channels linked yet.</li>}
       </ul>
 
       <div className="mt-4 rounded-lg border border-dashed border-black/15 p-3">
         {code ? (
           <>
-            <p className="text-sm text-cda-text">Send this code to Ellie from the channel you want to add:</p>
-            <p className="mt-2 text-center text-2xl font-bold tracking-widest text-cda-dark">{code}</p>
-            <p className="mt-2 text-xs text-cda-text">
+            <p className="text-sm text-muted">Send this code to Clara from the channel you want to add:</p>
+            <p className="mt-2 text-center text-2xl font-bold tracking-widest text-heading">{code}</p>
+            <p className="mt-2 text-xs text-muted">
               It works once and expires in 30 minutes. Message the Telegram bot, or reply from the email address
               you want to add, with just the code.
             </p>
@@ -246,7 +246,7 @@ export function AccountPanel() {
               setBusy(false);
               if (body.code) setCode(body.code);
             }}
-            className="w-full rounded-lg border border-cda-red px-3 py-2 text-sm font-semibold text-cda-red disabled:opacity-60"
+            className="w-full rounded-lg border border-brand px-3 py-2 text-sm font-semibold text-brand disabled:opacity-60"
           >
             + Add a channel
           </button>
@@ -278,7 +278,7 @@ export function AccountPanel() {
               await refresh();
             }}
           >
-            <p className="text-sm text-cda-text">Ellie will know you when you call CDA, and when CDA calls you.</p>
+            <p className="text-sm text-muted">Clara will know you when you call CDA, and when CDA calls you.</p>
             <PhoneInput
               value={phone || undefined}
               onChange={(value) => setPhone(value ?? "")}
@@ -290,12 +290,12 @@ export function AccountPanel() {
               className="rounded-lg border border-black/10 px-3 py-2 text-sm"
               numberInputProps={{ className: "min-w-0 flex-1 bg-transparent outline-none" }}
             />
-            {error && <p className="text-sm text-cda-red">{error}</p>}
+            {error && <p className="text-sm text-brand">{error}</p>}
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={busy || !phone}
-                className="flex-1 rounded-lg bg-cda-red px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="flex-1 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
               >
                 Save number
               </button>
@@ -305,7 +305,7 @@ export function AccountPanel() {
                   setAddingPhone(false);
                   setError(null);
                 }}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm text-cda-text"
+                className="rounded-lg border border-black/10 px-3 py-2 text-sm text-muted"
               >
                 Cancel
               </button>
@@ -315,7 +315,7 @@ export function AccountPanel() {
           <button
             type="button"
             onClick={() => setAddingPhone(true)}
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-cda-dark"
+            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-heading"
           >
             + Add your phone number
           </button>

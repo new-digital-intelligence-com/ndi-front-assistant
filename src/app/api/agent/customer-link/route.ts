@@ -4,7 +4,7 @@ import { customerStoreConfigured, redeemLinkCode, rememberConversation, resolveI
 // Tool `customer_link`: the customer signed in on the website, got a short code, and sent it from
 // this channel. Redeeming it ties this channel to their account, so their history follows them.
 //
-// Ellie never asks anyone for an email address; this code is the only way a person links a channel.
+// Clara never asks anyone for an email address; this code is the only way a person links a channel.
 export async function POST(request: Request) {
   if (!(await hasValidToolSecret(request))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

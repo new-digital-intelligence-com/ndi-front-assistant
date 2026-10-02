@@ -61,29 +61,29 @@ export function EmailTranscriptForm({
     if (accountEmail) {
       return (
         <div className="space-y-1">
-          {note && <p className="text-xs text-cda-text">{note}</p>}
+          {note && <p className="text-xs text-muted">{note}</p>}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <button
               type="button"
               disabled={state === "sending"}
               onClick={() => void sendTo(accountEmail)}
-              className="text-sm font-semibold text-cda-red underline disabled:opacity-60"
+              className="text-sm font-semibold text-brand underline disabled:opacity-60"
             >
               {state === "sending" ? "Sending…" : `✉ ${label}`}
             </button>
-            <span className="text-xs text-cda-text">
+            <span className="text-xs text-muted">
               to {accountEmail} ·{" "}
               <button type="button" onClick={() => setOpen(true)} className="underline">
                 another address
               </button>
             </span>
           </div>
-          {message && <p className="text-sm text-cda-red">{message}</p>}
+          {message && <p className="text-sm text-brand">{message}</p>}
         </div>
       );
     }
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-sm font-semibold text-cda-red underline">
+      <button type="button" onClick={() => setOpen(true)} className="text-sm font-semibold text-brand underline">
         ✉ {label}
       </button>
     );
@@ -97,7 +97,7 @@ export function EmailTranscriptForm({
         void sendTo(email.trim());
       }}
     >
-      {note && <p className="text-xs text-cda-text">{note}</p>}
+      {note && <p className="text-xs text-muted">{note}</p>}
       <div className="flex gap-2">
         <input
           type="email"
@@ -107,20 +107,20 @@ export function EmailTranscriptForm({
           placeholder="your@email.com"
           autoComplete="email"
           autoFocus
-          className="min-w-0 flex-1 rounded-full border border-cda-grey px-4 py-2 text-sm"
+          className="min-w-0 flex-1 rounded-full border border-line px-4 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={state === "sending" || !email.trim()}
-          className="rounded-full bg-cda-red px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
           {state === "sending" ? "Sending…" : "Send"}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-cda-text underline">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-muted underline">
           Cancel
         </button>
       </div>
-      {message && <p className="text-sm text-cda-red">{message}</p>}
+      {message && <p className="text-sm text-brand">{message}</p>}
     </form>
   );
 }

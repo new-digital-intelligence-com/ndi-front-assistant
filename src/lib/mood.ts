@@ -1,6 +1,6 @@
 // Customer mood (sentiment) across every channel.
 //
-// ElevenLabs scores each of Ellie's voice and website conversations once it ends: a label, a
+// ElevenLabs scores each of Clara's voice and website conversations once it ends: a label, a
 // sentiment score from -1 (very negative) to +1, and a frustration score from 0 to 1, overall and for
 // every customer message. It never scores Custom Channel conversations (email, Instagram, Messenger,
 // Alexa), so Claude rates those the same way, message by message. The post-call webhook stores them
@@ -8,7 +8,7 @@
 // /admin → 😊 Mood reads them back.
 //
 // Emails and Aida rooms are checked earlier, while there is still time to act: Claude rates the
-// incoming email before Ellie answers it, and each customer line in an Aida room as it is said.
+// incoming email before Clara answers it, and each customer line in an Aida room as it is said.
 
 import { anthropicConfigured, askClaude, parseJsonObject } from "./anthropic";
 import { conversationChannel, customerForConversation } from "./customers";
@@ -107,7 +107,7 @@ function label(value: unknown, score: number): MoodLabel {
 }
 
 /**
- * What the customer wrote, without what the web app put around it for Ellie: the email header
+ * What the customer wrote, without what the web app put around it for Clara: the email header
  * ("[Email to CDA customer care]", From, Subject) and Alexa's "[Alexa]" marker.
  */
 function customerWords(text: string | null | undefined): string {
@@ -123,7 +123,7 @@ function excerpt(text: string | null | undefined): string {
   return clean.length > EXCERPT_LENGTH ? `${clean.slice(0, EXCERPT_LENGTH - 1)}…` : clean;
 }
 
-/** True when Ellie promised that the CDA team will come back to them, or they asked for a person. */
+/** True when Clara promised that the CDA team will come back to them, or they asked for a person. */
 function followUpAsked(results: Record<string, { value?: unknown } | undefined> | null | undefined): boolean {
   const value = results?.needs_follow_up?.value;
   return value === true || (typeof value === "string" && /^(true|yes)$/i.test(value.trim()));
@@ -199,7 +199,7 @@ async function channelOf(record: ConversationForMood, conversationId: string): P
   if (/telegram/i.test(source)) return "telegram";
   if (/twilio|sip|phone/i.test(source)) return "phone";
   // react_sdk / js_sdk: chat and voice on the site, the widget and the hosted page; python_sdk: the
-  // video avatar (Anam's servers connect to Ellie on the customer's behalf).
+  // video avatar (Anam's servers connect to Clara on the customer's behalf).
   if (/react|js_sdk|widget|web|python_sdk/i.test(source)) return "website";
   if (/custom_channel/i.test(source)) {
     const byTrigger = channelOfTrigger(record.metadata?.async_metadata?.external_id);
@@ -215,7 +215,7 @@ async function channelOf(record: ConversationForMood, conversationId: string): P
   return null;
 }
 
-const RATE_CONVERSATION = `You rate how a customer felt in a conversation with Ellie, the virtual assistant of CDA, a UK kitchen appliance brand.
+const RATE_CONVERSATION = `You rate how a customer felt in a conversation with Clara, the virtual assistant of CDA, a UK kitchen appliance brand.
 You get the customer's messages only, numbered, in order. Answer with JSON only:
 {"messages":[{"score":<-1 to 1>,"frustration":<0 to 1>}, one per message in the same order],
  "overall":{"label":"positive|neutral|negative","score":<-1 to 1>,"frustration":<0 to 1>},
@@ -293,13 +293,13 @@ async function storedMoodExists(conversationId: string): Promise<boolean> {
 }
 
 /**
- * Stores the mood of one conversation of Ellie's: ElevenLabs' scores, or Claude's rating when
+ * Stores the mood of one conversation of Clara's: ElevenLabs' scores, or Claude's rating when
  * ElevenLabs gave none. With `alert`, staff are emailed (once) when the customer was upset or was
  * promised a follow-up. Returns the stored mood, or null if there was none.
  */
 export async function recordConversationMood(record: ConversationForMood, { alert }: { alert: boolean }) {
-  const ellie = process.env.ELEVENLABS_AGENT_ID;
-  if (record.agent_id && ellie && record.agent_id !== ellie) return null; // not one of Ellie's conversations
+  const mainAgent = process.env.ELEVENLABS_AGENT_ID;
+  if (record.agent_id && mainAgent && record.agent_id !== mainAgent) return null; // not one of Clara's conversations
   let mood = moodFromConversation(record);
   if (!mood && record.conversation_id) {
     // An email already has Claude's rating from when it arrived: never rate it twice.
@@ -412,7 +412,7 @@ export async function markAlerted(conversationId: string) {
 type ListedConversation = { conversation_id: string; status?: string; start_time_unix_secs?: number };
 
 /**
- * Reads Ellie's recent conversations from ElevenLabs (free) and stores the mood of any that are not
+ * Reads Clara's recent conversations from ElevenLabs (free) and stores the mood of any that are not
  * here yet, without alerting anyone. Used by the "Import" button on /admin and by the daily cron.
  */
 export async function importMoods({ days = 30, max = 150 }: { days?: number; max?: number } = {}) {

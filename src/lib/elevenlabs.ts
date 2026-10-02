@@ -54,7 +54,7 @@ export async function elevenLabsConversation(conversationId: string): Promise<Co
 
 /**
  * Calls an ElevenLabs endpoint with the server-side API key and returns its JSON body. It targets
- * Ellie unless `params.agent_id` names another agent, such as Aida.
+ * Clara unless `params.agent_id` names another agent, such as Aida.
  */
 export async function elevenLabsGet<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   const { apiKey, agentId } = credentials();

@@ -4,7 +4,7 @@ import { visitorId } from "./visitor";
 
 /**
  * Ties a website conversation (chat, voice or the avatar) to whoever is using the browser, so
- * Ellie recognises them the same way she does on Telegram or email.
+ * Clara recognises them the same way she does on Telegram or email.
  *
  * It runs when the session is created rather than through a dynamic variable: a variable that only
  * exists on the website would make the agent's tool call fail on every other channel.

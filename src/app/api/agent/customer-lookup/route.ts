@@ -18,7 +18,7 @@ const LATE_REGISTRATION_WAIT_MS = 400;
 
 /**
  * Only say "found" when there is something worth saying, not merely that a row exists. On a call
- * CDA made from a staff call list, outbound_call tells Ellie whom she rang and why (never the number).
+ * CDA made from a staff call list, outbound_call tells Clara whom she rang and why (never the number).
  */
 function answer(profile: Profile | null, brief: CallBrief | null) {
   const found = profile ? Boolean(profile.name) || profile.recent.length > 0 : false;
@@ -26,7 +26,7 @@ function answer(profile: Profile | null, brief: CallBrief | null) {
   return Response.json({ found, ...(profile ?? {}), ...(outbound ? { outbound_call: outbound } : {}) });
 }
 
-// Tool `customer_lookup`: Ellie calls this silently at the start of every conversation. She says
+// Tool `customer_lookup`: Clara calls this silently at the start of every conversation. She says
 // nothing until it answers, which on a phone call is heard, so everything that can be asked at the
 // same time is.
 //
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       ? { channel: "phone", key: brief.phone, name: brief.customer_name ?? undefined }
       : await resolveIdentity(body);
     if (!identity) {
-      // An email is registered a moment after Ellie receives it, so give that a second to land.
+      // An email is registered a moment after Clara receives it, so give that a second to land.
       for (let attempt = 0; attempt < LATE_REGISTRATION_CHECKS && mayBeRegisteredLate(conversationId); attempt++) {
         await new Promise((resolve) => setTimeout(resolve, LATE_REGISTRATION_WAIT_MS));
         const late = await customerForConversation(conversationId);

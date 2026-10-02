@@ -1,4 +1,4 @@
-export const SESSION_COOKIE = "cda_demo_session";
+export const SESSION_COOKIE = "ndi_demo_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export function sitePasswordConfigured(): boolean {
@@ -21,7 +21,7 @@ export function constantTimeEqual(a: string, b: string): boolean {
 export async function expectedSessionToken(): Promise<string | null> {
   const password = process.env.SITE_PASSWORD;
   if (!password) return null;
-  return sha256Hex(`cda-demo-session:${password}`);
+  return sha256Hex(`ndi-demo-session:${password}`);
 }
 
 export async function isValidSession(cookieValue: string | undefined): Promise<boolean> {

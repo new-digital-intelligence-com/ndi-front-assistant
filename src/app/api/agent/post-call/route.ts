@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   // Only the transcription event carries a summary; other event types are acknowledged and dropped.
   if (event.type !== "post_call_transcription") return Response.json({ ok: true, ignored: event.type });
 
-  // Questions Ellie could not answer (her "unanswered_question" analysis item) wait on /admin for
+  // Questions Clara could not answer (her "unanswered_question" analysis item) wait on /admin for
   // staff to write the answer. Never fatal: the note below matters more.
   const results = event.data?.analysis?.data_collection_results;
   const unanswered = results?.unanswered_question?.value;
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       console.error("knowledge gap could not be stored", error),
     );
   }
-  // The customer's appliances (model, type, purchase date): Ellie gets them back on every channel,
+  // The customer's appliances (model, type, purchase date): Clara gets them back on every channel,
   // so she never asks twice for a model number she has already seen on a receipt or rating plate.
   if (event.data?.conversation_id && results?.appliance?.value) {
     await addAppliances(event.data.conversation_id, results.appliance.value).catch((error) =>
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // What the customer said about Ellie's answers ("that's wrong", "perfect"): the weekly score, and a
+  // What the customer said about Clara's answers ("that's wrong", "perfect"): the weekly score, and a
   // complaint waits for staff next to the unanswered questions.
   if (event.data?.conversation_id) {
     await recordSaidFeedback(event.data.conversation_id, results, isPhoneCall).catch((error) =>
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   }
 
   // The customer's mood (ElevenLabs' sentiment scores) for /admin → 😊 Mood; staff are emailed when
-  // the customer was upset or Ellie promised a follow-up. Never fatal: the note below still matters.
+  // the customer was upset or Clara promised a follow-up. Never fatal: the note below still matters.
   if (event.data?.conversation_id) {
     await recordConversationMood(event.data as ConversationForMood, { alert: true }).catch((error) =>
       console.error("mood could not be stored", error),

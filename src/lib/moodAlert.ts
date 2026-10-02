@@ -37,7 +37,7 @@ function listedAddresses(): string[] {
 
 /**
  * The CDA mailbox itself is fine: the alert is sent from that mailbox, and the email channel ignores
- * mail from itself and anything marked Sent (src/lib/emailInbox.ts), so Ellie never answers an alert.
+ * mail from itself and anything marked Sent (src/lib/emailInbox.ts), so Clara never answers an alert.
  */
 function recipients(): string[] {
   return listedAddresses().filter(isAddress);
@@ -107,7 +107,7 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
           ["Channel", channelName(alert.channel)],
           ["When", `${LONDON.format(alert.when)} (UK time)`],
           ["Mood", `${alert.label}, sentiment ${alert.score.toFixed(1)}, frustration ${Math.round(alert.frustration * 100)}%`],
-          ...(alert.followUp ? ([["Follow-up", "Ellie told the customer that the CDA team will get back to them"]] as [string, string][]) : []),
+          ...(alert.followUp ? ([["Follow-up", "Clara told the customer that the CDA team will get back to them"]] as [string, string][]) : []),
           ...(alert.lowPoint ? ([["Where it turned", `“${alert.lowPoint}”`]] as [string, string][]) : []),
           ...(alert.summary ? ([["Summary", alert.summary]] as [string, string][]) : []),
         ]
@@ -116,7 +116,7 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
           ["Subject", alert.subject || "(no subject)"],
           ["When", `${LONDON.format(alert.when)} (UK time)`],
           ["Mood", `upset, frustration ${Math.round(alert.frustration * 100)}%${alert.reason ? ` (${alert.reason})` : ""}`],
-          ["What Ellie did", "She did not reply. Her answer is waiting as a Gmail draft labelled “Ellie/Upset customer” for you to check."],
+          ["What Clara did", "She did not reply. Her answer is waiting as a Gmail draft labelled “Clara/Upset customer” for you to check."],
         ];
 
   const heading =
@@ -124,7 +124,7 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
       ? "An upset customer emailed CDA"
       : alert.followUp && alert.frustration < 0.6
         ? "A customer is waiting for a follow-up"
-        : "A customer was upset talking to Ellie";
+        : "A customer was upset talking to Clara";
   const subject =
     alert.kind === "email"
       ? `[CDA demo] Upset customer email: ${alert.subject || "(no subject)"}`

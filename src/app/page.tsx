@@ -14,14 +14,14 @@ const helpTopics = [
 export default function Home() {
   return (
     <>
-      <div className="bg-cda-ink px-4 py-1.5 text-center text-xs text-white/80">
+      <div className="bg-ink px-4 py-1.5 text-center text-xs text-white/80">
         NDI demo · not an official CDA website
       </div>
 
-      <header className="bg-cda-dark text-white">
+      <header className="bg-heading text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="rounded-md bg-cda-red px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
+            <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
             <span className="text-lg font-semibold">Customer Assistant</span>
           </div>
           <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export default function Home() {
             </form>
           </div>
         </div>
-        <div className="h-1 bg-cda-red" />
+        <div className="h-1 bg-brand" />
       </header>
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-4 py-4 lg:grid-cols-[320px_1fr] lg:gap-6">
@@ -53,19 +53,19 @@ export default function Home() {
 
         <aside className="order-2 space-y-3 lg:order-1 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
           <section className="rounded-xl bg-white p-4 shadow-sm">
-            <h1 className="text-xl font-bold text-cda-dark">Hi, I&apos;m Ellie</h1>
-            <p className="mt-1 text-sm text-cda-text">
+            <h1 className="text-xl font-bold text-heading">Hi, I&apos;m Clara</h1>
+            <p className="mt-1 text-sm text-muted">
               The virtual assistant for CDA kitchen appliances. Chat, send a photo or PDF, or just talk.
             </p>
             <details className="group mt-3">
-              <summary className="cursor-pointer list-none text-sm font-semibold text-cda-dark">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-heading">
                 What I can help with
-                <span className="float-right text-cda-text transition group-open:rotate-180">⌄</span>
+                <span className="float-right text-muted transition group-open:rotate-180">⌄</span>
               </summary>
-              <ul className="mt-2 space-y-1.5 text-sm text-cda-text">
+              <ul className="mt-2 space-y-1.5 text-sm text-muted">
                 {helpTopics.map((topic) => (
                   <li key={topic} className="flex gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cda-red" />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
                     {topic}
                   </li>
                 ))}
@@ -74,8 +74,8 @@ export default function Home() {
           </section>
           <ChannelLinks />
           <AccountPanel />
-          <p className="rounded-xl border-l-4 border-cda-red bg-white px-4 py-3 text-sm text-cda-text shadow-sm">
-            <strong className="text-cda-dark">Smell gas?</strong> Leave the property and call{" "}
+          <p className="rounded-xl border-l-4 border-brand bg-white px-4 py-3 text-sm text-muted shadow-sm">
+            <strong className="text-heading">Smell gas?</strong> Leave the property and call{" "}
             <strong>0800 111 999</strong>.
           </p>
         </aside>
@@ -83,7 +83,7 @@ export default function Home() {
 
       <IntercomMessenger />
 
-      <footer className="mt-auto bg-cda-blue text-white">
+      <footer className="mt-auto bg-accent text-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-sm sm:flex-row sm:justify-between">
           <span>CDA Customer Care: 01949 862012 · Mon–Fri 9am–5pm, Sat 9am–1pm</span>
           <span>Demo built by NDI with ElevenLabs Agents</span>

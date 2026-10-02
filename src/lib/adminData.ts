@@ -218,7 +218,7 @@ async function recentTranscripts(conversationIds: string[]): Promise<string[]> {
         const record = await elevenLabsConversation(id);
         const text = (record.transcript ?? [])
           .filter((turn) => turn.message?.trim())
-          .map((turn) => `${turn.role === "agent" ? "Ellie" : "Customer"}: ${turn.message?.trim()}`)
+          .map((turn) => `${turn.role === "agent" ? "Clara" : "Customer"}: ${turn.message?.trim()}`)
           .join("\n");
         return text ? text.slice(0, 2500) : null;
       } catch {

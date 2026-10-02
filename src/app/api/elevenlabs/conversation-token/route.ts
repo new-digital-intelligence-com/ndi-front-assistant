@@ -12,7 +12,7 @@ export async function GET() {
       "/conversation/token",
     );
 
-    // Tie this conversation to the visitor now, so Ellie's lookup recognises them.
+    // Tie this conversation to the visitor now, so Clara's lookup recognises them.
     await registerWebsiteConversation(conversation_id);
 
     return Response.json({ conversationToken: token, conversationId: conversation_id ?? null });

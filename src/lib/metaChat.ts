@@ -1,7 +1,7 @@
 // Messenger and Instagram direct messages, handled by the web app (no Make.com):
 //
-//   message        → Meta webhook → /api/<channel>/webhook → Ellie via that channel's Custom Channel trigger
-//   Ellie's answer → /api/<channel>/reply → that channel's Send API
+//   message        → Meta webhook → /api/<channel>/webhook → Clara via that channel's Custom Channel trigger
+//   Clara's answer → /api/<channel>/reply → that channel's Send API
 //
 // A person's messages continue one ElevenLabs conversation for 10 minutes. Supabase keeps one row
 // per person (messenger_threads / instagram_threads): their conversation and the last answer sent,
@@ -17,10 +17,10 @@ import { supabaseConfigured, supabaseRest as rest } from "./supabase";
 
 export type MetaChannel = {
   channel: "messenger" | "instagram";
-  /** For logs and messages to Ellie. */
+  /** For logs and messages to Clara. */
   label: string;
   table: "messenger_threads" | "instagram_threads";
-  /** Put in user_message_id, so Ellie's answer can be traced back to the person. */
+  /** Put in user_message_id, so Clara's answer can be traced back to the person. */
   prefix: string;
   /** Meta's `object` for this channel's webhooks. */
   webhookObject: "page" | "instagram";
@@ -63,7 +63,7 @@ async function graphPost(ch: MetaChannel, path: string, body: unknown) {
   if (!response.ok) throw new Error(`${ch.label} ${path} failed with ${response.status}: ${(await response.text()).slice(0, 300)}`);
 }
 
-/** The person's name, asked once when they first write, so Ellie can greet them. Best effort. */
+/** The person's name, asked once when they first write, so Clara can greet them. Best effort. */
 async function senderName(ch: MetaChannel, id: string): Promise<string | undefined> {
   try {
     const response = await fetch(`${ch.api}/${q(id)}?fields=${ch.profileFields}`, {
@@ -85,7 +85,7 @@ type MessagingEvent = {
 };
 export type MetaWebhook = { object?: string; entry?: { messaging?: MessagingEvent[] }[] };
 
-async function sendToEllie(ch: MetaChannel, id: string, mid: string, text: string, conversationId: string | null) {
+async function sendToAssistant(ch: MetaChannel, id: string, mid: string, text: string, conversationId: string | null) {
   const inbound = ch.inbound();
   const response = await fetch(inbound.url ?? "", {
     method: "POST",
@@ -103,8 +103,8 @@ async function sendToEllie(ch: MetaChannel, id: string, mid: string, text: strin
   return body.conversation_id;
 }
 
-async function passToEllie(ch: MetaChannel, id: string, mid: string, text: string) {
-  // "…" while Ellie writes. Cosmetic, so a failure is ignored.
+async function passToAssistant(ch: MetaChannel, id: string, mid: string, text: string) {
+  // "…" while Clara writes. Cosmetic, so a failure is ignored.
   void graphPost(ch, ch.sendPath(), { recipient: { id }, sender_action: "typing_on" }).catch(() => {});
 
   const [thread] = await rest<Thread[]>(`${ch.table}?psid=eq.${q(id)}&select=*`);
@@ -114,11 +114,11 @@ async function passToEllie(ch: MetaChannel, id: string, mid: string, text: strin
     thread?.conversation_id && Date.now() - new Date(thread.updated_at).getTime() < CONTINUE_MS ? thread.conversation_id : null;
   let conversationId: string;
   try {
-    conversationId = await sendToEllie(ch, id, mid, text, continueId);
+    conversationId = await sendToAssistant(ch, id, mid, text, continueId);
   } catch (error) {
     // A conversation ElevenLabs will not continue any more: start a new one instead.
     if (!continueId) throw error;
-    conversationId = await sendToEllie(ch, id, mid, text, null);
+    conversationId = await sendToAssistant(ch, id, mid, text, null);
   }
 
   await Promise.all([
@@ -145,17 +145,17 @@ export async function handleMetaWebhook(ch: MetaChannel, payload: MetaWebhook): 
         (message.attachments?.length ? `[The customer sent a photo or file, which you cannot see on ${ch.label}.]` : "");
       if (!text) continue;
       try {
-        await passToEllie(ch, id, message.mid, text);
+        await passToAssistant(ch, id, message.mid, text);
         handled++;
       } catch (error) {
-        console.error(`${ch.label} message could not be passed to Ellie`, error);
+        console.error(`${ch.label} message could not be passed to Clara`, error);
       }
     }
   }
   return handled;
 }
 
-// --- Ellie's answer ------------------------------------------------------------------------------
+// --- Clara's answer ------------------------------------------------------------------------------
 
 export type MetaReply = {
   conversation_id?: string;
@@ -203,7 +203,7 @@ export async function handleMetaReply(ch: MetaChannel, payload: MetaReply): Prom
   }
   if (!id) return { outcome: `not a ${ch.label} conversation` };
   if (payload.status === "failed") {
-    console.error(`Ellie could not answer a ${ch.label} message`, payload.conversation_id);
+    console.error(`Clara could not answer a ${ch.label} message`, payload.conversation_id);
     return { outcome: "failed" };
   }
 

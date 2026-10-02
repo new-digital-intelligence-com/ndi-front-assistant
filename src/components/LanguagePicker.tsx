@@ -13,7 +13,7 @@ const LANGUAGES: { value: CallLanguage; label: string }[] = [
  */
 export function LanguagePicker({ value, onChange }: { value: CallLanguage; onChange: (language: CallLanguage) => void }) {
   return (
-    <div className="flex rounded-full bg-cda-grey p-1" role="group" aria-label="Call language">
+    <div className="flex rounded-full bg-line p-1" role="group" aria-label="Call language">
       {LANGUAGES.map((option) => (
         <button
           key={option.value}
@@ -21,7 +21,7 @@ export function LanguagePicker({ value, onChange }: { value: CallLanguage; onCha
           onClick={() => onChange(option.value)}
           aria-pressed={value === option.value}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            value === option.value ? "bg-white text-cda-dark shadow-sm" : "text-cda-text hover:text-cda-dark"
+            value === option.value ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
           }`}
         >
           {option.label}

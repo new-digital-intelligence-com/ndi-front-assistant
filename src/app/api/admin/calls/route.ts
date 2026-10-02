@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const instructions = typeof row?.instructions === "string" ? row.instructions.trim() : "";
     const name = typeof row?.name === "string" ? row.name.trim().slice(0, MAX_NAME) : "";
     if (!phone) problems.push(`Line ${index + 1}: the phone number is not valid (use +44…, or 07… for the UK).`);
-    if (!instructions) problems.push(`Line ${index + 1}: tell Ellie what the call is about.`);
+    if (!instructions) problems.push(`Line ${index + 1}: tell Clara what the call is about.`);
     if (phone && instructions) calls.push({ phone, name: name || null, instructions: instructions.slice(0, MAX_INSTRUCTIONS) });
   });
   if (problems.length) return Response.json({ error: problems.join(" ") }, { status: 400 });

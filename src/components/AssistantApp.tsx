@@ -165,7 +165,7 @@ function Assistant() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
     } catch {
-      setError("Please allow microphone access to talk with Ellie.");
+      setError("Please allow microphone access to talk with Clara.");
       return;
     }
     const response = await fetch("/api/elevenlabs/conversation-token");
@@ -180,7 +180,7 @@ function Assistant() {
     setConversationId(id ?? null);
     sessionKindRef.current = "voice";
     setMessages([]);
-    // Polish uses Ellie's "pl" preset in ElevenLabs (Polish greeting, multilingual voice model, same voice).
+    // Polish uses Clara's "pl" preset in ElevenLabs (Polish greeting, multilingual voice model, same voice).
     conversation.startSession({
       conversationToken,
       connectionType: "webrtc",
@@ -240,8 +240,8 @@ function Assistant() {
 
   return (
     <section className="flex min-h-[640px] flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-cda-grey px-4 py-3">
-        <div className="flex rounded-full bg-cda-grey p-1" role="tablist" aria-label="Assistant mode">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <div className="flex rounded-full bg-line p-1" role="tablist" aria-label="Assistant mode">
           {(["chat", "voice", "avatar", "aida"] as const).map((item) => (
             <button
               key={item}
@@ -249,7 +249,7 @@ function Assistant() {
               aria-selected={mode === item}
               onClick={() => switchMode(item)}
               className={`rounded-full px-3 py-1.5 text-sm font-semibold transition sm:px-5 ${
-                mode === item ? "bg-cda-red text-white shadow" : "text-cda-ink hover:text-cda-dark"
+                mode === item ? "bg-brand text-white shadow" : "text-ink hover:text-heading"
               }`}
             >
               {TAB_LABELS[item]}
@@ -260,7 +260,7 @@ function Assistant() {
       </div>
 
       {error && (
-        <div className="flex items-start justify-between gap-3 bg-red-50 px-4 py-2 text-sm text-cda-red-dark">
+        <div className="flex items-start justify-between gap-3 bg-red-50 px-4 py-2 text-sm text-brand-dark">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="font-semibold" aria-label="Dismiss error">
             ✕
@@ -270,14 +270,14 @@ function Assistant() {
 
       {mode === "chat" ? (
         <>
-          <div className="flex-1 space-y-4 overflow-y-auto bg-cda-grey-light px-4 py-5">
+          <div className="flex-1 space-y-4 overflow-y-auto bg-surface px-4 py-5">
             {messages.length === 0 && (
               <div className="space-y-4">
                 <MessageBubble
                   message={{
                     id: "welcome",
                     role: "agent",
-                    text: "Hello, I'm Ellie, CDA's virtual assistant. Ask me anything about your CDA appliance, or attach a photo of the rating plate or a PDF receipt.",
+                    text: "Hello, I'm Clara, CDA's virtual assistant. Ask me anything about your CDA appliance, or attach a photo of the rating plate or a PDF receipt.",
                   }}
                 />
                 <div className="flex flex-wrap gap-2">
@@ -286,7 +286,7 @@ function Assistant() {
                       key={suggestion}
                       onClick={() => handleSend(suggestion)}
                       disabled={busy}
-                      className="rounded-full border border-cda-red/40 bg-white px-3 py-1.5 text-sm text-cda-ink transition hover:border-cda-red hover:text-cda-red disabled:opacity-50"
+                      className="rounded-full border border-brand/40 bg-white px-3 py-1.5 text-sm text-ink transition hover:border-brand hover:text-brand disabled:opacity-50"
                     >
                       {suggestion}
                     </button>
@@ -310,19 +310,19 @@ function Assistant() {
             <div ref={listEndRef} />
           </div>
 
-          <div className="border-t border-cda-grey bg-white p-3">
+          <div className="border-t border-line bg-white p-3">
             {files.length > 0 && (
               <div className="mb-2 flex flex-wrap gap-2">
                 {files.map((file, index) => (
                   <span
                     key={`${file.name}-${index}`}
-                    className="flex items-center gap-2 rounded-full bg-cda-grey px-3 py-1 text-xs text-cda-ink"
+                    className="flex items-center gap-2 rounded-full bg-line px-3 py-1 text-xs text-ink"
                   >
                     {file.type === "application/pdf" ? "📄" : "🖼️"} {file.name}
                     <button
                       onClick={() => setFiles(files.filter((_, i) => i !== index))}
                       aria-label={`Remove ${file.name}`}
-                      className="font-bold text-cda-text hover:text-cda-red"
+                      className="font-bold text-muted hover:text-brand"
                     >
                       ✕
                     </button>
@@ -348,7 +348,7 @@ function Assistant() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-cda-grey text-xl text-cda-ink transition hover:border-cda-red hover:text-cda-red"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-xl text-ink transition hover:border-brand hover:text-brand"
                 aria-label="Attach an image or PDF"
                 title="Attach an image or PDF"
               >
@@ -365,12 +365,12 @@ function Assistant() {
                 }}
                 rows={1}
                 placeholder="Type your question…"
-                className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-cda-grey px-4 py-2.5 text-[15px] outline-none focus:border-cda-red"
+                className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-line px-4 py-2.5 text-[15px] outline-none focus:border-brand"
               />
               <button
                 type="submit"
                 disabled={busy || (!draft.trim() && files.length === 0)}
-                className="h-11 shrink-0 rounded-full bg-cda-red px-5 font-semibold text-white transition hover:bg-cda-red-dark disabled:opacity-40"
+                className="h-11 shrink-0 rounded-full bg-brand px-5 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-40"
               >
                 Send
               </button>
@@ -383,7 +383,7 @@ function Assistant() {
                     setConversationId(null);
                     setMessages([]);
                   }}
-                  className="text-xs text-cda-text underline hover:text-cda-red"
+                  className="text-xs text-muted underline hover:text-brand"
                 >
                   Start a new conversation
                 </button>
@@ -407,16 +407,16 @@ function Assistant() {
               getInputVolume={conversation.getInputVolume}
               getOutputVolume={conversation.getOutputVolume}
             />
-            <p className="text-sm text-cda-text">
+            <p className="text-sm text-muted">
               {connected
                 ? isSpeaking
-                  ? "Ellie is speaking…"
+                  ? "Clara is speaking…"
                   : isMuted
                     ? "Microphone muted"
                     : "Listening…"
                 : busy
                   ? "Connecting…"
-                  : "Press start and talk to Ellie"}
+                  : "Press start and talk to Clara"}
             </p>
             <div className="mt-4 flex gap-3">
               {connected || busy ? (
@@ -424,13 +424,13 @@ function Assistant() {
                   <button
                     onClick={() => setMuted(!isMuted)}
                     disabled={!connected}
-                    className="rounded-full border border-cda-grey px-5 py-2.5 font-semibold text-cda-ink transition hover:border-cda-dark disabled:opacity-40"
+                    className="rounded-full border border-line px-5 py-2.5 font-semibold text-ink transition hover:border-heading disabled:opacity-40"
                   >
                     {isMuted ? "Unmute" : "Mute"}
                   </button>
                   <button
                     onClick={endSession}
-                    className="rounded-full bg-cda-dark px-6 py-2.5 font-semibold text-white transition hover:bg-black"
+                    className="rounded-full bg-heading px-6 py-2.5 font-semibold text-white transition hover:bg-black"
                   >
                     End call
                   </button>
@@ -440,7 +440,7 @@ function Assistant() {
                   <LanguagePicker value={callLanguage} onChange={setCallLanguage} />
                   <button
                     onClick={() => void startVoiceSession()}
-                    className="rounded-full bg-cda-red px-8 py-3 font-semibold text-white shadow transition hover:bg-cda-red-dark"
+                    className="rounded-full bg-brand px-8 py-3 font-semibold text-white shadow transition hover:bg-brand-dark"
                   >
                     Start voice call
                   </button>
@@ -448,16 +448,16 @@ function Assistant() {
               )}
             </div>
           </div>
-          <div className="mt-6 flex-1 space-y-3 overflow-y-auto border-t border-cda-grey bg-cda-grey-light px-4 py-4">
+          <div className="mt-6 flex-1 space-y-3 overflow-y-auto border-t border-line bg-surface px-4 py-4">
             {messages.length === 0 ? (
-              <p className="text-center text-sm text-cda-text">The live transcript will appear here.</p>
+              <p className="text-center text-sm text-muted">The live transcript will appear here.</p>
             ) : (
               messages.map((message) => <MessageBubble key={message.id} message={message} />)
             )}
             <div ref={listEndRef} />
           </div>
           {conversationId && messages.length > 0 && (
-            <div className="border-t border-cda-grey bg-white px-4 py-3">
+            <div className="border-t border-line bg-white px-4 py-3">
               <EmailTranscriptForm
                 key={conversationId}
                 onSend={emailTranscript}
@@ -470,7 +470,7 @@ function Assistant() {
         <AvatarPanel language={callLanguage} onLanguageChange={setCallLanguage} />
       ) : (
         // A live call with CDA staff. From here someone is always a customer: the staff side is /admin.
-        <div className="flex-1 overflow-y-auto bg-cda-grey-light p-4">
+        <div className="flex-1 overflow-y-auto bg-surface p-4">
           <AidaJoin initialCode="" />
         </div>
       )}
@@ -482,8 +482,8 @@ function StatusPill({ status }: { status: string }) {
   const styles: Record<string, string> = {
     connected: "bg-green-100 text-green-800",
     connecting: "bg-amber-100 text-amber-800",
-    error: "bg-red-100 text-cda-red-dark",
-    disconnected: "bg-cda-grey text-cda-text",
+    error: "bg-red-100 text-brand-dark",
+    disconnected: "bg-line text-muted",
   };
   const labels: Record<string, string> = {
     connected: "Connected",

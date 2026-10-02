@@ -2,12 +2,12 @@
 //
 //   customer email -> Gmail -> Pub/Sub push -> /api/email/gmail-push
 //        -> rules skip codes, alerts and newsletters (no credits spent)
-//        -> Ellie, through an ElevenLabs Custom Channel trigger of its own
-//   Ellie's answer -> /api/email/ellie-reply -> email_mode on Aida
-//        -> "auto": sent in the customer's thread    -> label Ellie/Replied
-//        -> "draft": a Gmail draft in that thread    -> label Ellie/Draft ready
+//        -> Clara, through an ElevenLabs Custom Channel trigger of its own
+//   Clara's answer -> /api/email/assistant-reply -> email_mode on Aida
+//        -> "auto": sent in the customer's thread    -> label Clara/Replied
+//        -> "draft": a Gmail draft in that thread    -> label Clara/Draft ready
 //   An upset customer (Claude rates each email's mood first) is never answered automatically: the
-//   answer becomes a draft, labelled Ellie/Upset customer as well, and staff are emailed.
+//   answer becomes a draft, labelled Clara/Upset customer as well, and staff are emailed.
 //
 // Supabase keeps one row per email (email_messages), which is also what stops Gmail's or
 // ElevenLabs' repeated deliveries from producing a second reply. It keeps who wrote and the
@@ -18,7 +18,7 @@ import { getEmailMode } from "./emailMode";
 import { withoutQuotedHistory } from "./feedback";
 import { isUpsetEmail, markAlerted, rateMessage, recordEmailMood, type QuickMood } from "./mood";
 import { sendMoodAlert } from "./moodAlert";
-import { automatedReason, buildReply, isSkip, parseGmailMessage, plainReply, replySubject, textForEllie, type IncomingEmail } from "./emailParse";
+import { automatedReason, buildReply, isSkip, parseGmailMessage, plainReply, replySubject, textForAssistant, type IncomingEmail } from "./emailParse";
 import {
   createDraft,
   getMessage,
@@ -50,10 +50,10 @@ export type EmailRow = {
   conversation_id: string | null;
   mode: string | null;
   created_at: string;
-  /** Draft mode: the Gmail draft and Ellie's text, to compare with what staff finally send. */
+  /** Draft mode: the Gmail draft and Clara's text, to compare with what staff finally send. */
   draft_id?: string | null;
-  ellie_reply?: string | null;
-  /** The email's mood, rated by Claude before Ellie saw it (null before schema.sql is re-run). */
+  assistant_reply?: string | null;
+  /** The email's mood, rated by Claude before Clara saw it (null before schema.sql is re-run). */
   mood_label?: string | null;
   mood_frustration?: number | null;
   mood_reason?: string | null;
@@ -64,7 +64,7 @@ export type EmailRow = {
 const MAX_AGE_MS = 24 * 3_600_000;
 /** More than this many emails from one sender in an hour looks like a robot or a loop. */
 const MAX_PER_SENDER_PER_HOUR = 5;
-/** Ties Ellie's reply back to the email: ElevenLabs returns it in user_message_ids. */
+/** Ties Clara's reply back to the email: ElevenLabs returns it in user_message_ids. */
 const MESSAGE_ID_PREFIX = "email|";
 
 const q = encodeURIComponent;
@@ -208,12 +208,12 @@ async function tooManyFromSender(fromEmail: string): Promise<boolean> {
   return rows.length > MAX_PER_SENDER_PER_HOUR;
 }
 
-async function sendToEllie(email: IncomingEmail): Promise<string> {
+async function sendToAssistant(email: IncomingEmail): Promise<string> {
   const response = await fetch(process.env.EMAIL_CHANNEL_INBOUND_URL ?? "", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Webhook-Secret": process.env.EMAIL_CHANNEL_INBOUND_SECRET ?? "" },
     body: JSON.stringify({
-      data: { type: "user_message", text: textForEllie(email), user_identifier: email.fromEmail },
+      data: { type: "user_message", text: textForAssistant(email), user_identifier: email.fromEmail },
       user_message_id: `${MESSAGE_ID_PREFIX}${email.gmailId}`,
     }),
     cache: "no-store",
@@ -263,11 +263,11 @@ async function handleIncoming(gmailId: string) {
     return;
   }
 
-  // Its mood, before Ellie sees it: an upset customer is never answered automatically (😊 Mood).
+  // Its mood, before Clara sees it: an upset customer is never answered automatically (😊 Mood).
   const mood = await rateEmail(email);
 
   // The sender's customer record comes first, so the conversation can be tied to it the moment
-  // ElevenLabs names it: Ellie's customer_lookup runs a second or so later and finds it. Receiving
+  // ElevenLabs names it: Clara's customer_lookup runs a second or so later and finds it. Receiving
   // an email from an address is taken as that address, as it was with Freshdesk.
   const customer = email.fromEmail
     ? await customerForChannel({ channel: "email", key: email.fromEmail, name: email.fromName ?? undefined }, true).catch(
@@ -281,10 +281,10 @@ async function handleIncoming(gmailId: string) {
   await move(gmailId, ["new"], { status: "waiting" });
   let conversationId: string;
   try {
-    conversationId = await sendToEllie(email);
+    conversationId = await sendToAssistant(email);
   } catch (error) {
-    console.error(`Email ${gmailId} could not be passed to Ellie`, error);
-    await move(gmailId, ["waiting"], { status: "failed", reason: "Ellie could not be reached" });
+    console.error(`Email ${gmailId} could not be passed to Clara`, error);
+    await move(gmailId, ["waiting"], { status: "failed", reason: "Clara could not be reached" });
     await label(gmailId, "failed");
     return;
   }
@@ -310,7 +310,7 @@ async function handleIncoming(gmailId: string) {
   ]);
 }
 
-// --- Ellie's answer ----------------------------------------------------------------------------
+// --- Clara's answer ----------------------------------------------------------------------------
 
 /** Each item in `data` is `{ type, event }`; an agent_response's text is `event.agent_response`. */
 export type ReplyWebhook = {
@@ -321,7 +321,7 @@ export type ReplyWebhook = {
   data?: { type?: string; event?: { agent_response?: unknown } }[];
 };
 
-/** Everything Ellie said in this turn, in order. */
+/** Everything Clara said in this turn, in order. */
 function replyText(payload: ReplyWebhook): string {
   return (payload.data ?? [])
     .filter((item) => item.type === "agent_response")
@@ -348,12 +348,12 @@ async function rowFor(payload: ReplyWebhook): Promise<EmailRow | null> {
  * One call per turn. Throws when Gmail refuses, so the route answers 500 and ElevenLabs tries
  * again (it retries twice within a few seconds); the row lets a retry pick up a failed send.
  */
-export async function handleEllieReply(payload: ReplyWebhook): Promise<{ outcome: string }> {
+export async function handleAssistantReply(payload: ReplyWebhook): Promise<{ outcome: string }> {
   const row = await rowFor(payload);
-  if (!row) return { outcome: "not an email we sent to Ellie" };
+  if (!row) return { outcome: "not an email we sent to Clara" };
 
   if (payload.status === "failed") {
-    if (await move(row.gmail_id, ["new", "waiting"], { status: "failed", reason: "Ellie could not answer" })) {
+    if (await move(row.gmail_id, ["new", "waiting"], { status: "failed", reason: "Clara could not answer" })) {
       await label(row.gmail_id, "failed");
     }
     return { outcome: "failed" };
@@ -362,15 +362,15 @@ export async function handleEllieReply(payload: ReplyWebhook): Promise<{ outcome
   const text = plainReply(replyText(payload));
   if (!text) {
     // Not expected: every email turn ends with an answer. Say so loudly instead of waiting forever.
-    console.error("ellie-reply: no agent_response text", JSON.stringify(payload).slice(0, 1000));
-    if (await move(row.gmail_id, ["new", "waiting"], { status: "failed", reason: "Ellie's answer had no text" })) {
+    console.error("assistant-reply: no agent_response text", JSON.stringify(payload).slice(0, 1000));
+    if (await move(row.gmail_id, ["new", "waiting"], { status: "failed", reason: "Clara's answer had no text" })) {
       await label(row.gmail_id, "failed");
     }
     return { outcome: "no text in this turn" };
   }
 
   if (isSkip(text)) {
-    if (await move(row.gmail_id, ["new", "waiting"], { status: "skipped", reason: "Ellie: not written by a customer" })) {
+    if (await move(row.gmail_id, ["new", "waiting"], { status: "skipped", reason: "Clara: not written by a customer" })) {
       await label(row.gmail_id, "skipped");
       // A robot is not a customer: drop the record made for this sender, if that is all it is.
       await forgetRobotSender(row.conversation_id ?? payload.conversation_id ?? null).catch((error) =>
@@ -385,7 +385,7 @@ export async function handleEllieReply(payload: ReplyWebhook): Promise<{ outcome
     return { outcome: "already handled" };
   }
 
-  // An upset customer always gets a person: Ellie's answer waits as a draft, whatever the switch says.
+  // An upset customer always gets a person: Clara's answer waits as a draft, whatever the switch says.
   const upset = isUpsetEmail(row.mood_frustration);
   const mode = upset ? "draft" : await getEmailMode();
   const to = row.reply_to ?? row.from_email;
@@ -407,10 +407,10 @@ export async function handleEllieReply(payload: ReplyWebhook): Promise<{ outcome
     } else {
       const draftId = await createDraft(raw, row.thread_id);
       const reason = upset ? `upset customer${row.mood_reason ? `: ${row.mood_reason}` : ""}`.slice(0, 300) : null;
-      await move(row.gmail_id, ["replying"], { status: "draft", mode, reason, draft_id: draftId, ellie_reply: text }).catch((error) => {
+      await move(row.gmail_id, ["replying"], { status: "draft", mode, reason, draft_id: draftId, assistant_reply: text }).catch((error) => {
         // Before supabase/schema.sql is re-run the comparison columns are missing: the draft itself
         // is still there, so record it without them rather than calling it a failure.
-        console.error("could not keep Ellie's draft for comparison", error);
+        console.error("could not keep Clara's draft for comparison", error);
         return move(row.gmail_id, ["replying"], { status: "draft", mode, reason });
       });
       await label(row.gmail_id, "draft");

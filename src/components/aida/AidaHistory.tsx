@@ -53,14 +53,14 @@ export function AidaHistory({ code, staffToken, onBack }: { code: string; staffT
   if (error) {
     return (
       <section className="mx-auto max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
-        <p className="text-sm text-cda-red">{error}</p>
-        <button type="button" onClick={onBack} className="mt-4 rounded-lg border border-cda-grey px-4 py-2 text-sm font-semibold">
+        <p className="text-sm text-brand">{error}</p>
+        <button type="button" onClick={onBack} className="mt-4 rounded-lg border border-line px-4 py-2 text-sm font-semibold">
           Back
         </button>
       </section>
     );
   }
-  if (!room) return <p className="text-center text-sm text-cda-text">Loading the conversation…</p>;
+  if (!room) return <p className="text-center text-sm text-muted">Loading the conversation…</p>;
 
   const { lines, suggestions } = historyToState(events, "");
 
@@ -68,28 +68,28 @@ export function AidaHistory({ code, staffToken, onBack }: { code: string; staffT
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
       <header className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
         <div>
-          <h1 className="text-lg font-bold text-cda-dark">{room.title ?? "Aida room"}</h1>
-          <p className="text-xs text-cda-text">
-            Room code <strong className="tracking-widest text-cda-dark">{room.code}</strong> · started {when(room.createdAt)}
+          <h1 className="text-lg font-bold text-heading">{room.title ?? "Aida room"}</h1>
+          <p className="text-xs text-muted">
+            Room code <strong className="tracking-widest text-heading">{room.code}</strong> · started {when(room.createdAt)}
             {room.endedAt ? ` · ended ${when(room.endedAt)}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${room.active ? "bg-green-100 text-green-800" : "bg-cda-grey text-cda-dark"}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${room.active ? "bg-green-100 text-green-800" : "bg-line text-heading"}`}
           >
             {room.active ? "Still open" : "Ended · read only"}
           </span>
-          <button type="button" onClick={onBack} className="rounded-full bg-cda-dark px-3 py-1.5 text-xs font-semibold text-white">
+          <button type="button" onClick={onBack} className="rounded-full bg-heading px-3 py-1.5 text-xs font-semibold text-white">
             Back
           </button>
         </div>
       </header>
 
       <div className={isStaff ? "grid gap-4 lg:grid-cols-[1fr_340px]" : "grid"}>
-        <section className="min-h-[70dvh] space-y-3 rounded-xl bg-cda-grey-light p-4 shadow-sm">
+        <section className="min-h-[70dvh] space-y-3 rounded-xl bg-surface p-4 shadow-sm">
           {lines.length === 0 ? (
-            <p className="text-center text-sm text-cda-text">Nothing was said or typed in this room.</p>
+            <p className="text-center text-sm text-muted">Nothing was said or typed in this room.</p>
           ) : (
             lines.map((line) => <LineView key={line.id} line={line} viewerRole={isStaff ? "employee" : "customer"} />)
           )}
@@ -97,19 +97,19 @@ export function AidaHistory({ code, staffToken, onBack }: { code: string; staffT
 
         {isStaff && (
           <aside className="space-y-2 rounded-xl bg-white p-4 shadow-sm">
-            <h2 className="font-semibold text-cda-dark">Aida&apos;s drafts</h2>
+            <h2 className="font-semibold text-heading">Aida&apos;s drafts</h2>
             {suggestions.length === 0 ? (
-              <p className="text-sm text-cda-text">Aida made no drafts in this room.</p>
+              <p className="text-sm text-muted">Aida made no drafts in this room.</p>
             ) : (
               suggestions.map((suggestion) => (
-                <p key={suggestion.id} className="rounded-lg bg-cda-grey-light p-2 text-xs text-cda-dark">
+                <p key={suggestion.id} className="rounded-lg bg-surface p-2 text-xs text-heading">
                   <span
                     className={`font-semibold ${
                       suggestion.status === "approved"
                         ? "text-green-700"
                         : suggestion.status === "declined"
-                          ? "text-cda-red"
-                          : "text-cda-text"
+                          ? "text-brand"
+                          : "text-muted"
                     }`}
                   >
                     {suggestion.status === "approved" ? "Sent" : suggestion.status === "declined" ? "Declined" : "Not used"}
@@ -125,7 +125,7 @@ export function AidaHistory({ code, staffToken, onBack }: { code: string; staffT
 
       <section className="rounded-xl bg-white p-4 shadow-sm">
         {room.active ? (
-          <p className="text-sm text-cda-text">The conversation can be emailed once the room has ended.</p>
+          <p className="text-sm text-muted">The conversation can be emailed once the room has ended.</p>
         ) : (
           <EmailTranscriptForm
             label="Email me this conversation"

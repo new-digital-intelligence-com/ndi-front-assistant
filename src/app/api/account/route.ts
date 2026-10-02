@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     return Response.json(await createLinkCode(customerId));
   }
 
-  // Their own phone number: Ellie then knows them when they call CDA, and when CDA calls them.
+  // Their own phone number: Clara then knows them when they call CDA, and when CDA calls them.
   if (action === "phone") {
     const customerId = await signedInCustomerId();
     if (!customerId) return Response.json({ error: "Please sign in first" }, { status: 401 });

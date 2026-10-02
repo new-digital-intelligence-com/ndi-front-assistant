@@ -8,10 +8,10 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed shadow-sm ${
-          isUser ? "rounded-br-sm bg-cda-dark text-white" : "rounded-bl-sm bg-white text-cda-ink"
+          isUser ? "rounded-br-sm bg-heading text-white" : "rounded-bl-sm bg-white text-ink"
         }`}
       >
-        {!isUser && <div className="mb-1 text-xs font-semibold text-cda-red">Ellie</div>}
+        {!isUser && <div className="mb-1 text-xs font-semibold text-brand">Clara</div>}
         {message.attachments && message.attachments.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {message.attachments.map((file) =>
@@ -58,11 +58,11 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 export function TypingIndicator() {
   return (
     <div className="flex justify-start">
-      <div className="flex gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-4 shadow-sm" aria-label="Ellie is typing">
+      <div className="flex gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-4 shadow-sm" aria-label="Clara is typing">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="typing-dot h-2 w-2 rounded-full bg-cda-red"
+            className="typing-dot h-2 w-2 rounded-full bg-brand"
             style={{ animationDelay: `${i * 0.15}s` }}
           />
         ))}

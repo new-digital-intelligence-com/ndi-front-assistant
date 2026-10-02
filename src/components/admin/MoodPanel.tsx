@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { channelStyle } from "./CustomersPanel";
 
-// /admin → 😊 Mood: how customers felt talking to Ellie, on every channel. The scores come from
+// /admin → 😊 Mood: how customers felt talking to Clara, on every channel. The scores come from
 // ElevenLabs (sentiment -1…+1 and frustration 0…100% per conversation and per customer message);
 // emails and Aida rooms are rated by Claude as they happen.
 //
@@ -75,9 +75,9 @@ const EMAIL_STATUS: Record<string, string> = {
   sent: "Replied",
   skipped: "Skipped",
   failed: "Failed",
-  new: "Ellie writing",
-  waiting: "Ellie writing",
-  replying: "Ellie writing",
+  new: "Clara writing",
+  waiting: "Clara writing",
+  replying: "Clara writing",
 };
 const when = (iso: string) =>
   new Date(iso).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -157,20 +157,20 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
     <div className="space-y-4" onMouseLeave={() => setTip(null)}>
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
         <div>
-          <h2 className="text-lg font-bold text-cda-dark">😊 Customer mood</h2>
-          <p className="text-xs text-cda-text">
-            ElevenLabs scores every conversation with Ellie when it ends; Claude rates emails and Aida calls as they happen.
+          <h2 className="text-lg font-bold text-heading">😊 Customer mood</h2>
+          <p className="text-xs text-muted">
+            ElevenLabs scores every conversation with Clara when it ends; Claude rates emails and Aida calls as they happen.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-full bg-cda-grey p-1" role="group" aria-label="Period">
+          <div className="flex rounded-full bg-line p-1" role="group" aria-label="Period">
             {([7, 30] as const).map((option) => (
               <button
                 key={option}
                 type="button"
                 aria-pressed={days === option}
                 onClick={() => setDays(option)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${days === option ? "bg-white text-cda-dark shadow-sm" : "text-cda-text"}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${days === option ? "bg-white text-heading shadow-sm" : "text-muted"}`}
               >
                 {option} days
               </button>
@@ -180,7 +180,7 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
             type="button"
             onClick={() => void importPast()}
             disabled={importing}
-            className="rounded-full border border-cda-grey px-3 py-1.5 text-xs font-semibold text-cda-dark disabled:opacity-60"
+            className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-heading disabled:opacity-60"
             title="Reads the last 30 days of conversations from ElevenLabs (free) and adds any that are missing"
           >
             {importing ? "Importing…" : "⟳ Import past conversations"}
@@ -188,15 +188,15 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
         </div>
       </section>
 
-      {importNote && <p className="rounded-xl bg-white px-4 py-2 text-sm text-cda-dark shadow-sm">{importNote}</p>}
-      {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-cda-red-dark">{error}</p>}
-      {!data && !error && <p className="rounded-xl bg-white p-4 text-sm text-cda-text shadow-sm">Loading…</p>}
+      {importNote && <p className="rounded-xl bg-white px-4 py-2 text-sm text-heading shadow-sm">{importNote}</p>}
+      {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">{error}</p>}
+      {!data && !error && <p className="rounded-xl bg-white p-4 text-sm text-muted shadow-sm">Loading…</p>}
 
       {data && (
         <>
           <p className={`rounded-xl px-4 py-2 text-xs ${data.alertsOn ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-900"}`}>
             {data.alerts?.on
-              ? `Staff alerts are on: an email goes to ${data.alerts.to.join(", ")} when a customer is upset or Ellie promised a follow-up.`
+              ? `Staff alerts are on: an email goes to ${data.alerts.to.join(", ")} when a customer is upset or Clara promised a follow-up.`
               : `Staff alerts are off. ${
                   data.alerts && !data.alerts.on ? ALERTS_OFF[data.alerts.reason] : ALERTS_OFF.no_address
                 } Unhappy conversations are still listed below.`}
@@ -226,7 +226,7 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
           </section>
 
           {data.counts.total === 0 ? (
-            <p className="rounded-xl bg-white p-4 text-sm text-cda-text shadow-sm">
+            <p className="rounded-xl bg-white p-4 text-sm text-muted shadow-sm">
               No scored conversations in this period yet. Use “Import past conversations” to fill in the last 30 days.
             </p>
           ) : (
@@ -236,11 +236,11 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
                 <ul className="mt-3 space-y-2.5">
                   {data.byChannel.map((row) => (
                     <li key={row.channel} className="grid grid-cols-[110px_1fr_70px] items-center gap-3 text-sm">
-                      <span className="truncate text-cda-dark">
+                      <span className="truncate text-heading">
                         {channelStyle(row.channel).icon} {channelStyle(row.channel).label}
                       </span>
                       <div
-                        className={`flex h-4 gap-[2px] ${row.total === 0 ? "rounded bg-cda-grey-light" : ""}`}
+                        className={`flex h-4 gap-[2px] ${row.total === 0 ? "rounded bg-surface" : ""}`}
                         aria-label={`${channelStyle(row.channel).label}: ${row.total === 0 ? "no conversations" : ORDER.map((l) => `${row[l]} ${l}`).join(", ")}`}
                         title={row.total === 0 ? "No conversations in this period" : undefined}
                       >
@@ -256,13 +256,13 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
                           />
                         ))}
                       </div>
-                      <span className="text-right text-xs text-cda-text" title="Average frustration">
+                      <span className="text-right text-xs text-muted" title="Average frustration">
                         {row.total === 0 ? "0 · –" : `${row.total} · ${Math.round(row.averageFrustration * 100)}%`}
                       </span>
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-[11px] text-cda-text">Right: conversations · average frustration.</p>
+                <p className="mt-3 text-[11px] text-muted">Right: conversations · average frustration.</p>
               </section>
 
               <section className="rounded-xl bg-white p-4 shadow-sm">
@@ -274,23 +274,23 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
 
           <section className="grid gap-3 lg:grid-cols-2">
             <div className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-cda-dark">✉️ Emails checked before Ellie answered</p>
-              <p className="mt-1 text-sm text-cda-dark">
-                {data.emails.checked} checked · <strong className="text-cda-red-dark">{data.emails.upset} upset</strong>
+              <p className="text-sm font-semibold text-heading">✉️ Emails checked before Clara answered</p>
+              <p className="mt-1 text-sm text-heading">
+                {data.emails.checked} checked · <strong className="text-brand-dark">{data.emails.upset} upset</strong>
               </p>
-              <p className="mt-1 text-xs text-cda-text">
-                An upset email is never answered automatically: Ellie leaves a Gmail draft labelled “Ellie/Upset customer”.
+              <p className="mt-1 text-xs text-muted">
+                An upset email is never answered automatically: Clara leaves a Gmail draft labelled “Clara/Upset customer”.
               </p>
               {data.emails.items.length > 0 && (
                 <ul className="mt-3 space-y-2">
                   {data.emails.items.map((email) => (
-                    <li key={`${email.threadId}-${email.receivedAt}`} className="rounded-lg bg-cda-grey-light px-3 py-2">
+                    <li key={`${email.threadId}-${email.receivedAt}`} className="rounded-lg bg-surface px-3 py-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="min-w-0 truncate text-sm font-semibold text-cda-dark">{email.from ?? "Unknown sender"}</span>
-                        <span className="shrink-0 text-[11px] text-cda-text">{when(email.receivedAt)}</span>
+                        <span className="min-w-0 truncate text-sm font-semibold text-heading">{email.from ?? "Unknown sender"}</span>
+                        <span className="shrink-0 text-[11px] text-muted">{when(email.receivedAt)}</span>
                       </div>
-                      <p className="truncate text-xs text-cda-dark">{email.subject || "(no subject)"}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-cda-text">
+                      <p className="truncate text-xs text-heading">{email.subject || "(no subject)"}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted">
                         <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLOR.negative }} aria-hidden="true" />
                         Frustration {Math.round(email.frustration * 100)}%{email.reason ? ` · ${email.reason}` : ""} ·{" "}
                         {EMAIL_STATUS[email.status] ?? email.status} ·{" "}
@@ -309,26 +309,26 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
               )}
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-cda-dark">📞 Aida calls, live</p>
-              <p className="mt-1 text-sm text-cda-dark">
-                {data.aida.lines} customer lines rated · <strong className="text-cda-red-dark">{data.aida.frustrated} frustrated</strong>
+              <p className="text-sm font-semibold text-heading">📞 Aida calls, live</p>
+              <p className="mt-1 text-sm text-heading">
+                {data.aida.lines} customer lines rated · <strong className="text-brand-dark">{data.aida.frustrated} frustrated</strong>
               </p>
-              <p className="mt-1 text-xs text-cda-text">
+              <p className="mt-1 text-xs text-muted">
                 Staff see the mood of each line in the room; when the customer is frustrated, Aida’s next draft opens with an apology.
               </p>
               {data.aida.items.length > 0 && (
                 <ul className="mt-3 space-y-2">
                   {data.aida.items.map((line, index) => (
-                    <li key={`${line.at}-${index}`} className="rounded-lg bg-cda-grey-light px-3 py-2">
+                    <li key={`${line.at}-${index}`} className="rounded-lg bg-surface px-3 py-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="min-w-0 truncate text-sm font-semibold text-cda-dark">
+                        <span className="min-w-0 truncate text-sm font-semibold text-heading">
                           {line.roomTitle ?? "Aida room"}
-                          {line.roomCode ? <span className="font-normal text-cda-text"> · room {line.roomCode}</span> : null}
+                          {line.roomCode ? <span className="font-normal text-muted"> · room {line.roomCode}</span> : null}
                         </span>
-                        <span className="shrink-0 text-[11px] text-cda-text">{when(line.at)}</span>
+                        <span className="shrink-0 text-[11px] text-muted">{when(line.at)}</span>
                       </div>
-                      {line.excerpt && <p className="text-xs text-cda-dark">“{line.excerpt}”</p>}
-                      <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-cda-text">
+                      {line.excerpt && <p className="text-xs text-heading">“{line.excerpt}”</p>}
+                      <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted">
                         <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[line.label] }} aria-hidden="true" />
                         {WORD[line.label]}, frustration {Math.round(line.frustration * 100)}%
                       </p>
@@ -342,23 +342,23 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
           <section className="rounded-xl bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="font-semibold text-cda-dark">Unhappy conversations</h3>
-                <p className="text-xs text-cda-text">
-                  Upset customers (frustration 60%+ or a very negative moment) and everyone Ellie promised a follow-up, newest first.
+                <h3 className="font-semibold text-heading">Unhappy conversations</h3>
+                <p className="text-xs text-muted">
+                  Upset customers (frustration 60%+ or a very negative moment) and everyone Clara promised a follow-up, newest first.
                 </p>
               </div>
-              <label className="text-xs text-cda-text">
+              <label className="text-xs text-muted">
                 Your name{" "}
                 <input
                   value={staffName}
                   onChange={(event) => setStaffName(event.target.value)}
                   placeholder="for “followed up by”"
-                  className="ml-1 w-44 rounded-full border border-cda-grey px-3 py-1 text-xs"
+                  className="ml-1 w-44 rounded-full border border-line px-3 py-1 text-xs"
                 />
               </label>
             </div>
             {data.unhappy.length === 0 ? (
-              <p className="mt-3 rounded-lg bg-cda-grey-light p-3 text-sm text-cda-text">Nobody was unhappy in this period. 🎉</p>
+              <p className="mt-3 rounded-lg bg-surface p-3 text-sm text-muted">Nobody was unhappy in this period. 🎉</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {data.unhappy.map((item) => (
@@ -372,7 +372,7 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
 
       {tip && (
         <div
-          className="pointer-events-none fixed z-50 max-w-xs rounded-lg bg-cda-dark px-2.5 py-1.5 text-xs text-white shadow-lg"
+          className="pointer-events-none fixed z-50 max-w-xs rounded-lg bg-heading px-2.5 py-1.5 text-xs text-white shadow-lg"
           style={{ left: tip.x + 12, top: tip.y + 12 }}
           role="tooltip"
         >
@@ -385,13 +385,13 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
 
 function Tile({ label, value, note, swatch, alert }: { label: string; value: string; note?: string; swatch?: string; alert?: boolean }) {
   return (
-    <div className={`rounded-xl bg-white p-3 shadow-sm ${alert ? "ring-1 ring-cda-red/50" : ""}`}>
-      <p className="flex items-center gap-1.5 text-xs text-cda-text">
+    <div className={`rounded-xl bg-white p-3 shadow-sm ${alert ? "ring-1 ring-brand/50" : ""}`}>
+      <p className="flex items-center gap-1.5 text-xs text-muted">
         {swatch && <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: swatch }} aria-hidden="true" />}
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-cda-dark">{value}</p>
-      {note && <p className="text-[11px] text-cda-text">{note}</p>}
+      <p className="mt-1 text-2xl font-semibold text-heading">{value}</p>
+      {note && <p className="text-[11px] text-muted">{note}</p>}
     </div>
   );
 }
@@ -399,8 +399,8 @@ function Tile({ label, value, note, swatch, alert }: { label: string; value: str
 function ChartTitle({ title }: { title: string }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <h3 className="text-sm font-semibold text-cda-dark">{title}</h3>
-      <p className="flex gap-3 text-[11px] text-cda-text">
+      <h3 className="text-sm font-semibold text-heading">{title}</h3>
+      <p className="flex gap-3 text-[11px] text-muted">
         {ORDER.map((label) => (
           <span key={label} className="inline-flex items-center gap-1">
             <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: COLOR[label] }} aria-hidden="true" />
@@ -426,7 +426,7 @@ function DayColumns({
   const every = days.length > 10 ? 5 : 1;
   return (
     <div className="mt-3">
-      <div className="flex h-40 items-end gap-[2px] border-b border-cda-grey">
+      <div className="flex h-40 items-end gap-[2px] border-b border-line">
         {days.map((day) => (
           <div
             key={day.date}
@@ -448,14 +448,14 @@ function DayColumns({
           </div>
         ))}
       </div>
-      <div className="mt-1 flex gap-[2px] text-[10px] text-cda-text">
+      <div className="mt-1 flex gap-[2px] text-[10px] text-muted">
         {days.map((day, index) => (
           <span key={day.date} className="flex-1 truncate text-center">
             {index % every === 0 || index === days.length - 1 ? dayLabel(day.date) : ""}
           </span>
         ))}
       </div>
-      <p className="mt-1 text-[11px] text-cda-text">Tallest day: {max} conversations.</p>
+      <p className="mt-1 text-[11px] text-muted">Tallest day: {max} conversations.</p>
     </div>
   );
 }
@@ -499,41 +499,41 @@ function UnhappyCard({ item, onHandled }: { item: Unhappy; onHandled: (id: strin
   const [open, setOpen] = useState(false);
   const channel = channelStyle(item.channel);
   return (
-    <li className={`rounded-lg border p-3 ${item.handledAt ? "border-cda-grey bg-cda-grey-light" : "border-cda-red/40"}`}>
+    <li className={`rounded-lg border p-3 ${item.handledAt ? "border-line bg-surface" : "border-brand/40"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${channel.className}`}>
               {channel.icon} {channel.label}
             </span>
-            <span className="font-semibold text-cda-dark">{item.customerName ?? "Customer not identified"}</span>
-            <span className="text-cda-text">· {when(item.startedAt)}</span>
-            <span className="inline-flex items-center gap-1 text-cda-text">
+            <span className="font-semibold text-heading">{item.customerName ?? "Customer not identified"}</span>
+            <span className="text-muted">· {when(item.startedAt)}</span>
+            <span className="inline-flex items-center gap-1 text-muted">
               · <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[item.label] }} aria-hidden="true" />
               {WORD[item.label]}, frustration up to {Math.round(item.peakFrustration * 100)}%
             </span>
             {item.followUp && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">Follow-up promised</span>}
             {item.alerted && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-800">Staff emailed</span>}
           </p>
-          <p className="mt-1 text-sm font-semibold text-cda-dark">{item.title ?? "Conversation"}</p>
+          <p className="mt-1 text-sm font-semibold text-heading">{item.title ?? "Conversation"}</p>
           {item.lowPoint && (
-            <p className="mt-1 text-sm text-cda-dark">
-              <span className="text-xs text-cda-text">Where it turned: </span>“{item.lowPoint}”
+            <p className="mt-1 text-sm text-heading">
+              <span className="text-xs text-muted">Where it turned: </span>“{item.lowPoint}”
             </p>
           )}
           {item.summary && (
-            <button type="button" onClick={() => setOpen(!open)} className="mt-1 text-xs text-cda-text underline">
+            <button type="button" onClick={() => setOpen(!open)} className="mt-1 text-xs text-muted underline">
               {open ? "Hide summary" : "Show summary"}
             </button>
           )}
-          {open && item.summary && <p className="mt-1 text-sm text-cda-ink">{item.summary}</p>}
+          {open && item.summary && <p className="mt-1 text-sm text-ink">{item.summary}</p>}
         </div>
         <div className="flex flex-col items-end gap-2">
           <MoodCurve turns={item.turns} />
           {item.handledAt ? (
             <p className="text-xs text-green-800">
               ✓ Followed up{item.handledBy ? ` by ${item.handledBy}` : ""}{" "}
-              <button type="button" onClick={() => onHandled(item.conversationId, false)} className="text-cda-text underline">
+              <button type="button" onClick={() => onHandled(item.conversationId, false)} className="text-muted underline">
                 undo
               </button>
             </p>
@@ -541,7 +541,7 @@ function UnhappyCard({ item, onHandled }: { item: Unhappy; onHandled: (id: strin
             <button
               type="button"
               onClick={() => onHandled(item.conversationId, true)}
-              className="rounded-full bg-cda-red px-3 py-1.5 text-xs font-semibold text-white"
+              className="rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-white"
             >
               Mark followed up
             </button>

@@ -61,29 +61,29 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 const CHANNEL_STYLE: Record<string, { icon: string; label: string; className: string }> = {
-  email: { icon: "✉", label: "Email", className: "bg-red-50 text-cda-red-dark" },
+  email: { icon: "✉", label: "Email", className: "bg-red-50 text-brand-dark" },
   telegram: { icon: "✈", label: "Telegram", className: "bg-sky-50 text-sky-800" },
   instagram: { icon: "◎", label: "Instagram", className: "bg-pink-50 text-pink-800" },
   messenger: { icon: "ⓜ", label: "Messenger", className: "bg-blue-50 text-blue-800" },
   alexa: { icon: "◉", label: "Alexa", className: "bg-cyan-50 text-cyan-800" },
   phone: { icon: "☎", label: "Phone", className: "bg-emerald-50 text-emerald-800" },
-  website: { icon: "🌐", label: "Website", className: "bg-cda-grey text-cda-dark" },
+  website: { icon: "🌐", label: "Website", className: "bg-line text-heading" },
   slack: { icon: "#", label: "Slack", className: "bg-purple-50 text-purple-800" },
-  messaging: { icon: "💬", label: "Messaging app", className: "bg-cda-grey text-cda-dark" },
+  messaging: { icon: "💬", label: "Messaging app", className: "bg-line text-heading" },
   intercom: { icon: "◌", label: "Intercom", className: "bg-indigo-50 text-indigo-800" },
-  hosted: { icon: "🔗", label: "ElevenLabs page / QR", className: "bg-cda-grey text-cda-dark" },
+  hosted: { icon: "🔗", label: "ElevenLabs page / QR", className: "bg-line text-heading" },
 };
 export const channelStyle = (channel: string | null) =>
-  CHANNEL_STYLE[channel ?? ""] ?? { icon: "•", label: channel ?? "unknown", className: "bg-cda-grey text-cda-dark" };
+  CHANNEL_STYLE[channel ?? ""] ?? { icon: "•", label: channel ?? "unknown", className: "bg-line text-heading" };
 
 const EMAIL_STATUS: Record<string, string> = {
   sent: "Replied",
   draft: "Draft ready",
   skipped: "Skipped",
   failed: "Failed",
-  waiting: "Ellie writing",
-  replying: "Ellie writing",
-  new: "Ellie writing",
+  waiting: "Clara writing",
+  replying: "Clara writing",
+  new: "Clara writing",
 };
 
 const when = (iso: string) =>
@@ -152,18 +152,18 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
 
   return (
     <div className="space-y-4">
-      {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-cda-red-dark">{error}</p>}
+      {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">{error}</p>}
       {data && <OverviewCards overview={data.overview} />}
       <WeekInsightCard staffToken={staffToken} />
 
       <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
         <section className="flex max-h-[75dvh] flex-col rounded-xl bg-white shadow-sm">
-          <div className="space-y-2 border-b border-cda-grey p-4">
+          <div className="space-y-2 border-b border-line p-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-cda-dark">
-                Customers <span className="text-sm font-normal text-cda-text">({visible.length})</span>
+              <h2 className="font-semibold text-heading">
+                Customers <span className="text-sm font-normal text-muted">({visible.length})</span>
               </h2>
-              <button type="button" onClick={() => void load()} disabled={loading} className="text-xs text-cda-text underline disabled:opacity-50">
+              <button type="button" onClick={() => void load()} disabled={loading} className="text-xs text-muted underline disabled:opacity-50">
                 {loading ? "Loading…" : "Refresh"}
               </button>
             </div>
@@ -171,7 +171,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search a name, email, Telegram chat…"
-              className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
             />
             <div className="flex flex-wrap gap-1.5">
               {FILTERS.map((item) => (
@@ -180,7 +180,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
                   type="button"
                   onClick={() => setFilter(item.id)}
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    filter === item.id ? "bg-cda-dark text-white" : "bg-cda-grey-light text-cda-dark"
+                    filter === item.id ? "bg-heading text-white" : "bg-surface text-heading"
                   }`}
                 >
                   {item.label}
@@ -189,26 +189,26 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
             </div>
           </div>
           <ul className="flex-1 space-y-1 overflow-y-auto p-2">
-            {!data && !error && <li className="p-3 text-sm text-cda-text">Loading customers…</li>}
-            {data && visible.length === 0 && <li className="p-3 text-sm text-cda-text">Nobody matches.</li>}
+            {!data && !error && <li className="p-3 text-sm text-muted">Loading customers…</li>}
+            {data && visible.length === 0 && <li className="p-3 text-sm text-muted">Nobody matches.</li>}
             {visible.map((customer) => (
               <li key={customer.id}>
                 <button
                   type="button"
                   onClick={() => setSelected(customer.id)}
                   className={`w-full rounded-lg px-3 py-2 text-left transition ${
-                    selected === customer.id ? "bg-red-50 ring-1 ring-cda-red/40" : "hover:bg-cda-grey-light"
+                    selected === customer.id ? "bg-red-50 ring-1 ring-brand/40" : "hover:bg-surface"
                   }`}
                 >
                   <span className="flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5">
                       {customer.activeNow && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" title="Active now" />}
-                      <span className="truncate text-sm font-semibold text-cda-dark">{customer.name ?? "Unnamed customer"}</span>
+                      <span className="truncate text-sm font-semibold text-heading">{customer.name ?? "Unnamed customer"}</span>
                       {customer.hasAccount && (
                         <span className="shrink-0 rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-800">account</span>
                       )}
                     </span>
-                    <span className="shrink-0 text-[11px] text-cda-text">{ago(customer.lastActivity)}</span>
+                    <span className="shrink-0 text-[11px] text-muted">{ago(customer.lastActivity)}</span>
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-1">
                     {[...new Set(customer.channels.map((channel) => channel.channel))].map((channel) => (
@@ -216,7 +216,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
                         {channelStyle(channel).icon} {channelStyle(channel).label}
                       </span>
                     ))}
-                    <span className="text-[11px] text-cda-text">
+                    <span className="text-[11px] text-muted">
                       · {customer.conversations} chats · {customer.notes} notes
                     </span>
                   </span>
@@ -229,7 +229,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
         {selected ? (
           <CustomerView key={selected} id={selected} staffToken={staffToken} />
         ) : (
-          <section className="flex items-center justify-center rounded-xl bg-white p-8 text-sm text-cda-text shadow-sm">
+          <section className="flex items-center justify-center rounded-xl bg-white p-8 text-sm text-muted shadow-sm">
             Pick a customer to see their channels, history and an AI insight.
           </section>
         )}
@@ -256,27 +256,27 @@ function OverviewCards({ overview }: { overview: Overview }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {stats.map(([label, value, hint]) => (
           <div key={label} className="rounded-xl bg-white p-3 shadow-sm" title={hint}>
-            <p className="text-2xl font-bold text-cda-dark">{value}</p>
-            <p className="text-xs text-cda-text">{label}</p>
+            <p className="text-2xl font-bold text-heading">{value}</p>
+            <p className="text-xs text-muted">{label}</p>
           </div>
         ))}
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-cda-dark">Customers per channel</p>
+          <p className="text-xs font-semibold text-heading">Customers per channel</p>
           <Bars values={overview.channels} />
         </div>
         <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-cda-dark">Conversations this week</p>
-          {week.length ? <Bars values={Object.fromEntries(week)} /> : <p className="mt-2 text-xs text-cda-text">None yet.</p>}
+          <p className="text-xs font-semibold text-heading">Conversations this week</p>
+          {week.length ? <Bars values={Object.fromEntries(week)} /> : <p className="mt-2 text-xs text-muted">None yet.</p>}
         </div>
         <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-cda-dark">Emails since the switch to Gmail</p>
-          <ul className="mt-2 space-y-1 text-xs text-cda-text">
+          <p className="text-xs font-semibold text-heading">Emails since the switch to Gmail</p>
+          <ul className="mt-2 space-y-1 text-xs text-muted">
             {emailOrder.map((status) => (
               <li key={status} className="flex justify-between">
                 <span>{EMAIL_STATUS[status]}</span>
-                <strong className="text-cda-dark">{overview.emails[status] ?? 0}</strong>
+                <strong className="text-heading">{overview.emails[status] ?? 0}</strong>
               </li>
             ))}
           </ul>
@@ -292,11 +292,11 @@ function Bars({ values }: { values: Record<string, number> }) {
     <ul className="mt-2 space-y-1.5">
       {Object.entries(values).map(([channel, count]) => (
         <li key={channel} className="flex items-center gap-2 text-xs">
-          <span className="w-20 shrink-0 text-cda-text">{channelStyle(channel).label}</span>
-          <span className="h-2 flex-1 rounded-full bg-cda-grey-light">
-            <span className="block h-2 rounded-full bg-cda-red" style={{ width: `${(count / max) * 100}%` }} />
+          <span className="w-20 shrink-0 text-muted">{channelStyle(channel).label}</span>
+          <span className="h-2 flex-1 rounded-full bg-surface">
+            <span className="block h-2 rounded-full bg-brand" style={{ width: `${(count / max) * 100}%` }} />
           </span>
-          <strong className="w-6 text-right text-cda-dark">{count}</strong>
+          <strong className="w-6 text-right text-heading">{count}</strong>
         </li>
       ))}
     </ul>
@@ -329,21 +329,21 @@ function WeekInsightCard({ staffToken }: { staffToken: string }) {
     <section className="rounded-xl bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="font-semibold text-cda-dark">What customers asked this week</h2>
-          <p className="text-xs text-cda-text">Claude reads the last 7 days of conversation notes and email subjects, on every channel.</p>
+          <h2 className="font-semibold text-heading">What customers asked this week</h2>
+          <p className="text-xs text-muted">Claude reads the last 7 days of conversation notes and email subjects, on every channel.</p>
         </div>
         <button
           type="button"
           onClick={() => void ask()}
           disabled={busy}
-          className="rounded-full bg-cda-dark px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+          className="rounded-full bg-heading px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
         >
           {busy ? "Claude is reading…" : insight ? "✨ Write it again" : "✨ Summarise with Claude"}
         </button>
       </div>
-      {error && <p className="mt-2 text-sm text-cda-red">{error}</p>}
+      {error && <p className="mt-2 text-sm text-brand">{error}</p>}
       {insight && (
-        <div className="mt-3 space-y-3 text-sm text-cda-dark">
+        <div className="mt-3 space-y-3 text-sm text-heading">
           <p>{insight.summary}</p>
           <div className="grid gap-3 md:grid-cols-2">
             <InsightList title="Top topics" items={insight.topTopics} />
@@ -351,7 +351,7 @@ function WeekInsightCard({ staffToken }: { staffToken: string }) {
             <InsightList title="Products mentioned" items={insight.products} />
             <InsightList title="Ideas for CDA" items={insight.suggestions} />
           </div>
-          <p className="text-xs text-cda-text">Based on {insight.basedOn} conversations and emails.</p>
+          <p className="text-xs text-muted">Based on {insight.basedOn} conversations and emails.</p>
         </div>
       )}
     </section>
@@ -362,7 +362,7 @@ function InsightList({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-cda-text">{title}</p>
+      <p className="text-xs font-semibold text-muted">{title}</p>
       <ul className="mt-1 list-disc space-y-0.5 pl-5">
         {items.map((item) => (
           <li key={item}>{item}</li>
@@ -413,8 +413,8 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
     }
   }
 
-  if (error) return <section className="rounded-xl bg-white p-6 text-sm text-cda-red shadow-sm">{error}</section>;
-  if (!detail) return <section className="rounded-xl bg-white p-6 text-sm text-cda-text shadow-sm">Loading…</section>;
+  if (error) return <section className="rounded-xl bg-white p-6 text-sm text-brand shadow-sm">{error}</section>;
+  if (!detail) return <section className="rounded-xl bg-white p-6 text-sm text-muted shadow-sm">Loading…</section>;
 
   const { customer } = detail;
   const perChannel = detail.conversations.reduce<Record<string, number>>((counts, conversation) => {
@@ -442,15 +442,15 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
     <section className="max-h-[75dvh] space-y-4 overflow-y-auto rounded-xl bg-white p-5 shadow-sm">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-lg font-bold text-cda-dark">{customer.name ?? "Unnamed customer"}</h2>
-          <p className="text-xs text-cda-text">
+          <h2 className="text-lg font-bold text-heading">{customer.name ?? "Unnamed customer"}</h2>
+          <p className="text-xs text-muted">
             First seen {when(customer.createdAt)} · last active {ago(customer.lastActivity)}
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {customer.activeNow && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">● Active now</span>}
           <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${customer.hasAccount ? "bg-green-100 text-green-800" : "bg-cda-grey text-cda-dark"}`}
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${customer.hasAccount ? "bg-green-100 text-green-800" : "bg-line text-heading"}`}
           >
             {customer.hasAccount ? "CDA account" : "No account"}
           </span>
@@ -459,22 +459,22 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold text-cda-text">Channels</p>
+          <p className="text-xs font-semibold text-muted">Channels</p>
           <ul className="mt-1 space-y-1">
             {customer.channels.map((channel) => (
               <li key={`${channel.channel}-${channel.label}`} className="flex items-center gap-2 text-sm">
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${channelStyle(channel.channel).className}`}>
                   {channelStyle(channel.channel).icon} {channelStyle(channel.channel).label}
                 </span>
-                <span className="min-w-0 truncate text-cda-dark">{channel.label}</span>
+                <span className="min-w-0 truncate text-heading">{channel.label}</span>
                 {channel.verified && <span className="text-xs text-green-700" title="Verified">✓</span>}
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold text-cda-text">Activity</p>
-          <ul className="mt-1 space-y-0.5 text-sm text-cda-dark">
+          <p className="text-xs font-semibold text-muted">Activity</p>
+          <ul className="mt-1 space-y-0.5 text-sm text-heading">
             <li>
               {detail.conversations.length} conversations
               {Object.keys(perChannel).length > 0 &&
@@ -489,24 +489,24 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
 
       <MoodStrip conversations={detail.conversations} />
 
-      <div className="rounded-xl border border-cda-grey p-4">
+      <div className="rounded-xl border border-line p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-semibold text-cda-dark">AI insight</p>
+          <p className="font-semibold text-heading">AI insight</p>
           <button
             type="button"
             onClick={() => void askInsight()}
             disabled={insightBusy}
-            className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+            className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
           >
             {insightBusy ? "Claude is reading…" : insight ? "✨ Write it again" : "✨ Ask Claude"}
           </button>
         </div>
-        {insightError && <p className="mt-2 text-sm text-cda-red">{insightError}</p>}
+        {insightError && <p className="mt-2 text-sm text-brand">{insightError}</p>}
         {!insight && !insightError && !insightBusy && (
-          <p className="mt-1 text-xs text-cda-text">Claude reads this customer&apos;s notes, emails, calls and last few transcripts. Nothing is stored.</p>
+          <p className="mt-1 text-xs text-muted">Claude reads this customer&apos;s notes, emails, calls and last few transcripts. Nothing is stored.</p>
         )}
         {insight && (
-          <div className="mt-3 space-y-3 text-sm text-cda-dark">
+          <div className="mt-3 space-y-3 text-sm text-heading">
             <p>{insight.summary}</p>
             <p className="flex flex-wrap items-center gap-2">
               <span
@@ -514,18 +514,18 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
                   insight.sentiment === "positive"
                     ? "bg-green-100 text-green-800"
                     : insight.sentiment === "negative"
-                      ? "bg-red-100 text-cda-red-dark"
-                      : "bg-cda-grey text-cda-dark"
+                      ? "bg-red-100 text-brand-dark"
+                      : "bg-line text-heading"
                 }`}
               >
                 Mood: {insight.sentiment}
               </span>
-              <span className="text-xs text-cda-text">{insight.sentimentReason}</span>
+              <span className="text-xs text-muted">{insight.sentimentReason}</span>
             </p>
             {insight.flags.length > 0 && (
               <p className="flex flex-wrap gap-1.5">
                 {insight.flags.map((flag) => (
-                  <span key={flag} className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-cda-red-dark">
+                  <span key={flag} className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-brand-dark">
                     ⚠ {flag}
                   </span>
                 ))}
@@ -537,7 +537,7 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
               <InsightList title="Not resolved yet" items={insight.openIssues} />
             </div>
             {insight.nextAction && (
-              <p className="rounded-lg bg-cda-grey-light px-3 py-2">
+              <p className="rounded-lg bg-surface px-3 py-2">
                 <strong>Next step for staff:</strong> {insight.nextAction}
               </p>
             )}
@@ -546,17 +546,17 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-cda-text">History</p>
+        <p className="text-xs font-semibold text-muted">History</p>
         {timeline.length === 0 ? (
-          <p className="mt-1 text-sm text-cda-text">Nothing recorded yet.</p>
+          <p className="mt-1 text-sm text-muted">Nothing recorded yet.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {timeline.slice(0, 40).map((item, index) => (
-              <li key={`${item.at}-${index}`} className="rounded-lg bg-cda-grey-light px-3 py-2">
-                <p className="text-[11px] text-cda-text">
+              <li key={`${item.at}-${index}`} className="rounded-lg bg-surface px-3 py-2">
+                <p className="text-[11px] text-muted">
                   {when(item.at)} · {item.kind === "room" ? "Aida room" : channelStyle(item.channel).label}
                 </p>
-                <p className="text-sm text-cda-dark">{item.text}</p>
+                <p className="text-sm text-heading">{item.text}</p>
               </li>
             ))}
           </ul>
@@ -578,35 +578,35 @@ function MoodStrip({ conversations }: { conversations: CustomerDetail["conversat
   const count = (label: "positive" | "neutral" | "negative") => scored.filter((c) => c.mood?.label === label).length;
   const upset = scored.filter((c) => c.mood?.upset).length;
   return (
-    <div className="rounded-xl border border-cda-grey px-4 py-3">
+    <div className="rounded-xl border border-line px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-cda-dark">Measured mood</p>
+        <p className="text-sm font-semibold text-heading">Measured mood</p>
         {scored.length > 0 && (
-          <p className="flex flex-wrap items-center gap-3 text-xs text-cda-text">
+          <p className="flex flex-wrap items-center gap-3 text-xs text-muted">
             {(["positive", "neutral", "negative"] as const).map((label) => (
               <span key={label} className="inline-flex items-center gap-1">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: MOOD_DOT[label].color }} aria-hidden="true" />
                 {MOOD_DOT[label].word} {count(label)}
               </span>
             ))}
-            {upset > 0 && <span className="font-semibold text-cda-red-dark">Upset {upset}</span>}
+            {upset > 0 && <span className="font-semibold text-brand-dark">Upset {upset}</span>}
           </p>
         )}
       </div>
       {scored.length === 0 ? (
-        <p className="mt-1 text-xs text-cda-text">No scored conversation yet. ElevenLabs scores each conversation when it ends.</p>
+        <p className="mt-1 text-xs text-muted">No scored conversation yet. ElevenLabs scores each conversation when it ends.</p>
       ) : (
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-cda-text">Oldest</span>
+          <span className="text-[11px] text-muted">Oldest</span>
           {scored.map((conversation) => (
             <span
               key={conversation.id}
-              className={`inline-block h-3.5 w-3.5 rounded-full ring-2 ${conversation.mood?.upset ? "ring-cda-red/40" : "ring-white"}`}
+              className={`inline-block h-3.5 w-3.5 rounded-full ring-2 ${conversation.mood?.upset ? "ring-brand/40" : "ring-white"}`}
               style={{ backgroundColor: MOOD_DOT[conversation.mood!.label].color }}
               title={`${when(conversation.createdAt)} · ${channelStyle(conversation.channel).label} · ${MOOD_DOT[conversation.mood!.label].word} · frustration ${Math.round(conversation.mood!.frustration * 100)}%`}
             />
           ))}
-          <span className="text-[11px] text-cda-text">newest</span>
+          <span className="text-[11px] text-muted">newest</span>
         </div>
       )}
     </div>

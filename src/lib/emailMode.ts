@@ -1,9 +1,9 @@
-// Whether Ellie's email replies are sent straight away ("auto") or left as Gmail drafts for staff
+// Whether Clara's email replies are sent straight away ("auto") or left as Gmail drafts for staff
 // ("draft"). The switch lives in ElevenLabs, as the dynamic variable placeholder `email_mode` on
 // the Aida agent, so staff can flip it on the website and Claude can flip it through the
 // ElevenLabs connector, and both see the same value.
 //
-// It is on Aida and not on Ellie on purpose: a placeholder on Ellie could change how her channel
+// It is on Aida and not on Clara on purpose: a placeholder on Clara could change how her channel
 // triggers start conversations (an integration__ placeholder once took Telegram down). Aida has
 // no channels, and nothing in her prompt uses the variable.
 

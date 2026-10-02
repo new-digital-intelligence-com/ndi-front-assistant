@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-// Ellie learns from the questions she could not answer and from feedback on her answers. Both arrive
+// Clara learns from the questions she could not answer and from feedback on her answers. Both arrive
 // here by themselves: unanswered questions and what customers said come from ElevenLabs' post-call
-// analysis, 👎 from the website chat, and corrections from staff editing Aida's or Ellie's drafts.
+// analysis, 👎 from the website chat, and corrections from staff editing Aida's or Clara's drafts.
 // Staff write or fix the answer and approve it, and it is published as "CDA approved FAQ" at once.
 
 type Gap = { id: number; conversation_id: string | null; channel: string | null; question: string; created_at: string };
@@ -59,7 +59,7 @@ function sourceLabel(item: FeedbackItem): string {
   if (item.source === "said") return `💬 Said by the customer · ${item.channel ? CHANNELS[item.channel] ?? item.channel : "unknown channel"}`;
   const style = item.kind === "style";
   if (item.source === "aida") return style ? "✏️ Staff reworded Aida's draft · style only" : "✏️ Staff corrected Aida's draft";
-  return style ? "✏️ Staff reworded Ellie's email draft · style only" : "✏️ Staff corrected Ellie's email draft";
+  return style ? "✏️ Staff reworded Clara's email draft · style only" : "✏️ Staff corrected Clara's email draft";
 }
 
 const UNFINISHED = /\[check/i;
@@ -196,13 +196,13 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
   const cards: Group[] = groups ?? (state?.gaps ?? []).map((gap) => ({ question: gap.question, answer: "", ids: [gap.id] }));
 
   if (!state) {
-    return <p className="text-sm text-cda-text">{error ?? "Loading…"}</p>;
+    return <p className="text-sm text-muted">{error ?? "Loading…"}</p>;
   }
 
   return (
     <div className="space-y-4">
       {error && (
-        <p className="flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-cda-red-dark">
+        <p className="flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">
           {error}
           <button type="button" onClick={() => setError(null)} aria-label="Dismiss">
             ✕
@@ -214,27 +214,27 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
       <section className="rounded-xl bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="font-semibold text-cda-dark">Ellie learns from what she could not answer, and from feedback</h2>
-            <p className="mt-1 text-sm text-cda-text">
-              After every conversation, on every channel, the questions Ellie could not answer, what customers thought of her
-              answers, and the facts staff corrected appear below. Write the right answer and approve it: Ellie and Aida use it
+            <h2 className="font-semibold text-heading">Clara learns from what she could not answer, and from feedback</h2>
+            <p className="mt-1 text-sm text-muted">
+              After every conversation, on every channel, the questions Clara could not answer, what customers thought of her
+              answers, and the facts staff corrected appear below. Write the right answer and approve it: Clara and Aida use it
               from their next conversation on. Nothing reaches them without your approval.
             </p>
           </div>
-          <button type="button" onClick={() => void load()} className="text-xs text-cda-text underline">
+          <button type="button" onClick={() => void load()} className="text-xs text-muted underline">
             Refresh
           </button>
         </div>
-        <p className="mt-3 rounded-lg bg-cda-grey-light px-3 py-2 text-xs text-cda-dark">
-          📚 <strong>CDA approved FAQ</strong> in Ellie&apos;s knowledge: {state.published.entries} answer
+        <p className="mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-heading">
+          📚 <strong>CDA approved FAQ</strong> in Clara&apos;s knowledge: {state.published.entries} answer
           {state.published.entries === 1 ? "" : "s"}
           {state.published.published_at ? ` · published ${when(state.published.published_at)}` : " · not published yet"}
           {state.faq.length !== state.published.entries && (
             <button
               type="button"
-              onClick={() => void change("publish", { action: "publish" }, "Published to Ellie.")}
+              onClick={() => void change("publish", { action: "publish" }, "Published to Clara.")}
               disabled={busy !== null}
-              className="ml-2 font-semibold text-cda-red underline"
+              className="ml-2 font-semibold text-brand underline"
             >
               Publish again
             </button>
@@ -244,20 +244,20 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
 
       <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold text-cda-dark">Questions Ellie could not answer ({state.gaps.length})</h2>
+          <h2 className="font-semibold text-heading">Questions Clara could not answer ({state.gaps.length})</h2>
           {state.gaps.length > 1 && (
             <button
               type="button"
               onClick={() => void group()}
               disabled={busy !== null}
-              className="rounded-full bg-cda-dark px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+              className="rounded-full bg-heading px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
             >
               {busy === "group" ? "Claude is reading…" : "✨ Group and suggest answers"}
             </button>
           )}
         </div>
         {cards.length === 0 && (
-          <p className="text-sm text-cda-text">Nothing open. New questions appear here a minute after a conversation ends.</p>
+          <p className="text-sm text-muted">Nothing open. New questions appear here a minute after a conversation ends.</p>
         )}
 
         {cards.map((card) => {
@@ -270,8 +270,8 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           const setDraft = (field: "question" | "answer", value: string) =>
             setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
           return (
-            <div key={key} className="space-y-2 rounded-lg border border-cda-grey p-3">
-              <p className="text-xs text-cda-text">
+            <div key={key} className="space-y-2 rounded-lg border border-line p-3">
+              <p className="text-xs text-muted">
                 Asked {card.ids.length} time{card.ids.length === 1 ? "" : "s"} · {channels.join(", ")}
                 {latest ? ` · last ${when(latest)}` : ""}
                 {card.ids.length > 1 && asked.length > 0 && (
@@ -281,22 +281,22 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
               <input
                 value={draft.question}
                 onChange={(event) => setDraft("question", event.target.value)}
-                className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm font-semibold"
+                className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
               />
               <textarea
                 value={draft.answer}
                 onChange={(event) => setDraft("answer", event.target.value)}
-                placeholder="The answer Ellie should give…"
+                placeholder="The answer Clara should give…"
                 rows={3}
-                className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-line px-3 py-2 text-sm"
               />
-              {unfinished && <p className="text-xs text-cda-red">Replace every [check: …] with the real fact before approving.</p>}
+              {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
               <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => void change(`dismiss-${key}`, { action: "dismiss", gapIds: card.ids })}
                   disabled={busy !== null}
-                  className="rounded-full border border-cda-grey px-4 py-1.5 text-xs font-semibold text-cda-text disabled:opacity-50"
+                  className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-muted disabled:opacity-50"
                 >
                   Dismiss
                 </button>
@@ -306,13 +306,13 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                     void change(
                       `approve-${key}`,
                       { action: "approve", question: draft.question, answer: draft.answer, gapIds: card.ids },
-                      "Approved. Ellie uses this answer from her next conversation.",
+                      "Approved. Clara uses this answer from her next conversation.",
                     )
                   }
                   disabled={busy !== null || !draft.answer.trim() || unfinished}
-                  className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                  className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
-                  {busy === `approve-${key}` ? "Teaching Ellie…" : "Approve and teach Ellie"}
+                  {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
                 </button>
               </div>
             </div>
@@ -322,16 +322,16 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
 
       <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold text-cda-dark">Feedback and corrections ({state.feedback.length})</h2>
-          <span className="rounded-full bg-cda-grey-light px-3 py-1 text-xs font-semibold text-cda-dark">
+          <h2 className="font-semibold text-heading">Feedback and corrections ({state.feedback.length})</h2>
+          <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-heading">
             This week: {state.score.likes} 👍 · {state.score.dislikes} 👎
           </span>
         </div>
-        <p className="text-xs text-cda-text">
-          Turn one into an answer for everyone, or dismiss it when Ellie was right.
+        <p className="text-xs text-muted">
+          Turn one into an answer for everyone, or dismiss it when Clara was right.
         </p>
 
-        <div className="flex flex-wrap gap-1 rounded-full bg-cda-grey-light p-1" role="tablist" aria-label="Kinds of feedback">
+        <div className="flex flex-wrap gap-1 rounded-full bg-surface p-1" role="tablist" aria-label="Kinds of feedback">
           {FEEDBACK_TABS.map((tabInfo) => {
             const count = state.feedback.filter((item) => tabInfo.sources.includes(item.source)).length;
             return (
@@ -342,7 +342,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                 aria-selected={feedbackTab === tabInfo.id}
                 onClick={() => setFeedbackTab(tabInfo.id)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  feedbackTab === tabInfo.id ? "bg-white text-cda-dark shadow-sm" : "text-cda-text hover:text-cda-dark"
+                  feedbackTab === tabInfo.id ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
                 }`}
               >
                 {tabInfo.label} ({count})
@@ -352,19 +352,19 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
         </div>
 
         {feedbackTab === "customer" && (
-          <p className="text-xs text-cda-text">👎 under an answer in the website chat, and complaints customers made in any conversation.</p>
+          <p className="text-xs text-muted">👎 under an answer in the website chat, and complaints customers made in any conversation.</p>
         )}
         {feedbackTab !== "customer" && (
-          <div className="rounded-lg bg-cda-grey-light px-3 py-2 text-xs">
-            <p className="font-semibold text-cda-dark">
-              {feedbackTab === "aida" ? "📞 Aida's drafts in rooms" : "✉️ Ellie's email drafts"}, this week
+          <div className="rounded-lg bg-surface px-3 py-2 text-xs">
+            <p className="font-semibold text-heading">
+              {feedbackTab === "aida" ? "📞 Aida's drafts in rooms" : "✉️ Clara's email drafts"}, this week
             </p>
-            <p className="text-cda-text">
+            <p className="text-muted">
               {(feedbackTab === "aida" ? draftLine(state.drafts?.aida, "declined") : draftLine(state.drafts?.email, "discarded")) ??
                 "None yet."}
             </p>
-            <p className="mt-1 text-cda-text">
-              Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Ellie.{" "}
+            <p className="mt-1 text-muted">
+              Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Clara.{" "}
               <strong>Style only</strong>: just reworded, usually dismissed.
             </p>
           </div>
@@ -374,7 +374,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           const shown = state.feedback.filter((item) =>
             FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.sources.includes(item.source),
           );
-          return shown.length === 0 ? <p className="text-sm text-cda-text">Nothing open.</p> : null;
+          return shown.length === 0 ? <p className="text-sm text-muted">Nothing open.</p> : null;
         })()}
 
         {state.feedback
@@ -388,26 +388,26 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           const unfinished = UNFINISHED.test(draft.answer);
           const setDraft = (field: "question" | "answer", value: string) =>
             setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
-          const who = item.source === "aida" ? "Aida" : "Ellie";
+          const who = item.source === "aida" ? "Aida" : "Clara";
           return (
-            <div key={key} className="space-y-2 rounded-lg border border-cda-grey p-3">
-              <p className="text-xs text-cda-text">
-                <span className="font-semibold text-cda-dark">{sourceLabel(item)}</span> · {when(item.created_at)}
+            <div key={key} className="space-y-2 rounded-lg border border-line p-3">
+              <p className="text-xs text-muted">
+                <span className="font-semibold text-heading">{sourceLabel(item)}</span> · {when(item.created_at)}
               </p>
               {item.question && (
                 <p className="text-sm">
-                  <span className="text-xs font-semibold text-cda-text">Customer asked: </span>
+                  <span className="text-xs font-semibold text-muted">Customer asked: </span>
                   {item.question}
                 </p>
               )}
               {item.original_answer && (
-                <p className="rounded-md bg-cda-grey-light p-2 text-sm text-cda-text">
+                <p className="rounded-md bg-surface p-2 text-sm text-muted">
                   <span className="text-xs font-semibold">{who} answered: </span>
                   {item.original_answer}
                 </p>
               )}
               {item.comment && (
-                <p className="rounded-md bg-red-50 p-2 text-sm text-cda-red-dark">
+                <p className="rounded-md bg-red-50 p-2 text-sm text-brand-dark">
                   <span className="text-xs font-semibold">Customer said: </span>
                   {item.comment}
                 </p>
@@ -422,22 +422,22 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                 value={draft.question}
                 onChange={(event) => setDraft("question", event.target.value)}
                 placeholder="The question, for everyone"
-                className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm font-semibold"
+                className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
               />
               <textarea
                 value={draft.answer}
                 onChange={(event) => setDraft("answer", event.target.value)}
-                placeholder="The right answer Ellie should give from now on…"
+                placeholder="The right answer Clara should give from now on…"
                 rows={3}
-                className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-line px-3 py-2 text-sm"
               />
-              {unfinished && <p className="text-xs text-cda-red">Replace every [check: …] with the real fact before approving.</p>}
+              {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
               <div className="flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => void makeGeneral(item, key)}
                   disabled={busy !== null}
-                  className="rounded-full border border-cda-dark px-4 py-1.5 text-xs font-semibold text-cda-dark disabled:opacity-50"
+                  className="rounded-full border border-heading px-4 py-1.5 text-xs font-semibold text-heading disabled:opacity-50"
                 >
                   {busy === `general-${key}` ? "Claude is writing…" : "✨ Make it a general answer"}
                 </button>
@@ -445,7 +445,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                   type="button"
                   onClick={() => void change(`dismiss-${key}`, { action: "dismiss", feedbackIds: [item.id] })}
                   disabled={busy !== null}
-                  className="rounded-full border border-cda-grey px-4 py-1.5 text-xs font-semibold text-cda-text disabled:opacity-50"
+                  className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-muted disabled:opacity-50"
                 >
                   Dismiss
                 </button>
@@ -455,13 +455,13 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                     void change(
                       `approve-${key}`,
                       { action: "approve", question: draft.question, answer: draft.answer, feedbackIds: [item.id] },
-                      "Approved. Ellie uses this answer from her next conversation.",
+                      "Approved. Clara uses this answer from her next conversation.",
                     )
                   }
                   disabled={busy !== null || !draft.question.trim() || !draft.answer.trim() || unfinished}
-                  className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                  className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
-                  {busy === `approve-${key}` ? "Teaching Ellie…" : "Approve and teach Ellie"}
+                  {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
                 </button>
               </div>
             </div>
@@ -470,24 +470,24 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
       </section>
 
       <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-cda-dark">Approved answers ({state.faq.length})</h2>
-        {state.faq.length === 0 && <p className="text-sm text-cda-text">None yet.</p>}
+        <h2 className="font-semibold text-heading">Approved answers ({state.faq.length})</h2>
+        {state.faq.length === 0 && <p className="text-sm text-muted">None yet.</p>}
         {state.faq.map((entry) => {
           const edit = editing[entry.id];
           return (
-            <div key={entry.id} className="space-y-1 rounded-lg bg-cda-grey-light p-3 text-sm">
+            <div key={entry.id} className="space-y-1 rounded-lg bg-surface p-3 text-sm">
               {edit ? (
                 <>
                   <input
                     value={edit.question}
                     onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, question: event.target.value } }))}
-                    className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm font-semibold"
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
                   />
                   <textarea
                     value={edit.answer}
                     onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, answer: event.target.value } }))}
                     rows={3}
-                    className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm"
                   />
                   <div className="flex justify-end gap-2">
                     <button
@@ -497,7 +497,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                         delete next[entry.id];
                         return next;
                       })}
-                      className="text-xs text-cda-text underline"
+                      className="text-xs text-muted underline"
                     >
                       Cancel
                     </button>
@@ -505,14 +505,14 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                       type="button"
                       disabled={busy !== null}
                       onClick={async () => {
-                        const saved = await change(`update-${entry.id}`, { action: "update", id: entry.id, ...edit }, "Updated. Ellie uses the new wording now.");
+                        const saved = await change(`update-${entry.id}`, { action: "update", id: entry.id, ...edit }, "Updated. Clara uses the new wording now.");
                         if (saved) setEditing((current) => {
                           const next = { ...current };
                           delete next[entry.id];
                           return next;
                         });
                       }}
-                      className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                      className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                     >
                       Save
                     </button>
@@ -520,9 +520,9 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                 </>
               ) : (
                 <>
-                  <p className="font-semibold text-cda-dark">{entry.question}</p>
-                  <p className="whitespace-pre-wrap text-cda-dark">{entry.answer}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-cda-text">
+                  <p className="font-semibold text-heading">{entry.question}</p>
+                  <p className="whitespace-pre-wrap text-heading">{entry.answer}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                     <span>
                       {entry.approved_by ? `Approved by ${entry.approved_by} · ` : ""}
                       {when(entry.updated_at)}
@@ -538,8 +538,8 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                       <button
                         type="button"
                         disabled={busy !== null}
-                        onClick={() => void change(`delete-${entry.id}`, { action: "delete", id: entry.id }, "Removed from Ellie's knowledge.")}
-                        className="text-cda-red underline"
+                        onClick={() => void change(`delete-${entry.id}`, { action: "delete", id: entry.id }, "Removed from Clara's knowledge.")}
+                        className="text-brand underline"
                       >
                         Delete
                       </button>
@@ -551,33 +551,33 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           );
         })}
 
-        <details className="rounded-lg border border-dashed border-cda-grey p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-cda-dark">+ Add an answer yourself</summary>
+        <details className="rounded-lg border border-dashed border-line p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-heading">+ Add an answer yourself</summary>
           <div className="mt-2 space-y-2">
             <input
               value={manual.question}
               onChange={(event) => setManual((current) => ({ ...current, question: event.target.value }))}
               placeholder="Question, e.g. Do CDA ovens come with a plug fitted?"
-              className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
             />
             <textarea
               value={manual.answer}
               onChange={(event) => setManual((current) => ({ ...current, answer: event.target.value }))}
-              placeholder="The answer Ellie should give"
+              placeholder="The answer Clara should give"
               rows={3}
-              className="w-full rounded-lg border border-cda-grey px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
             />
             <div className="flex justify-end">
               <button
                 type="button"
                 disabled={busy !== null || !manual.question.trim() || !manual.answer.trim()}
                 onClick={async () => {
-                  const saved = await change("add", { action: "add", ...manual }, "Added. Ellie uses this answer from her next conversation.");
+                  const saved = await change("add", { action: "add", ...manual }, "Added. Clara uses this answer from her next conversation.");
                   if (saved) setManual({ question: "", answer: "" });
                 }}
-                className="rounded-full bg-cda-red px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
               >
-                Add and teach Ellie
+                Add and teach Clara
               </button>
             </div>
           </div>

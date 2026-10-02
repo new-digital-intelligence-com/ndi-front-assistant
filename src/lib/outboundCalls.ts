@@ -1,4 +1,4 @@
-// Call lists: staff put phone numbers with instructions on /admin, and Ellie phones them one by one
+// Call lists: staff put phone numbers with instructions on /admin, and Clara phones them one by one
 // from the Twilio number. A number is tried up to 3 times, a minute apart, before the list moves on;
 // a call that reaches someone counts as done, whatever was said.
 //
@@ -7,7 +7,7 @@
 // call ends or fails to connect). Only one call per list is ever in progress, because a list's
 // current_item is claimed with a conditional update before a call is placed.
 //
-// Ellie learns why she is calling from customer_lookup, which she calls at the start of every
+// Clara learns why she is calling from customer_lookup, which she calls at the start of every
 // conversation anyway: for a call from a list it also returns the staff instructions. No dynamic
 // variable is added to her prompt, so no other channel is touched.
 
@@ -68,11 +68,11 @@ function apiKey(): string {
   return key;
 }
 
-let ellieNumberId: string | null = null;
+let agentNumberId: string | null = null;
 
-/** The Twilio number attached to Ellie in ElevenLabs, looked up rather than configured. */
-async function ellieNumber(): Promise<string> {
-  if (ellieNumberId) return ellieNumberId;
+/** The Twilio number attached to Clara in ElevenLabs, looked up rather than configured. */
+async function agentNumber(): Promise<string> {
+  if (agentNumberId) return agentNumberId;
   const response = await fetch(`${API}/phone-numbers`, { headers: { "xi-api-key": apiKey() }, cache: "no-store" });
   if (!response.ok) throw new Error(`ElevenLabs phone numbers failed with ${response.status}`);
   const numbers = (await response.json()) as {
@@ -80,12 +80,12 @@ async function ellieNumber(): Promise<string> {
     supports_outbound?: boolean;
     assigned_agent?: { agent_id?: string } | null;
   }[];
-  const ellies = numbers.find(
+  const attached = numbers.find(
     (number) => number.assigned_agent?.agent_id === process.env.ELEVENLABS_AGENT_ID && number.supports_outbound !== false,
   );
-  if (!ellies) throw new Error("No phone number that can call out is attached to Ellie in ElevenLabs");
-  ellieNumberId = ellies.phone_number_id;
-  return ellieNumberId;
+  if (!attached) throw new Error("No phone number that can call out is attached to Clara in ElevenLabs");
+  agentNumberId = attached.phone_number_id;
+  return agentNumberId;
 }
 
 const REASON_SYSTEM = `You help CDA's virtual assistant open a phone call she makes to a customer.
@@ -108,7 +108,7 @@ async function callReason(instructions: string): Promise<string | null> {
 }
 
 /**
- * What Ellie says as the person picks up (her usual greeting is for people calling CDA): their first
+ * What Clara says as the person picks up (her usual greeting is for people calling CDA): their first
  * name, from the list or else from what CDA already knows about that number, and why she is calling,
  * so nobody hangs up during the moment she takes to look them up.
  */
@@ -118,7 +118,7 @@ async function greeting(item: CallItem): Promise<string> {
     callReason(item.instructions),
   ]);
   const first = (item.name ?? known?.customer.name ?? "").trim().split(/\s+/)[0];
-  return `Hello${first ? ` ${first}` : ""}, this is Ellie, the virtual assistant from CDA.${reason ? ` I'm calling about ${reason}.` : ""} Have you got a moment?`;
+  return `Hello${first ? ` ${first}` : ""}, this is Clara, the virtual assistant from CDA.${reason ? ` I'm calling about ${reason}.` : ""} Have you got a moment?`;
 }
 
 function errorText(body: { message?: string; detail?: unknown }, status: number): string {
@@ -135,7 +135,7 @@ async function placeCall(item: CallItem): Promise<string> {
     headers: { "xi-api-key": apiKey(), "Content-Type": "application/json" },
     body: JSON.stringify({
       agent_id: process.env.ELEVENLABS_AGENT_ID,
-      agent_phone_number_id: await ellieNumber(),
+      agent_phone_number_id: await agentNumber(),
       to_number: item.phone,
       conversation_initiation_client_data: {
         conversation_config_override: { agent: { first_message: await greeting(item) } },
@@ -352,11 +352,11 @@ export async function recentLists(limit = 6): Promise<CallList[]> {
   return lists;
 }
 
-// --- Ellie and ElevenLabs' webhook ---------------------------------------------------------------
+// --- Clara and ElevenLabs' webhook ---------------------------------------------------------------
 
 export type CallBrief = { phone: string; customer_name: string | null; instructions: string };
 
-/** For customer_lookup: when Ellie is on a call from a list, whom she called and why. */
+/** For customer_lookup: when Clara is on a call from a list, whom she called and why. */
 export async function callBrief(conversationId: string): Promise<CallBrief | null> {
   if (!conversationId) return null;
   const [item] = await rest<Pick<CallItem, "phone" | "name" | "instructions">[]>(

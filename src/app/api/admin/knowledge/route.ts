@@ -5,12 +5,12 @@ import { approve, deleteFaq, dismiss, knowledgeState, publish, updateFaq } from 
 import { supabaseConfigured } from "@/lib/supabase";
 
 // The "Knowledge" tab on /admin. Staff only (Aida staff token).
-//   GET  → questions Ellie could not answer, feedback and staff corrections, the week's 👍 / 👎, the
+//   GET  → questions Clara could not answer, feedback and staff corrections, the week's 👍 / 👎, the
 //          approved answers and when they were published. Also looks for email drafts staff sent.
 //   POST → { action: "approve" | "add", question, answer, gapIds?, feedbackIds? }, { action: "update",
 //          id, question, answer }, { action: "delete", id }, { action: "dismiss", gapIds?, feedbackIds? },
 //          { action: "publish" }
-// Every change to the approved answers republishes "CDA approved FAQ" to Ellie straight away.
+// Every change to the approved answers republishes "CDA approved FAQ" to Clara straight away.
 
 export async function GET(request: Request) {
   if (!(await isStaffRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,6 +57,6 @@ export async function POST(request: Request) {
     return Response.json(await knowledgeState());
   } catch (error) {
     console.error("knowledge change failed", error);
-    return Response.json({ error: "Saved, but Ellie's knowledge could not be updated. Try Publish again." }, { status: 502 });
+    return Response.json({ error: "Saved, but Clara's knowledge could not be updated. Try Publish again." }, { status: 502 });
   }
 }

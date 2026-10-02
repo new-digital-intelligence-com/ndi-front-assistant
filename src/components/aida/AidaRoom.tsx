@@ -588,8 +588,8 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
   if (status === "ended" || status === "error") {
     return (
       <section className="mx-auto max-w-md rounded-xl bg-white p-6 text-center shadow-sm">
-        <h1 className="text-xl font-bold text-cda-dark">{status === "error" ? "Could not join the room" : "Room closed"}</h1>
-        <p className="mt-2 text-sm text-cda-text">
+        <h1 className="text-xl font-bold text-heading">{status === "error" ? "Could not join the room" : "Room closed"}</h1>
+        <p className="mt-2 text-sm text-muted">
           {status === "error" ? "Please check your connection and try again." : endedMessage}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -597,7 +597,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             <button
               type="button"
               onClick={onViewHistory}
-              className="rounded-lg bg-cda-red px-4 py-2 text-sm font-semibold text-white"
+              className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white"
             >
               See the conversation &amp; email it
             </button>
@@ -605,7 +605,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
           <button
             type="button"
             onClick={onLeave}
-            className="rounded-lg border border-cda-grey px-4 py-2 text-sm font-semibold text-cda-dark"
+            className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-heading"
           >
             Back
           </button>
@@ -622,9 +622,9 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
     <div className="flex flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold text-cda-dark">{info.title ?? "Aida room"}</h1>
-          <p className="text-xs text-cda-text">
-            Room code <strong className="tracking-widest text-cda-dark">{info.code}</strong>
+          <h1 className="truncate text-lg font-bold text-heading">{info.title ?? "Aida room"}</h1>
+          <p className="text-xs text-muted">
+            Room code <strong className="tracking-widest text-heading">{info.code}</strong>
             {" · "}
             {status === "connecting" ? "connecting…" : `${people.length} in the room`}
             {" · "}
@@ -632,22 +632,22 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={copyInvite} className="rounded-full border border-cda-grey px-3 py-1.5 text-xs font-semibold text-cda-dark">
+          <button type="button" onClick={copyInvite} className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-heading">
             {copied ? "Link copied" : "Copy invite link"}
           </button>
           <button
             type="button"
             onClick={toggleMute}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${muted ? "bg-cda-red text-white" : "border border-cda-grey text-cda-dark"}`}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${muted ? "bg-brand text-white" : "border border-line text-heading"}`}
           >
             {muted ? "Unmute" : "Mute"}
           </button>
           {isEmployee && (
-            <button type="button" onClick={endRoom} className="rounded-full border border-cda-red px-3 py-1.5 text-xs font-semibold text-cda-red">
+            <button type="button" onClick={endRoom} className="rounded-full border border-brand px-3 py-1.5 text-xs font-semibold text-brand">
               End room
             </button>
           )}
-          <button type="button" onClick={leave} className="rounded-full bg-cda-dark px-3 py-1.5 text-xs font-semibold text-white">
+          <button type="button" onClick={leave} className="rounded-full bg-heading px-3 py-1.5 text-xs font-semibold text-white">
             Leave
           </button>
         </div>
@@ -658,12 +658,12 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
           <li
             key={person.identity}
             className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs shadow-sm ${
-              person.speaking ? "bg-cda-red text-white" : "bg-white text-cda-dark"
+              person.speaking ? "bg-brand text-white" : "bg-white text-heading"
             }`}
           >
             <span aria-hidden="true">{person.speaking ? "🔊" : "🎙"}</span>
             <span className="font-semibold">{person.isMe ? `${person.name} (you)` : person.name}</span>
-            <span className={person.speaking ? "text-white/80" : "text-cda-text"}>
+            <span className={person.speaking ? "text-white/80" : "text-muted"}>
               {person.role === "employee" ? "CDA" : "customer"}
             </span>
           </li>
@@ -674,13 +674,13 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
         <button
           type="button"
           onClick={() => void roomRef.current?.startAudio()}
-          className="rounded-xl bg-cda-red px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white"
         >
           Click here to hear the others
         </button>
       )}
       {notice && (
-        <p className="flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-cda-red-dark">
+        <p className="flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">
           {notice}
           <button type="button" onClick={() => setNotice(null)} aria-label="Dismiss">
             ✕
@@ -690,33 +690,33 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
 
       <div className={isEmployee ? "grid gap-4 lg:grid-cols-[1fr_380px]" : "grid"}>
         <section className="flex h-[78dvh] min-h-[520px] flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-          <div className="flex-1 space-y-3 overflow-y-auto bg-cda-grey-light p-4">
+          <div className="flex-1 space-y-3 overflow-y-auto bg-surface p-4">
             {lines.length === 0 && (
-              <p className="text-center text-sm text-cda-text">Say hello, or type a message below.</p>
+              <p className="text-center text-sm text-muted">Say hello, or type a message below.</p>
             )}
             {lines.map((line) => (
               <LineView key={line.id} line={line} viewerRole={ticket.role} mood={isEmployee ? moods[line.id] : undefined} />
             ))}
             {scribe.partialTranscript && (
-              <p className="text-right text-sm italic text-cda-text">{scribe.partialTranscript}…</p>
+              <p className="text-right text-sm italic text-muted">{scribe.partialTranscript}…</p>
             )}
             <div ref={listEndRef} />
           </div>
-          <p className="border-t border-cda-grey px-4 py-1.5 text-xs text-cda-text">
+          <p className="border-t border-line px-4 py-1.5 text-xs text-muted">
             {transcriptStatus({ muted, employeePresent, isEmployee, scribeStatus: scribe.status })}
           </p>
-          <form onSubmit={submitChat} className="flex gap-2 border-t border-cda-grey p-3">
+          <form onSubmit={submitChat} className="flex gap-2 border-t border-line p-3">
             <input
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="Type a message…"
               maxLength={2000}
-              className="flex-1 rounded-full border border-cda-grey px-4 py-2 text-sm"
+              className="flex-1 rounded-full border border-line px-4 py-2 text-sm"
             />
             <button
               type="submit"
               disabled={!draft.trim() || status !== "connected"}
-              className="rounded-full bg-cda-red px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               Send
             </button>
@@ -726,8 +726,8 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
         {isEmployee && (
           <aside className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm lg:max-h-[75dvh] lg:overflow-y-auto">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-cda-dark">Aida suggests</h2>
-              <span className="rounded-full bg-cda-grey px-2.5 py-0.5 text-xs text-cda-text">
+              <h2 className="font-semibold text-heading">Aida suggests</h2>
+              <span className="rounded-full bg-line px-2.5 py-0.5 text-xs text-muted">
                 {isHost
                   ? copilot.status === "connected"
                     ? "Listening"
@@ -737,7 +737,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
                     : "Waiting"}
               </span>
             </div>
-            <p className="text-xs text-cda-text">
+            <p className="text-xs text-muted">
               Only CDA staff see this. Approve a draft to send it to the customer in the chat.
             </p>
             <MoodMeter
@@ -754,7 +754,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             )}
 
             {pending.length === 0 && (
-              <p className="rounded-lg bg-cda-grey-light p-3 text-sm text-cda-text">
+              <p className="rounded-lg bg-surface p-3 text-sm text-muted">
                 A draft appears here when the customer speaks or types.
               </p>
             )}
@@ -763,10 +763,10 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
               const note = suggestion.text.match(STAFF_NOTE)?.[1];
               const isEditing = suggestion.id in editing;
               return (
-                <article key={suggestion.id} className="rounded-lg border border-cda-red/40 p-3">
-                  <p className="text-xs text-cda-text">Reply to {suggestion.replyTo}</p>
+                <article key={suggestion.id} className="rounded-lg border border-brand/40 p-3">
+                  <p className="text-xs text-muted">Reply to {suggestion.replyTo}</p>
                   {note && (
-                    <p className="mt-1 inline-block rounded bg-red-50 px-2 py-0.5 text-xs font-semibold text-cda-red-dark">
+                    <p className="mt-1 inline-block rounded bg-red-50 px-2 py-0.5 text-xs font-semibold text-brand-dark">
                       {note}
                     </p>
                   )}
@@ -775,10 +775,10 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
                       value={editing[suggestion.id]}
                       onChange={(event) => setEditing((current) => ({ ...current, [suggestion.id]: event.target.value }))}
                       rows={4}
-                      className="mt-2 w-full rounded-lg border border-cda-grey p-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-line p-2 text-sm"
                     />
                   ) : (
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-cda-dark">
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-heading">
                       {suggestion.text.replace(STAFF_NOTE, "")}
                     </p>
                   )}
@@ -786,7 +786,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
                     <button
                       type="button"
                       onClick={() => approve(suggestion)}
-                      className="rounded-full bg-cda-red px-3 py-1.5 text-xs font-semibold text-white"
+                      className="rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-white"
                     >
                       Approve &amp; send
                     </button>
@@ -799,14 +799,14 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
                             : { ...current, [suggestion.id]: suggestion.text.replace(STAFF_NOTE, "") },
                         )
                       }
-                      className="rounded-full border border-cda-grey px-3 py-1.5 text-xs font-semibold text-cda-dark"
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-heading"
                     >
                       {isEditing ? "Cancel edit" : "Edit"}
                     </button>
                     <button
                       type="button"
                       onClick={() => decline(suggestion)}
-                      className="rounded-full border border-cda-grey px-3 py-1.5 text-xs font-semibold text-cda-text"
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-muted"
                     >
                       Decline
                     </button>
@@ -816,10 +816,10 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
             })}
 
             {decided.length > 0 && (
-              <div className="space-y-2 border-t border-cda-grey pt-3">
-                <p className="text-xs font-semibold text-cda-text">Recent decisions</p>
+              <div className="space-y-2 border-t border-line pt-3">
+                <p className="text-xs font-semibold text-muted">Recent decisions</p>
                 {decided.map((suggestion) => (
-                  <p key={suggestion.id} className="text-xs text-cda-text">
+                  <p key={suggestion.id} className="text-xs text-muted">
                     <span className={suggestion.status === "approved" ? "font-semibold text-green-700" : "font-semibold"}>
                       {suggestion.status === "approved" ? "Sent" : "Declined"}
                     </span>
@@ -840,7 +840,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
 
 export function LineView({ line, viewerRole, mood }: { line: TimelineLine; viewerRole: AidaRole; mood?: LineMood }) {
   if (line.kind === "system") {
-    return <p className="text-center text-xs text-cda-text">{line.text}</p>;
+    return <p className="text-center text-xs text-muted">{line.text}</p>;
   }
   // An approved draft is the staff member's own answer: same bubble, same side, their name on it.
   // Where the words came from is between Aida and the staff, and it stays in the drafts panel.
@@ -855,10 +855,10 @@ export function LineView({ line, viewerRole, mood }: { line: TimelineLine; viewe
   return (
     <div className={`flex ${mySide ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${mySide ? "bg-cda-dark text-white" : "bg-white text-cda-dark"}`}
+        className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${mySide ? "bg-heading text-white" : "bg-white text-heading"}`}
       >
         {/* Spoken or typed makes no difference to the reader: a message is a message. */}
-        <p className={`text-xs font-semibold ${mySide ? "text-white/70" : "text-cda-text"}`}>
+        <p className={`text-xs font-semibold ${mySide ? "text-white/70" : "text-muted"}`}>
           {who} · {line.role === "employee" ? "CDA" : "customer"}
           {/* Staff only: how the customer sounded. The dot carries the colour, the word says it. */}
           {mood && line.role === "customer" && (

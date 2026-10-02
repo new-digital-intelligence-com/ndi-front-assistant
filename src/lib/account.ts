@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 import { constantTimeEqual, sha256Hex } from "./auth";
 import { customerForAccount, type Customer } from "./customers";
 
-export const ACCOUNT_COOKIE = "cda_account";
+export const ACCOUNT_COOKIE = "ndi_account";
 const ACCOUNT_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 function config() {

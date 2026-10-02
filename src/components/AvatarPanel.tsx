@@ -7,7 +7,7 @@ import { LanguagePicker } from "./LanguagePicker";
 import { MessageBubble } from "./MessageBubble";
 import type { AvatarOrientation, CallLanguage, ChatMessage } from "./types";
 
-const VIDEO_ELEMENT_ID = "ellie-avatar-video";
+const VIDEO_ELEMENT_ID = "assistant-avatar-video";
 const START_ERROR = "Could not start the video call. Please try again.";
 
 type CallStatus = "idle" | "connecting" | "connected";
@@ -96,7 +96,7 @@ export function AvatarPanel({
         clientRef.current = null;
         setStatus("idle");
         if (reason === ConnectionClosedCode.MICROPHONE_PERMISSION_DENIED) {
-          setError("Please allow the microphone to talk to Ellie.");
+          setError("Please allow the microphone to talk to Clara.");
         } else if (
           reason === ConnectionClosedCode.WEBRTC_FAILURE ||
           reason === ConnectionClosedCode.SIGNALLING_CLIENT_CONNECTION_FAILURE
@@ -131,12 +131,12 @@ export function AvatarPanel({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 bg-cda-grey-light p-4">
+    <div className="flex flex-1 flex-col gap-4 bg-surface p-4">
       <div
         className={
           status === "idle"
             ? "hidden"
-            : `relative overflow-hidden rounded-xl bg-cda-dark shadow-sm ${orientation === "vertical" ? "mx-auto w-full max-w-sm" : ""}`
+            : `relative overflow-hidden rounded-xl bg-heading shadow-sm ${orientation === "vertical" ? "mx-auto w-full max-w-sm" : ""}`
         }
       >
         <video
@@ -147,29 +147,29 @@ export function AvatarPanel({
         />
         {status === "connecting" && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
-            Connecting to Ellie…
+            Connecting to Clara…
           </div>
         )}
       </div>
 
       {status === "idle" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl bg-white p-8 text-center shadow-sm">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cda-red/10 text-4xl">🧑‍💼</div>
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand/10 text-4xl">🧑‍💼</div>
           <div>
-            <h2 className="text-xl font-bold text-cda-dark">Talk to Ellie face to face</h2>
-            <p className="mt-1 max-w-md text-cda-text">
-              Start a video call with Ellie. She listens, answers out loud and uses the same CDA knowledge as the chat.
+            <h2 className="text-xl font-bold text-heading">Talk to Clara face to face</h2>
+            <p className="mt-1 max-w-md text-muted">
+              Start a video call with Clara. She listens, answers out loud and uses the same CDA knowledge as the chat.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
-            <div className="flex rounded-full bg-cda-grey p-1" role="group" aria-label="Video layout">
+            <div className="flex rounded-full bg-line p-1" role="group" aria-label="Video layout">
               {ORIENTATIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setOrientation(option.value)}
                   aria-pressed={orientation === option.value}
                   className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                    orientation === option.value ? "bg-white text-cda-dark shadow-sm" : "text-cda-text hover:text-cda-dark"
+                    orientation === option.value ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
                   }`}
                 >
                   {option.label}
@@ -178,10 +178,10 @@ export function AvatarPanel({
             </div>
             <LanguagePicker value={language} onChange={onLanguageChange} />
           </div>
-          {error && <p className="text-sm text-cda-red-dark">{error}</p>}
+          {error && <p className="text-sm text-brand-dark">{error}</p>}
           <button
             onClick={() => void start()}
-            className="rounded-full bg-cda-red px-8 py-3 font-semibold text-white shadow transition hover:bg-cda-red-dark"
+            className="rounded-full bg-brand px-8 py-3 font-semibold text-white shadow transition hover:bg-brand-dark"
           >
             Start video call
           </button>
@@ -196,12 +196,12 @@ export function AvatarPanel({
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-cda-text">
+            <p className="text-sm text-muted">
               Allow the microphone and just talk. Calls end after {Math.round(maxSeconds / 60)} minutes.
             </p>
             <button
               onClick={() => void stop()}
-              className="rounded-full bg-cda-dark px-6 py-2.5 font-semibold text-white transition hover:bg-black"
+              className="rounded-full bg-heading px-6 py-2.5 font-semibold text-white transition hover:bg-black"
             >
               End video call
             </button>
