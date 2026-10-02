@@ -9,7 +9,7 @@ import { supabaseConfigured } from "@/lib/supabase";
 // src/instrumentation.ts), with `Authorization: Bearer <CRON_SECRET>`. It can also be called by hand.
 // - renews the Gmail watch (it stops after 7 days) and catches up on any missed email
 // - refreshes the Instagram token every 7 days (Meta's tokens last 60 days)
-// - compares email drafts staff have sent with Clara's draft (📚 Knowledge → Feedback)
+// - compares email drafts staff have sent with Clara's draft (/admin/knowledge/feedback)
 // - stores the mood of any conversation of the last 2 days the post-call webhook missed (😊 Mood)
 // Each job runs even if the other fails.
 export async function GET(request: Request) {

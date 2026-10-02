@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // 👍 / 👎 under one of Clara's answers in the website chat. A 👎 asks what was wrong. The rating
-// reaches NDI staff on /admin (📚 Knowledge → Feedback) and shows on the conversation in ElevenLabs.
+// reaches NDI staff on /admin/knowledge/feedback and shows on the conversation in ElevenLabs.
 
 type Props = { conversationId: string; messageId: string; question: string; answer: string };
 

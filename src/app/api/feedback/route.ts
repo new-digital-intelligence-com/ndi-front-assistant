@@ -2,7 +2,7 @@ import { recordButtonFeedback } from "@/lib/feedback";
 import { supabaseConfigured } from "@/lib/supabase";
 
 // 👍 / 👎 under an answer in the website chat. Behind the site password like the rest of the site.
-// A 👎 (with "What was wrong?") waits for staff on /admin → 📚 Knowledge → Feedback.
+// A 👎 (with "What was wrong?") waits for staff on /admin/knowledge/feedback.
 export async function POST(request: Request) {
   if (!supabaseConfigured()) return Response.json({ error: "Feedback is not configured" }, { status: 503 });
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;

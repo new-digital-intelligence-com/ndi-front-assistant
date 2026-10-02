@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, isValidSession, sitePasswordConfigured } from "@/lib/auth";
 
-// The icon is linked from the login page itself, so it has to be readable before signing in.
+// The icons (the browser tab's and the phone home screen's) are linked from the login page itself, so
+// they have to be readable before signing in.
 // /docs explains the demo to anyone (no secrets on it), so it needs no password either. /demos lists
 // NDI's public YouTube demo videos and is read by Clara's knowledge base (ElevenLabs), so it is open too.
-const PUBLIC_PATHS = new Set(["/login", "/api/login", "/icon.svg", "/docs", "/demos"]);
+const PUBLIC_PATHS = new Set(["/login", "/api/login", "/icon.svg", "/apple-icon.png", "/docs", "/demos"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

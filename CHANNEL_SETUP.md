@@ -407,7 +407,7 @@ anything unreadable counts as draft). In draft mode Clara's answer is not sent: 
 customer's latest message (kept on the thread only in draft mode), and staff change it if needed and **Send** it, or
 **Discard** it (`src/lib/socialDrafts.ts`). Meta only takes a reply within **24 hours** of the customer's last
 message: the page shows the time, and Meta's refusal is shown in plain words. What staff changed counts in the
-weekly "sent unchanged" line and, when a fact changed, waits under `/admin/knowledge` → **Instagram & Messenger
+weekly "sent unchanged" line and, when a fact changed, waits under `/admin/knowledge/feedback` → **Instagram & Messenger
 corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 ---
@@ -558,7 +558,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | 👥 **Customers** `/admin/customers` | Numbers, a searchable list, one customer's channels, activity and timeline; ✨ Ask Claude (summary, topics, AI Employees asked about, mood, open issues, next step) |
 | 😊 **Mood** `/admin/mood` | How customers felt on every channel (7 / 30 days), and the unhappy conversations to follow up |
 | 📲 **Call list** `/admin/calls` | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
-| 📚 **Knowledge** `/admin/knowledge` | Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
+| 📚 **Knowledge** `/admin/knowledge` | Three tabs, each at its own address: **To answer** (`/admin/knowledge`), **Feedback** (`/admin/knowledge/feedback`, with customer feedback, Aida, email and Instagram & Messenger corrections) and **Approved answers** (`/admin/knowledge/approved`, searchable, add your own). Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
 | ✉️ **Replies** `/admin/replies` | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
 
 - **Claude insights** (Claude Haiku, `ANTHROPIC_MODEL`, only when a staff member clicks, nothing stored)

@@ -1,11 +1,76 @@
 "use client";
 
+import {
+  BadgeCheck,
+  BookOpenCheck,
+  CircleCheck,
+  CircleHelp,
+  Headset,
+  Mail,
+  MessageSquareWarning,
+  MessagesSquare,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  ThumbsDown,
+  Trash2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 // Clara learns from the questions she could not answer and from feedback on her answers. Both arrive
 // here by themselves: unanswered questions and what customers said come from ElevenLabs' post-call
 // analysis, 👎 from the website chat, and corrections from staff editing Aida's or Clara's drafts.
 // Staff write or fix the answer and approve it, and it is published as "NDI approved FAQ" at once.
+//
+// Three tabs, each at its own address: what to answer (/admin/knowledge), feedback and corrections
+// (/admin/knowledge/feedback) and the approved answers (/admin/knowledge/approved).
+
+type KnowledgeView = "questions" | "feedback" | "approved";
+
+const VIEWS: { id: KnowledgeView; href: string; label: string; short: string; icon: LucideIcon; hint: string }[] = [
+  {
+    id: "questions",
+    href: "/admin/knowledge",
+    label: "To answer",
+    short: "To answer",
+    icon: CircleHelp,
+    hint: "After every conversation, on every channel, the questions Clara could not answer appear here. Write the right answer and approve it: Clara and Aida use it from their next conversation on.",
+  },
+  {
+    id: "feedback",
+    href: "/admin/knowledge/feedback",
+    label: "Feedback",
+    short: "Feedback",
+    icon: MessageSquareWarning,
+    hint: "What customers thought of Clara's answers, and the facts staff corrected in drafts. Turn one into an answer for everyone, or dismiss it when Clara was right.",
+  },
+  {
+    id: "approved",
+    href: "/admin/knowledge/approved",
+    label: "Approved answers",
+    short: "Approved",
+    icon: BadgeCheck,
+    hint: "Published as “NDI approved FAQ” in Clara's and Aida's knowledge. Edit or delete an answer, or add one yourself.",
+  },
+];
+
+const viewFromPath = (pathname: string): KnowledgeView =>
+  pathname.startsWith("/admin/knowledge/feedback") ? "feedback" : pathname.startsWith("/admin/knowledge/approved") ? "approved" : "questions";
+
+const FIELD =
+  "w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10";
+const PRIMARY =
+  "inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50";
+const GHOST =
+  "inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-muted transition hover:border-heading hover:text-heading disabled:opacity-50";
+const DARK =
+  "inline-flex items-center gap-1.5 rounded-full bg-heading px-4 py-2 text-xs font-semibold text-white transition hover:bg-black disabled:opacity-50";
 
 type Gap = { id: number; conversation_id: string | null; channel: string | null; question: string; created_at: string };
 type Faq = { id: number; question: string; answer: string; approved_by: string | null; updated_at: string };
@@ -69,12 +134,12 @@ const UNFINISHED = /\[check/i;
 
 type FeedbackTab = "customer" | "aida" | "email" | "social";
 
-/** Customer feedback (👎 in the chat, complaints said in any conversation) and the two kinds of staff correction. */
-const FEEDBACK_TABS: { id: FeedbackTab; label: string; sources: FeedbackItem["source"][] }[] = [
-  { id: "customer", label: "💬 Customer feedback", sources: ["chat", "said"] },
-  { id: "aida", label: "📞 Aida corrections", sources: ["aida"] },
-  { id: "email", label: "✉️ Email corrections", sources: ["email"] },
-  { id: "social", label: "📷 Instagram & Messenger corrections", sources: ["social"] },
+/** Customer feedback (👎 in the chat, complaints said in any conversation) and the kinds of staff correction. */
+const FEEDBACK_TABS: { id: FeedbackTab; label: string; detail: string; icon: LucideIcon; sources: FeedbackItem["source"][] }[] = [
+  { id: "customer", label: "Customer feedback", detail: "👎 in the chat, and complaints", icon: ThumbsDown, sources: ["chat", "said"] },
+  { id: "aida", label: "Aida corrections", detail: "Staff changed Aida's drafts", icon: Headset, sources: ["aida"] },
+  { id: "email", label: "Email corrections", detail: "Staff changed Clara's email drafts", icon: Mail, sources: ["email"] },
+  { id: "social", label: "Instagram & Messenger", detail: "Staff changed Clara's drafts", icon: MessagesSquare, sources: ["social"] },
 ];
 
 /** Each staff-corrections tab's weekly line: whose drafts, and what not sending one is called. */
@@ -99,6 +164,9 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [feedbackTab, setFeedbackTab] = useState<FeedbackTab>("customer");
+  const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState("");
+  const view = viewFromPath(usePathname());
 
   const call = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -210,387 +278,484 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
     return <p className="text-sm text-muted">{error ?? "Loading…"}</p>;
   }
 
+  const counts: Record<KnowledgeView, number> = { questions: state.gaps.length, feedback: state.feedback.length, approved: state.faq.length };
+  const current = VIEWS.find((item) => item.id === view) ?? VIEWS[0];
+  const feedbackShown = state.feedback.filter((item) =>
+    FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.sources.includes(item.source),
+  );
+  const needle = search.trim().toLowerCase();
+  const faqShown = needle
+    ? state.faq.filter((entry) => `${entry.question}\n${entry.answer}`.toLowerCase().includes(needle))
+    : state.faq;
+
   return (
     <div className="space-y-4">
       {error && (
         <p className="flex items-start justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">
           {error}
-          <button type="button" onClick={() => setError(null)} aria-label="Dismiss">
-            ✕
+          <button type="button" onClick={() => setError(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-red-100">
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </p>
       )}
       {notice && <p className="rounded-xl bg-green-50 px-4 py-2 text-sm text-green-800">{notice}</p>}
 
-      <section className="rounded-xl bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="font-semibold text-heading">Clara learns from what she could not answer, and from feedback</h2>
-            <p className="mt-1 text-sm text-muted">
-              After every conversation, on every channel, the questions Clara could not answer, what customers thought of her
-              answers, and the facts staff corrected appear below. Write the right answer and approve it: Clara and Aida use it
-              from their next conversation on. Nothing reaches them without your approval.
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+            <BookOpenCheck className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-heading">
+              NDI approved FAQ: {state.published.entries} answer{state.published.entries === 1 ? "" : "s"} in Clara&apos;s knowledge
+            </p>
+            <p className="text-xs text-muted">
+              {state.published.published_at ? `Published ${when(state.published.published_at)}` : "Not published yet"} · Nothing
+              reaches Clara or Aida without your approval.
             </p>
           </div>
-          <button type="button" onClick={() => void load()} className="text-xs text-muted underline">
-            Refresh
-          </button>
         </div>
-        <p className="mt-3 rounded-lg bg-surface px-3 py-2 text-xs text-heading">
-          📚 <strong>NDI approved FAQ</strong> in Clara&apos;s knowledge: {state.published.entries} answer
-          {state.published.entries === 1 ? "" : "s"}
-          {state.published.published_at ? ` · published ${when(state.published.published_at)}` : " · not published yet"}
+        <div className="flex items-center gap-2">
           {state.faq.length !== state.published.entries && (
             <button
               type="button"
               onClick={() => void change("publish", { action: "publish" }, "Published to Clara.")}
               disabled={busy !== null}
-              className="ml-2 font-semibold text-brand underline"
+              className={PRIMARY}
             >
               Publish again
             </button>
           )}
-        </p>
+          <button type="button" onClick={() => void load()} className={GHOST}>
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" /> Refresh
+          </button>
+        </div>
       </section>
 
-      <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold text-heading">Questions Clara could not answer ({state.gaps.length})</h2>
-          {state.gaps.length > 1 && (
-            <button
-              type="button"
-              onClick={() => void group()}
-              disabled={busy !== null}
-              className="rounded-full bg-heading px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-            >
-              {busy === "group" ? "Claude is reading…" : "✨ Group and suggest answers"}
-            </button>
-          )}
-        </div>
-        {cards.length === 0 && (
-          <p className="text-sm text-muted">Nothing open. New questions appear here a minute after a conversation ends.</p>
-        )}
-
-        {cards.map((card) => {
-          const key = keyOf(card);
-          const draft = drafts[key] ?? { question: card.question, answer: card.answer };
-          const asked = card.ids.map((id) => gapsById.get(id)).filter((gap): gap is Gap => Boolean(gap));
-          const channels = [...new Set(asked.map((gap) => (gap.channel ? CHANNELS[gap.channel] ?? gap.channel : "Unknown")))];
-          const latest = asked.map((gap) => gap.created_at).sort().at(-1);
-          const unfinished = UNFINISHED.test(draft.answer);
-          const setDraft = (field: "question" | "answer", value: string) =>
-            setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
+      <nav aria-label="Knowledge" className="flex gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm">
+        {VIEWS.map((item) => {
+          const active = item.id === view;
+          const Icon = item.icon;
+          const count = counts[item.id];
           return (
-            <div key={key} className="space-y-2 rounded-lg border border-line p-3">
-              <p className="text-xs text-muted">
-                Asked {card.ids.length} time{card.ids.length === 1 ? "" : "s"} · {channels.join(", ")}
-                {latest ? ` · last ${when(latest)}` : ""}
-                {card.ids.length > 1 && asked.length > 0 && (
-                  <span className="block italic">“{asked.map((gap) => gap.question).join("” · “")}”</span>
-                )}
-              </p>
-              <input
-                value={draft.question}
-                onChange={(event) => setDraft("question", event.target.value)}
-                className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
-              />
-              <textarea
-                value={draft.answer}
-                onChange={(event) => setDraft("answer", event.target.value)}
-                placeholder="The answer Clara should give…"
-                rows={3}
-                className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-              />
-              {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
-              <div className="flex flex-wrap justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => void change(`dismiss-${key}`, { action: "dismiss", gapIds: card.ids })}
-                  disabled={busy !== null}
-                  className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-muted disabled:opacity-50"
-                >
-                  Dismiss
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    void change(
-                      `approve-${key}`,
-                      { action: "approve", question: draft.question, answer: draft.answer, gapIds: card.ids },
-                      "Approved. Clara uses this answer from her next conversation.",
-                    )
-                  }
-                  disabled={busy !== null || !draft.answer.trim() || unfinished}
-                  className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                >
-                  {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </section>
-
-      <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold text-heading">Feedback and corrections ({state.feedback.length})</h2>
-          <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-heading">
-            This week: {state.score.likes} 👍 · {state.score.dislikes} 👎
-          </span>
-        </div>
-        <p className="text-xs text-muted">
-          Turn one into an answer for everyone, or dismiss it when Clara was right.
-        </p>
-
-        <div className="flex flex-wrap gap-1 rounded-full bg-surface p-1" role="tablist" aria-label="Kinds of feedback">
-          {FEEDBACK_TABS.map((tabInfo) => {
-            const count = state.feedback.filter((item) => tabInfo.sources.includes(item.source)).length;
-            return (
-              <button
-                key={tabInfo.id}
-                type="button"
-                role="tab"
-                aria-selected={feedbackTab === tabInfo.id}
-                onClick={() => setFeedbackTab(tabInfo.id)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  feedbackTab === tabInfo.id ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
+            <Link
+              key={item.id}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2.5 text-sm font-semibold transition sm:gap-2 sm:px-3 ${
+                active ? "bg-heading text-white shadow" : "text-muted hover:bg-surface hover:text-heading"
+              }`}
+            >
+              <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
+              <span className="sm:hidden">{item.short}</span>
+              <span className="hidden sm:inline">{item.label}</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                  active ? "bg-white/15 text-white" : count && item.id !== "approved" ? "bg-brand text-white" : "bg-surface text-muted"
                 }`}
               >
-                {tabInfo.label} ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        {feedbackTab === "customer" && (
-          <p className="text-xs text-muted">👎 under an answer in the website chat, and complaints customers made in any conversation.</p>
-        )}
-        {feedbackTab !== "customer" && (
-          <div className="rounded-lg bg-surface px-3 py-2 text-xs">
-            <p className="font-semibold text-heading">{DRAFT_LINES[feedbackTab].title}, this week</p>
-            <p className="text-muted">
-              {draftLine(state.drafts?.[DRAFT_LINES[feedbackTab].key], DRAFT_LINES[feedbackTab].notSent) ?? "None yet."}
-            </p>
-            <p className="mt-1 text-muted">
-              Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Clara.{" "}
-              <strong>Style only</strong>: just reworded, usually dismissed.
-            </p>
-          </div>
-        )}
-
-        {(() => {
-          const shown = state.feedback.filter((item) =>
-            FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.sources.includes(item.source),
-          );
-          return shown.length === 0 ? <p className="text-sm text-muted">Nothing open.</p> : null;
-        })()}
-
-        {state.feedback
-          .filter((item) => FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.sources.includes(item.source))
-          .map((item) => {
-          const key = `f-${item.id}`;
-          const draft = drafts[key] ?? {
-            question: (item.question ?? "").slice(0, 300),
-            answer: item.kind !== "feedback" ? item.corrected_answer ?? "" : "",
-          };
-          const unfinished = UNFINISHED.test(draft.answer);
-          const setDraft = (field: "question" | "answer", value: string) =>
-            setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
-          const who = item.source === "aida" ? "Aida" : "Clara";
-          return (
-            <div key={key} className="space-y-2 rounded-lg border border-line p-3">
-              <p className="text-xs text-muted">
-                <span className="font-semibold text-heading">{sourceLabel(item)}</span> · {when(item.created_at)}
-              </p>
-              {item.question && (
-                <p className="text-sm">
-                  <span className="text-xs font-semibold text-muted">Customer asked: </span>
-                  {item.question}
-                </p>
-              )}
-              {item.original_answer && (
-                <p className="rounded-md bg-surface p-2 text-sm text-muted">
-                  <span className="text-xs font-semibold">{who} answered: </span>
-                  {item.original_answer}
-                </p>
-              )}
-              {item.comment && (
-                <p className="rounded-md bg-red-50 p-2 text-sm text-brand-dark">
-                  <span className="text-xs font-semibold">Customer said: </span>
-                  {item.comment}
-                </p>
-              )}
-              {item.corrected_answer && (
-                <p className="rounded-md bg-green-50 p-2 text-sm text-green-900">
-                  <span className="text-xs font-semibold">Staff sent instead: </span>
-                  {item.corrected_answer}
-                </p>
-              )}
-              <input
-                value={draft.question}
-                onChange={(event) => setDraft("question", event.target.value)}
-                placeholder="The question, for everyone"
-                className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
-              />
-              <textarea
-                value={draft.answer}
-                onChange={(event) => setDraft("answer", event.target.value)}
-                placeholder="The right answer Clara should give from now on…"
-                rows={3}
-                className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-              />
-              {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
-              <div className="flex flex-wrap justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => void makeGeneral(item, key)}
-                  disabled={busy !== null}
-                  className="rounded-full border border-heading px-4 py-1.5 text-xs font-semibold text-heading disabled:opacity-50"
-                >
-                  {busy === `general-${key}` ? "Claude is writing…" : "✨ Make it a general answer"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void change(`dismiss-${key}`, { action: "dismiss", feedbackIds: [item.id] })}
-                  disabled={busy !== null}
-                  className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-muted disabled:opacity-50"
-                >
-                  Dismiss
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    void change(
-                      `approve-${key}`,
-                      { action: "approve", question: draft.question, answer: draft.answer, feedbackIds: [item.id] },
-                      "Approved. Clara uses this answer from her next conversation.",
-                    )
-                  }
-                  disabled={busy !== null || !draft.question.trim() || !draft.answer.trim() || unfinished}
-                  className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                >
-                  {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
-                </button>
-              </div>
-            </div>
+                {count}
+              </span>
+            </Link>
           );
         })}
-      </section>
+      </nav>
 
-      <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-heading">Approved answers ({state.faq.length})</h2>
-        {state.faq.length === 0 && <p className="text-sm text-muted">None yet.</p>}
-        {state.faq.map((entry) => {
-          const edit = editing[entry.id];
-          return (
-            <div key={entry.id} className="space-y-1 rounded-lg bg-surface p-3 text-sm">
-              {edit ? (
-                <>
+      <p key={view} className="animate-fade-up text-sm text-muted">
+        {current.hint}
+      </p>
+
+      {view === "questions" && (
+        <section className="space-y-3">
+          {state.gaps.length > 1 && (
+            <div className="flex justify-end">
+              <button type="button" onClick={() => void group()} disabled={busy !== null} className={DARK}>
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {busy === "group" ? "Claude is reading…" : "Group and suggest answers"}
+              </button>
+            </div>
+          )}
+          {cards.length === 0 && (
+            <Empty icon={CircleCheck} title="Nothing to answer" text="New questions appear here a minute after a conversation ends." />
+          )}
+
+          {cards.map((card) => {
+            const key = keyOf(card);
+            const draft = drafts[key] ?? { question: card.question, answer: card.answer };
+            const asked = card.ids.map((id) => gapsById.get(id)).filter((gap): gap is Gap => Boolean(gap));
+            const channels = [...new Set(asked.map((gap) => (gap.channel ? CHANNELS[gap.channel] ?? gap.channel : "Unknown")))];
+            const latest = asked.map((gap) => gap.created_at).sort().at(-1);
+            const unfinished = UNFINISHED.test(draft.answer);
+            const setDraft = (field: "question" | "answer", value: string) =>
+              setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
+            return (
+              <article key={key} className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                  <span className="rounded-full bg-brand-soft px-2.5 py-0.5 font-semibold text-brand-dark">
+                    Asked {card.ids.length} time{card.ids.length === 1 ? "" : "s"}
+                  </span>
+                  {channels.map((channel) => (
+                    <span key={channel} className="rounded-full bg-surface px-2.5 py-0.5 font-medium text-heading">
+                      {channel}
+                    </span>
+                  ))}
+                  {latest && <span className="ml-1">last {when(latest)}</span>}
+                </div>
+                {card.ids.length > 1 && asked.length > 0 && (
+                  <p className="text-xs italic text-muted">“{asked.map((gap) => gap.question).join("” · “")}”</p>
+                )}
+                <label className="block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Question</span>
+                  <input value={draft.question} onChange={(event) => setDraft("question", event.target.value)} className={`mt-1 font-semibold ${FIELD}`} />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">The answer Clara should give</span>
+                  <textarea
+                    value={draft.answer}
+                    onChange={(event) => setDraft("answer", event.target.value)}
+                    placeholder="Write the right answer…"
+                    rows={3}
+                    className={`mt-1 ${FIELD}`}
+                  />
+                </label>
+                {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void change(`dismiss-${key}`, { action: "dismiss", gapIds: card.ids })}
+                    disabled={busy !== null}
+                    className={GHOST}
+                  >
+                    Dismiss
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void change(
+                        `approve-${key}`,
+                        { action: "approve", question: draft.question, answer: draft.answer, gapIds: card.ids },
+                        "Approved. Clara uses this answer from her next conversation.",
+                      )
+                    }
+                    disabled={busy !== null || !draft.answer.trim() || unfinished}
+                    className={PRIMARY}
+                  >
+                    <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      )}
+
+      {view === "feedback" && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-3">
+            <div role="tablist" aria-label="Kinds of feedback" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+              {FEEDBACK_TABS.map((tabInfo) => {
+                const count = state.feedback.filter((item) => tabInfo.sources.includes(item.source)).length;
+                const active = feedbackTab === tabInfo.id;
+                const Icon = tabInfo.icon;
+                return (
+                  <button
+                    key={tabInfo.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setFeedbackTab(tabInfo.id)}
+                    className={`flex shrink-0 items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition lg:w-full ${
+                      active ? "bg-white shadow-sm ring-1 ring-brand/30" : "hover:bg-white/70"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                        active ? "bg-brand text-white" : "bg-white text-ink shadow-sm"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1 leading-tight">
+                      <span className="block text-sm font-semibold text-heading">{tabInfo.label}</span>
+                      <span className="hidden text-[11px] text-muted lg:block">{tabInfo.detail}</span>
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${count ? "bg-brand text-white" : "bg-surface text-muted"}`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="rounded-2xl bg-white p-3 text-xs shadow-sm">
+              <p className="font-semibold text-heading">Website chat, this week</p>
+              <p className="mt-0.5 text-muted">
+                {state.score.likes} 👍 · {state.score.dislikes} 👎
+              </p>
+            </div>
+          </div>
+
+          <div className="min-w-0 space-y-3">
+            {feedbackTab !== "customer" && (
+              <div className="rounded-2xl bg-white p-4 text-xs shadow-sm">
+                <p className="font-semibold text-heading">{DRAFT_LINES[feedbackTab].title}, this week</p>
+                <p className="text-muted">
+                  {draftLine(state.drafts?.[DRAFT_LINES[feedbackTab].key], DRAFT_LINES[feedbackTab].notSent) ?? "None yet."}
+                </p>
+                <p className="mt-1 text-muted">
+                  Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Clara.{" "}
+                  <strong>Style only</strong>: just reworded, usually dismissed.
+                </p>
+              </div>
+            )}
+
+            {feedbackShown.length === 0 && (
+              <Empty icon={CircleCheck} title="Nothing open" text="New feedback and corrections appear here by themselves." />
+            )}
+
+            {feedbackShown.map((item) => {
+              const key = `f-${item.id}`;
+              const draft = drafts[key] ?? {
+                question: (item.question ?? "").slice(0, 300),
+                answer: item.kind !== "feedback" ? item.corrected_answer ?? "" : "",
+              };
+              const unfinished = UNFINISHED.test(draft.answer);
+              const setDraft = (field: "question" | "answer", value: string) =>
+                setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
+              const who = item.source === "aida" ? "Aida" : "Clara";
+              return (
+                <article key={key} className="space-y-2.5 rounded-2xl bg-white p-4 shadow-sm">
+                  <p className="text-xs text-muted">
+                    <span className="font-semibold text-heading">{sourceLabel(item)}</span> · {when(item.created_at)}
+                  </p>
+                  {item.question && (
+                    <p className="text-sm">
+                      <span className="text-xs font-semibold text-muted">Customer asked: </span>
+                      {item.question}
+                    </p>
+                  )}
+                  {item.original_answer && (
+                    <p className="rounded-xl bg-surface p-3 text-sm text-muted">
+                      <span className="text-xs font-semibold">{who} answered: </span>
+                      {item.original_answer}
+                    </p>
+                  )}
+                  {item.comment && (
+                    <p className="rounded-xl bg-red-50 p-3 text-sm text-brand-dark">
+                      <span className="text-xs font-semibold">Customer said: </span>
+                      {item.comment}
+                    </p>
+                  )}
+                  {item.corrected_answer && (
+                    <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">
+                      <span className="text-xs font-semibold">Staff sent instead: </span>
+                      {item.corrected_answer}
+                    </p>
+                  )}
                   <input
-                    value={edit.question}
-                    onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, question: event.target.value } }))}
-                    className="w-full rounded-lg border border-line px-3 py-2 text-sm font-semibold"
+                    value={draft.question}
+                    onChange={(event) => setDraft("question", event.target.value)}
+                    placeholder="The question, for everyone"
+                    className={`font-semibold ${FIELD}`}
                   />
                   <textarea
-                    value={edit.answer}
-                    onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, answer: event.target.value } }))}
+                    value={draft.answer}
+                    onChange={(event) => setDraft("answer", event.target.value)}
+                    placeholder="The right answer Clara should give from now on…"
                     rows={3}
-                    className="w-full rounded-lg border border-line px-3 py-2 text-sm"
+                    className={FIELD}
                   />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditing((current) => {
-                        const next = { ...current };
-                        delete next[entry.id];
-                        return next;
-                      })}
-                      className="text-xs text-muted underline"
-                    >
-                      Cancel
+                  {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button type="button" onClick={() => void makeGeneral(item, key)} disabled={busy !== null} className={DARK}>
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      {busy === `general-${key}` ? "Claude is writing…" : "Make it a general answer"}
                     </button>
                     <button
                       type="button"
+                      onClick={() => void change(`dismiss-${key}`, { action: "dismiss", feedbackIds: [item.id] })}
                       disabled={busy !== null}
-                      onClick={async () => {
-                        const saved = await change(`update-${entry.id}`, { action: "update", id: entry.id, ...edit }, "Updated. Clara uses the new wording now.");
-                        if (saved) setEditing((current) => {
-                          const next = { ...current };
-                          delete next[entry.id];
-                          return next;
-                        });
-                      }}
-                      className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                      className={GHOST}
                     >
-                      Save
+                      Dismiss
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void change(
+                          `approve-${key}`,
+                          { action: "approve", question: draft.question, answer: draft.answer, feedbackIds: [item.id] },
+                          "Approved. Clara uses this answer from her next conversation.",
+                        )
+                      }
+                      disabled={busy !== null || !draft.question.trim() || !draft.answer.trim() || unfinished}
+                      className={PRIMARY}
+                    >
+                      <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                      {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
                     </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold text-heading">{entry.question}</p>
-                  <p className="whitespace-pre-wrap text-heading">{entry.answer}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-                    <span>
-                      {entry.approved_by ? `Approved by ${entry.approved_by} · ` : ""}
-                      {when(entry.updated_at)}
-                    </span>
-                    <span className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setEditing((current) => ({ ...current, [entry.id]: { question: entry.question, answer: entry.answer } }))}
-                        className="underline"
-                      >
-                        Edit
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {view === "approved" && (
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="relative min-w-0 flex-1 sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search the approved answers"
+                aria-label="Search the approved answers"
+                className={`pl-9 ${FIELD}`}
+              />
+            </div>
+            <button type="button" onClick={() => setAdding((open) => !open)} className={adding ? GHOST : PRIMARY}>
+              {adding ? <X className="h-3.5 w-3.5" aria-hidden="true" /> : <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
+              {adding ? "Close" : "Add an answer"}
+            </button>
+          </div>
+
+          {adding && (
+            <article className="animate-fade-up space-y-2.5 rounded-2xl border-2 border-dashed border-brand/30 bg-white p-4">
+              <p className="text-sm font-semibold text-heading">A new answer for Clara</p>
+              <input
+                value={manual.question}
+                onChange={(event) => setManual((current) => ({ ...current, question: event.target.value }))}
+                placeholder="Question, e.g. Can an AI Employee work in German and French?"
+                className={FIELD}
+              />
+              <textarea
+                value={manual.answer}
+                onChange={(event) => setManual((current) => ({ ...current, answer: event.target.value }))}
+                placeholder="The answer Clara should give"
+                rows={3}
+                className={FIELD}
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  disabled={busy !== null || !manual.question.trim() || !manual.answer.trim()}
+                  onClick={async () => {
+                    const saved = await change("add", { action: "add", ...manual }, "Added. Clara uses this answer from her next conversation.");
+                    if (saved) {
+                      setManual({ question: "", answer: "" });
+                      setAdding(false);
+                    }
+                  }}
+                  className={PRIMARY}
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" /> Add and teach Clara
+                </button>
+              </div>
+            </article>
+          )}
+
+          {state.faq.length === 0 && (
+            <Empty
+              icon={BookOpenCheck}
+              title="No approved answers yet"
+              text="Approve an answer under To answer or Feedback, or add one yourself."
+            />
+          )}
+          {state.faq.length > 0 && faqShown.length === 0 && (
+            <p className="rounded-2xl bg-white p-4 text-sm text-muted shadow-sm">No approved answer matches “{search.trim()}”.</p>
+          )}
+
+          {faqShown.map((entry) => {
+            const edit = editing[entry.id];
+            const stopEditing = () =>
+              setEditing((current) => {
+                const next = { ...current };
+                delete next[entry.id];
+                return next;
+              });
+            return (
+              <article key={entry.id} className="space-y-2 rounded-2xl bg-white p-4 text-sm shadow-sm">
+                {edit ? (
+                  <>
+                    <input
+                      value={edit.question}
+                      onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, question: event.target.value } }))}
+                      className={`font-semibold ${FIELD}`}
+                    />
+                    <textarea
+                      value={edit.answer}
+                      onChange={(event) => setEditing((current) => ({ ...current, [entry.id]: { ...edit, answer: event.target.value } }))}
+                      rows={3}
+                      className={FIELD}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button type="button" onClick={stopEditing} className={GHOST}>
+                        Cancel
                       </button>
                       <button
                         type="button"
                         disabled={busy !== null}
-                        onClick={() => void change(`delete-${entry.id}`, { action: "delete", id: entry.id }, "Removed from Clara's knowledge.")}
-                        className="text-brand underline"
+                        onClick={async () => {
+                          const saved = await change(`update-${entry.id}`, { action: "update", id: entry.id, ...edit }, "Updated. Clara uses the new wording now.");
+                          if (saved) stopEditing();
+                        }}
+                        className={PRIMARY}
                       >
-                        Delete
+                        Save
                       </button>
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-heading">{entry.question}</p>
+                    <p className="whitespace-pre-wrap text-ink">{entry.answer}</p>
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2 text-xs text-muted">
+                      <span>
+                        {entry.approved_by ? `Approved by ${entry.approved_by} · ` : ""}
+                        {when(entry.updated_at)}
+                      </span>
+                      <span className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditing((current) => ({ ...current, [entry.id]: { question: entry.question, answer: entry.answer } }))}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-semibold text-heading transition hover:bg-surface"
+                        >
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy !== null}
+                          onClick={() => void change(`delete-${entry.id}`, { action: "delete", id: entry.id }, "Removed from Clara's knowledge.")}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-semibold text-brand transition hover:bg-brand-soft disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Delete
+                        </button>
+                      </span>
+                    </div>
+                  </>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
+    </div>
+  );
+}
 
-        <details className="rounded-lg border border-dashed border-line p-3">
-          <summary className="cursor-pointer text-sm font-semibold text-heading">+ Add an answer yourself</summary>
-          <div className="mt-2 space-y-2">
-            <input
-              value={manual.question}
-              onChange={(event) => setManual((current) => ({ ...current, question: event.target.value }))}
-              placeholder="Question, e.g. Can an AI Employee work in German and French?"
-              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-            />
-            <textarea
-              value={manual.answer}
-              onChange={(event) => setManual((current) => ({ ...current, answer: event.target.value }))}
-              placeholder="The answer Clara should give"
-              rows={3}
-              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-            />
-            <div className="flex justify-end">
-              <button
-                type="button"
-                disabled={busy !== null || !manual.question.trim() || !manual.answer.trim()}
-                onClick={async () => {
-                  const saved = await change("add", { action: "add", ...manual }, "Added. Clara uses this answer from her next conversation.");
-                  if (saved) setManual({ question: "", answer: "" });
-                }}
-                className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-              >
-                Add and teach Clara
-              </button>
-            </div>
-          </div>
-        </details>
-      </section>
+/** What an empty tab shows. */
+function Empty({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
+  return (
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-white/60 px-6 py-10 text-center">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-muted shadow-sm">
+        <Icon className="h-6 w-6" aria-hidden="true" />
+      </span>
+      <p className="mt-3 font-semibold text-heading">{title}</p>
+      <p className="mt-1 max-w-sm text-sm text-muted">{text}</p>
     </div>
   );
 }

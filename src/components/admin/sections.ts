@@ -53,7 +53,7 @@ export const ADMIN_SECTIONS: {
     title: "Knowledge",
     description: "Questions Clara could not answer, and the answers staff approve for her.",
     icon: BookOpen,
-    width: "max-w-4xl",
+    width: "max-w-5xl",
   },
   {
     id: "replies",

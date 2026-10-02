@@ -1,4 +1,4 @@
-// Feedback on Clara's answers, from four places, all ending on /admin (📚 Knowledge → Feedback):
+// Feedback on Clara's answers, from four places, all ending on /admin/knowledge/feedback:
 //
 //   1. 👍 / 👎 under each answer in the website chat (a 👎 asks "What was wrong?")
 //   2. What customers say about an answer on any channel ("that's wrong", "perfect, thanks"),

@@ -111,7 +111,9 @@ npm run lint
   dark side menu and one address per section: `/admin/rooms`, `/customers`, `/mood`, `/calls`, `/knowledge`,
   `/replies` (`src/app/admin`, `src/components/admin/AdminShell.tsx` + `sections.ts`; `/admin` redirects in
   `next.config.ts`). Both shells live in layouts, so state survives moving between pages (CHANNEL_SETUP.md §9, §12).
-  Icons: `lucide-react`. Cards everywhere take `shadow-sm` (redefined in `globals.css`), big panels `shadow-card`
+  Icons: `lucide-react`. Cards everywhere take `shadow-sm` (redefined in `globals.css`), big panels `shadow-card`.
+  Knowledge has three tabs at their own addresses (`/admin/knowledge`, `/feedback`, `/approved`). The site icon is
+  the NDI letters drawn as shapes (`src/app/icon.svg`, `src/app/apple-icon.png` 180x180 for phone home screens)
 - Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
   Tailwind tokens (`brand`, `brand-soft`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`, `night`) in `src/app/globals.css`:
   `accent` = the logo red, `brand` = `#e00000` (buttons, menus, links: readable at 4.5:1), black and neutral greys.

@@ -328,7 +328,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["👥 Customers (/admin/customers)", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, the AI Employees they asked about, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
                 ["😊 Mood (/admin/mood)", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
                 ["📲 Call list (/admin/calls)", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
-                ["📚 Knowledge (/admin/knowledge)", "Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
+                ["📚 Knowledge (/admin/knowledge)", "Three tabs: To answer, Feedback (/admin/knowledge/feedback) and Approved answers (/admin/knowledge/approved). Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
                 ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
               ]}
             />
