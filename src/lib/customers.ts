@@ -12,7 +12,7 @@ import { elevenLabsConversation, type ConversationRecord } from "./elevenlabs";
 import { normalisePhone } from "./phone";
 import { supabaseConfigured, supabaseRest as rest } from "./supabase";
 
-export const CHANNELS = ["telegram", "instagram", "messenger", "email", "phone", "website", "alexa", "slack"] as const;
+export const CHANNELS = ["telegram", "instagram", "messenger", "email", "phone", "website", "slack"] as const;
 export type Channel = (typeof CHANNELS)[number];
 
 export type Customer = { id: string; name: string | null };
@@ -20,7 +20,7 @@ export type Identity = { channel: Channel; key: string; name?: string };
 export type LinkedChannel = { channel: Channel; channel_key: string; verified: boolean };
 
 /** What the agent is told. Deliberately no addresses, order numbers or other personal details. */
-export type Profile = { name: string | null; channels: Channel[]; verified: boolean; recent: string[]; appliances: string[] };
+export type Profile = { name: string | null; channels: Channel[]; verified: boolean; recent: string[]; interests: string[] };
 
 export const customerStoreConfigured = supabaseConfigured;
 
@@ -42,29 +42,6 @@ export function normaliseEmail(input: unknown): string | null {
  * every other channel with "Missing required dynamic variables", so we do not use them.
  */
 const TELEGRAM_CHAT = /_tg_(\d+)$/;
-const FRESHDESK_TICKET = /_fd_(\d+)$/;
-
-async function freshdeskRequester(ticket: string): Promise<{ email: string; name?: string } | null> {
-  const apiKey = process.env.FRESHDESK_API_KEY;
-  const subdomain = process.env.FRESHDESK_SUBDOMAIN;
-  if (!apiKey || !subdomain) return null;
-
-  try {
-    // Freshdesk signs in with the API key as the username and "X" as the password.
-    const response = await fetch(`https://${subdomain}.freshdesk.com/api/v2/tickets/${ticket}?include=requester`, {
-      headers: { Authorization: `Basic ${Buffer.from(`${apiKey}:X`).toString("base64")}` },
-      signal: AbortSignal.timeout(5000),
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    const body = (await response.json()) as { requester?: { email?: string; name?: string } };
-    const email = normaliseEmail(body.requester?.email);
-    return email ? { email, name: body.requester?.name?.trim() || undefined } : null;
-  } catch (error) {
-    console.error("Freshdesk requester lookup failed", error);
-    return null;
-  }
-}
 
 /** Who this turn is from, worked out from the conversation id alone. */
 export async function resolveIdentity(body: Record<string, unknown>): Promise<Identity | null> {
@@ -78,12 +55,6 @@ export async function resolveIdentity(body: Record<string, unknown>): Promise<Id
 
   const telegram = conversationId.match(TELEGRAM_CHAT)?.[1];
   if (telegram) return { channel: "telegram", key: telegram };
-
-  const ticket = conversationId.match(FRESHDESK_TICKET)?.[1];
-  if (ticket) {
-    const requester = await freshdeskRequester(ticket);
-    if (requester) return { channel: "email", key: requester.email, name: requester.name };
-  }
 
   // Asked side by side: Clara is silent until this answers, and on a phone call that is heard.
   const [sender, messenger, instagram, record] = await Promise.all([
@@ -99,9 +70,6 @@ export async function resolveIdentity(body: Record<string, unknown>): Promise<Id
   // A phone call, in or out: the customer's number as the phone network gave it.
   const phone = normalisePhone(record?.metadata?.phone_call?.external_number);
   if (phone) return { channel: "phone", key: phone };
-
-  const makeInstagram = instagramSender(record);
-  if (makeInstagram) return { channel: "instagram", key: makeInstagram };
 
   return null;
 }
@@ -129,18 +97,6 @@ async function threadSender(table: "messenger_threads" | "instagram_threads", co
   }
 }
 
-/**
- * Instagram conversations started while Make.com carried Instagram: Make passed the sender's id as
- * the dynamic variable `instagram_id`. It is read from the stored conversation, never bound to a
- * tool parameter: a tool bound to a variable that only Instagram sends would fail on every other
- * channel.
- */
-function instagramSender(record: ConversationRecord | null): string | null {
-  if (record?.metadata?.async_metadata?.external_system !== "custom_channel") return null;
-  const id = record.conversation_initiation_client_data?.dynamic_variables?.instagram_id;
-  return typeof id === "string" && /^\d{5,30}$/.test(id) ? id : null;
-}
-
 /** An email that reached Clara through Gmail push: the web app noted who sent it (src/lib/emailInbox.ts). */
 async function emailSender(conversationId: string): Promise<{ email: string; name?: string } | null> {
   if (!conversationId) return null;
@@ -158,11 +114,11 @@ async function emailSender(conversationId: string): Promise<{ email: string; nam
 
 /**
  * True for a conversation the web app may still be about to register: an email is handed to Clara
- * a moment before the push handler records which conversation it became. Telegram and Freshdesk
- * carry their id in the conversation id, so they never need to wait.
+ * a moment before the push handler records which conversation it became. Telegram carries its id
+ * in the conversation id, so it never needs to wait.
  */
 export function mayBeRegisteredLate(conversationId: string): boolean {
-  return Boolean(conversationId) && !TELEGRAM_CHAT.test(conversationId) && !FRESHDESK_TICKET.test(conversationId);
+  return Boolean(conversationId) && !TELEGRAM_CHAT.test(conversationId);
 }
 
 // --- customers and their channels ------------------------------------------------------------
@@ -280,13 +236,13 @@ export async function conversationChannel(conversationId: string, isPhoneCall = 
 }
 
 export async function profileFor(customer: Customer): Promise<Profile> {
-  const [channels, notes, appliances] = await Promise.all([
+  const [channels, notes, interests] = await Promise.all([
     listChannels(customer.id),
     rest<{ summary: string }[]>(
       `customer_notes?customer_id=eq.${q(customer.id)}&select=summary&order=created_at.desc&limit=3`,
     ),
     rest<{ description: string }[]>(
-      `customer_appliances?customer_id=eq.${q(customer.id)}&select=description&order=updated_at.desc&limit=5`,
+      `customer_interests?customer_id=eq.${q(customer.id)}&select=description&order=updated_at.desc&limit=5`,
     ).catch(() => []),
   ]);
   return {
@@ -294,7 +250,7 @@ export async function profileFor(customer: Customer): Promise<Profile> {
     channels: [...new Set(channels.map((row) => row.channel as Channel))],
     verified: channels.some((row) => row.verified),
     recent: notes.map((note) => note.summary),
-    appliances: appliances.map((appliance) => appliance.description),
+    interests: interests.map((interest) => interest.description),
   };
 }
 
@@ -399,7 +355,7 @@ async function adoptAnonymousOwner(identity: Identity, customerId: string): Prom
 
 /**
  * The customer's own phone number, added on the website while signed in. Clara then knows them when
- * they call, and when CDA calls them. Not proven (no code is sent to the phone), so it is stored as
+ * they call, and when NDI calls them. Not proven (no code is sent to the phone), so it is stored as
  * unverified, and a number that belongs to someone else's account is refused.
  */
 export async function linkPhone(customerId: string, rawPhone: string): Promise<{ ok: true } | { ok: false; reason: "invalid" | "taken" }> {
@@ -423,40 +379,48 @@ export async function rememberConversation(conversationId: string, customerId: s
   });
 }
 
-/** Returns false when the conversation was never tied to a customer, which is normal. */
-/** A CDA model number as on a rating plate: letters then digits, e.g. FW952, CDI6121, FF881SC. */
-const MODEL = /\b([A-Z]{1,5}\d{2,5}[A-Z0-9]{0,4})\b/;
+/**
+ * The topic of an interest is the AI Employee or subject before the dash ("AI SDR – Acme GmbH ...",
+ * "Pricing: ..."), in lower case, so the newest description of the same topic replaces the older one.
+ */
+function interestTopic(description: string): string {
+  const topic = description.split(/\s[–-]\s|:/)[0].trim().toLowerCase();
+  return (topic || description.toLowerCase()).slice(0, 80);
+}
 
 /**
- * The appliances from ElevenLabs' post-call analysis ("Fridge freezer FW952, bought 4 August 2026",
- * several separated by "|"), kept against the customer of that conversation. The newest description
- * of a model replaces the older one. Returns how many were kept.
+ * What the customer wants from NDI, from ElevenLabs' post-call analysis ("AI SDR – Acme GmbH (Head
+ * of Sales), outbound to DACH, wants a demo in November", several separated by "|"), kept against the
+ * customer of that conversation. Returns how many were kept.
  */
-export async function addAppliances(conversationId: string, value: unknown): Promise<number> {
+export async function addInterests(conversationId: string, value: unknown): Promise<number> {
   if (typeof value !== "string" || !value.trim()) return 0;
   const found = value
     .split("|")
     .map((part) => part.trim().replace(/\s+/g, " ").slice(0, 200))
-    .map((description) => ({ description, model: description.toUpperCase().match(MODEL)?.[1] }))
-    .filter((item): item is { description: string; model: string } => Boolean(item.model));
-  if (!found.length) return 0;
+    .filter(Boolean)
+    .map((description) => ({ description, topic: interestTopic(description) }));
+  // One row per topic: the last description of a topic in this conversation wins.
+  const byTopic = [...new Map(found.map((item) => [item.topic, item])).values()].slice(0, 5);
+  if (!byTopic.length) return 0;
   const customer = await customerForConversation(conversationId);
   if (!customer) return 0;
-  await rest("customer_appliances?on_conflict=customer_id,model", {
+  await rest("customer_interests?on_conflict=customer_id,topic", {
     method: "POST",
     prefer: "resolution=merge-duplicates,return=minimal",
     body: JSON.stringify(
-      found.slice(0, 5).map(({ description, model }) => ({
+      byTopic.map(({ description, topic }) => ({
         customer_id: customer.id,
-        model,
+        topic,
         description,
         updated_at: new Date().toISOString(),
       })),
     ),
   });
-  return found.length;
+  return byTopic.length;
 }
 
+/** Returns false when the conversation was never tied to a customer, which is normal. */
 export async function addNote(conversationId: string, summary: string): Promise<boolean> {
   const rows = await rest<{ customer_id: string; channel: string | null }[]>(
     `customer_conversations?conversation_id=eq.${q(conversationId)}&select=customer_id,channel&limit=1`,

@@ -2,7 +2,7 @@ import { secretMatches } from "@/lib/agentAuth";
 import { emailChannelConfigured, processInbox } from "@/lib/emailInbox";
 import { mailboxAddress } from "@/lib/gmail";
 
-// Google Pub/Sub calls this when the CDA inbox changes (a push subscription on the topic Gmail
+// Google Pub/Sub calls this when the NDI inbox changes (a push subscription on the topic Gmail
 // posts to). There is no browser and no site password: the secret in the subscription's URL is
 // the proof, and anything without it is refused.
 //

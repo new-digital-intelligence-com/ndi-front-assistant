@@ -470,11 +470,11 @@ function MoodCurve({ turns }: { turns: Turn[] }) {
   const low = turns.reduce((lowest, turn, index) => (turn.score < turns[lowest].score ? index : lowest), 0);
   return (
     <svg width={width} height={height} className="shrink-0" role="img" aria-label="Mood during the conversation">
-      <line x1={0} x2={width} y1={y(0)} y2={y(0)} stroke="#e7e6e6" strokeWidth={1} />
+      <line x1={0} x2={width} y1={y(0)} y2={y(0)} stroke="#dfeaf6" strokeWidth={1} />
       <polyline
         points={turns.map((turn, index) => `${x(index)},${y(turn.score)}`).join(" ")}
         fill="none"
-        stroke="#666666"
+        stroke="#475569"
         strokeWidth={2}
         strokeLinejoin="round"
       />

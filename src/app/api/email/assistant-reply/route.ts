@@ -2,8 +2,8 @@ import { hasValidWebhookSignature } from "@/lib/agentAuth";
 import { handleAssistantReply, type ReplyWebhook } from "@/lib/emailInbox";
 
 // The "Reply Webhook URL" of Clara's email Custom Channel trigger: ElevenLabs posts her answer
-// here after every email. Signed with that trigger's own Outbound Signing Secret. Instagram has
-// a Custom Channel trigger of its own, whose replies go to Make and never come here.
+// here after every email. Signed with that trigger's own Outbound Signing Secret. Instagram and
+// Messenger have Custom Channel triggers of their own, whose replies go to their own routes.
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("elevenlabs-signature");

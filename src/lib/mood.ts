@@ -2,8 +2,8 @@
 //
 // ElevenLabs scores each of Clara's voice and website conversations once it ends: a label, a
 // sentiment score from -1 (very negative) to +1, and a frustration score from 0 to 1, overall and for
-// every customer message. It never scores Custom Channel conversations (email, Instagram, Messenger,
-// Alexa), so Claude rates those the same way, message by message. The post-call webhook stores them
+// every customer message. It never scores Custom Channel conversations (email, Instagram,
+// Messenger), so Claude rates those the same way, message by message. The post-call webhook stores them
 // here (conversation_moods) and emails staff when a customer was upset or was promised a follow-up.
 // /admin → 😊 Mood reads them back.
 //
@@ -65,8 +65,6 @@ export type ConversationForMood = {
     /** "public": started without a signed link, e.g. ElevenLabs' own talk-to page or its QR code. */
     authorization_method?: string | null;
   } | null;
-  /** What the channel passed in at the start, e.g. Make's instagram_id in the first Instagram set-up. */
-  conversation_initiation_client_data?: { dynamic_variables?: Record<string, unknown> | null } | null;
   analysis?: {
     sentiment_analysis?: SentimentSummary | null;
     transcript_summary?: string | null;
@@ -108,12 +106,12 @@ function label(value: unknown, score: number): MoodLabel {
 
 /**
  * What the customer wrote, without what the web app put around it for Clara: the email header
- * ("[Email to CDA customer care]", From, Subject) and Alexa's "[Alexa]" marker.
+ * ("[Email to NDI]", From, Subject).
  */
 function customerWords(text: string | null | undefined): string {
-  let clean = (text ?? "").trim().replace(/^\[Alexa\]\s*/i, "");
-  if (clean.startsWith("[Email to CDA customer care]")) {
-    clean = clean.replace(/^\[Email to CDA customer care\]\s*/, "").replace(/^(From|Subject):[^\n]*\n?/gim, "");
+  let clean = (text ?? "").trim();
+  if (clean.startsWith("[Email to NDI]")) {
+    clean = clean.replace(/^\[Email to NDI\]\s*/, "").replace(/^(From|Subject):[^\n]*\n?/gim, "");
   }
   return clean.trim();
 }
@@ -123,7 +121,7 @@ function excerpt(text: string | null | undefined): string {
   return clean.length > EXCERPT_LENGTH ? `${clean.slice(0, EXCERPT_LENGTH - 1)}…` : clean;
 }
 
-/** True when Clara promised that the CDA team will come back to them, or they asked for a person. */
+/** True when Clara promised that the NDI team will come back to them, or they asked for a person. */
 function followUpAsked(results: Record<string, { value?: unknown } | undefined> | null | undefined): boolean {
   const value = results?.needs_follow_up?.value;
   return value === true || (typeof value === "string" && /^(true|yes)$/i.test(value.trim()));
@@ -170,31 +168,23 @@ const TRIGGER_CHANNELS: [string, string | undefined][] = [
   ["email", process.env.EMAIL_CHANNEL_INBOUND_URL],
   ["instagram", process.env.INSTAGRAM_CHANNEL_INBOUND_URL],
   ["messenger", process.env.MESSENGER_CHANNEL_INBOUND_URL],
-  ["alexa", process.env.ALEXA_CHANNEL_INBOUND_URL],
 ];
-
-/** Triggers that no longer exist but still own old conversations. */
-const RETIRED_TRIGGERS: Record<string, string> = {
-  // The first Instagram connection, through Make.com (17–21 Sep 2026), before the web app took over.
-  trigger_cxn_0101m2pccemse2591rmxbbet8742: "instagram",
-};
 
 function channelOfTrigger(triggerId: string | null | undefined): string | null {
   if (!triggerId) return null;
-  return TRIGGER_CHANNELS.find(([, url]) => url?.includes(triggerId))?.[0] ?? RETIRED_TRIGGERS[triggerId] ?? null;
+  return TRIGGER_CHANNELS.find(([, url]) => url?.includes(triggerId))?.[0] ?? null;
 }
 
 /**
  * Which channel a conversation came from. A known customer's conversation says it directly; for
  * anyone else ElevenLabs' own start source tells the phone and the website apart, and a Custom
- * Channel's trigger id tells email, Instagram, Messenger and Alexa apart.
+ * Channel's trigger id tells email, Instagram and Messenger apart.
  */
 async function channelOf(record: ConversationForMood, conversationId: string): Promise<string | null> {
   const isPhone = Boolean(record.metadata?.phone_call);
   const known = await conversationChannel(conversationId, isPhone).catch(() => null);
   if (known) return known;
   const source = record.conversation_initiation_source ?? record.metadata?.conversation_initiation_source ?? "";
-  if (/_fd_\d+$/.test(conversationId) || /freshdesk/i.test(source)) return "email"; // email before the switch to Gmail
   if (/_ic_\d+$/.test(conversationId) || /intercom/i.test(source)) return "intercom";
   if (/telegram/i.test(source)) return "telegram";
   if (/twilio|sip|phone/i.test(source)) return "phone";
@@ -204,7 +194,6 @@ async function channelOf(record: ConversationForMood, conversationId: string): P
   if (/custom_channel/i.test(source)) {
     const byTrigger = channelOfTrigger(record.metadata?.async_metadata?.external_id);
     if (byTrigger) return byTrigger;
-    if (record.conversation_initiation_client_data?.dynamic_variables?.instagram_id) return "instagram";
     const emails = await rest<{ gmail_id: string }[]>(
       `email_messages?conversation_id=eq.${q(conversationId)}&select=gmail_id&limit=1`,
     ).catch(() => []);
@@ -215,7 +204,7 @@ async function channelOf(record: ConversationForMood, conversationId: string): P
   return null;
 }
 
-const RATE_CONVERSATION = `You rate how a customer felt in a conversation with Clara, the virtual assistant of CDA, a UK kitchen appliance brand.
+const RATE_CONVERSATION = `You rate how a customer felt in a conversation with Clara, the virtual assistant of NDI (New Digital Intelligence), a company that builds and runs AI Employees for organisations.
 You get the customer's messages only, numbered, in order. Answer with JSON only:
 {"messages":[{"score":<-1 to 1>,"frustration":<0 to 1>}, one per message in the same order],
  "overall":{"label":"positive|neutral|negative","score":<-1 to 1>,"frustration":<0 to 1>},
@@ -223,13 +212,13 @@ You get the customer's messages only, numbered, in order. Answer with JSON only:
 - score: -1 very unhappy or angry, 0 neutral, +1 very happy or grateful.
 - frustration: 0 calm, 1 furious. Count anger, impatience, distress, threats to complain or leave, repeated chasing, sarcasm.
 - A plain question or request, however urgent the problem, is neutral: score near 0, frustration at most 0.2.
-- Messages can be in any language, and an email may start with a small header (From, Subject). Rate the customer, not the appliance.`;
+- Messages can be in any language, and an email may start with a small header (From, Subject). Rate the customer, not the problem they describe.`;
 
 const MAX_RATED_MESSAGES = 20;
 
 /**
  * Claude's rating of a conversation ElevenLabs did not score (every Custom Channel: email, Instagram,
- * Messenger, Alexa), in the same shape as ElevenLabs' own. Null without customer messages or Claude.
+ * Messenger), in the same shape as ElevenLabs' own. Null without customer messages or Claude.
  */
 async function moodFromClaude(record: ConversationForMood): Promise<MoodRow | null> {
   const conversationId = record.conversation_id;
@@ -467,12 +456,12 @@ export async function importMoods({ days = 30, max = 150 }: { days?: number; max
 
 export type QuickMood = { label: MoodLabel; score: number; frustration: number; reason: string };
 
-const RATER = `You rate the mood of one message a customer sent to CDA, a UK kitchen appliance brand, for its customer care team.
+const RATER = `You rate the mood of one message a customer sent to NDI (New Digital Intelligence, a company that builds and runs AI Employees for organisations), for the NDI team.
 Answer with JSON only: {"label":"positive|neutral|negative","score":<-1 to 1>,"frustration":<0 to 1>,"reason":"<at most 12 words, English>"}
 - score: -1 very unhappy or angry, 0 neutral, +1 very happy or grateful.
 - frustration: 0 calm, 1 furious. Count anger, impatience, distress, threats to complain or leave, repeated chasing, sarcasm.
 - A plain question or request, however urgent the problem, is neutral: score near 0, frustration at most 0.2.
-- The message can be in any language. Rate the customer, not the appliance: "my oven is broken" alone is neutral.`;
+- The message can be in any language. Rate the customer, not the problem they describe: "our AI Employee stopped answering" alone is neutral.`;
 
 /** Claude's rating of one customer message, or null when Claude is not configured or does not answer in time. */
 export async function rateMessage(text: string, { timeoutMs }: { timeoutMs: number }): Promise<QuickMood | null> {
@@ -573,13 +562,13 @@ export type FrustratedLine = {
 
 const emptyCounts = (): MoodCounts => ({ total: 0, positive: 0, neutral: 0, negative: 0 });
 /** Every channel of the demo is always listed, even in a period without conversations on it. */
-const DEMO_CHANNELS = ["website", "phone", "email", "telegram", "instagram", "messenger", "alexa", "intercom", "hosted"];
+const DEMO_CHANNELS = ["website", "phone", "email", "telegram", "instagram", "messenger", "intercom", "hosted"];
 const add = (counts: MoodCounts, moodLabel: MoodLabel) => {
   counts.total += 1;
   counts[moodLabel] += 1;
 };
 const average = (values: number[]) => (values.length ? values.reduce((a, b) => a + b, 0) / values.length : null);
-const LONDON_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+const NDI_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Zurich", year: "numeric", month: "2-digit", day: "2-digit" });
 
 export async function moodOverview(days: number): Promise<MoodOverview> {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
@@ -621,7 +610,7 @@ export async function moodOverview(days: number): Promise<MoodOverview> {
     DEMO_CHANNELS.map((channel) => [channel, { ...emptyCounts(), frustrations: [] }]),
   );
   const dayKeys: string[] = [];
-  for (let i = days - 1; i >= 0; i--) dayKeys.push(LONDON_DAY.format(new Date(Date.now() - i * 86_400_000)));
+  for (let i = days - 1; i >= 0; i--) dayKeys.push(NDI_DAY.format(new Date(Date.now() - i * 86_400_000)));
   const byDay = new Map(dayKeys.map((date) => [date, emptyCounts()]));
 
   for (const row of rows) {
@@ -631,7 +620,7 @@ export async function moodOverview(days: number): Promise<MoodOverview> {
     add(entry, row.label);
     entry.frustrations.push(row.frustration);
     channels.set(channel, entry);
-    const day = byDay.get(LONDON_DAY.format(new Date(row.started_at)));
+    const day = byDay.get(NDI_DAY.format(new Date(row.started_at)));
     if (day) add(day, row.label);
   }
 

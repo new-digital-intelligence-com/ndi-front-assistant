@@ -20,5 +20,4 @@ export const messenger: MetaChannel = {
   profileFields: "first_name,last_name",
   profileName: (profile) =>
     [profile.first_name, profile.last_name].filter((part) => typeof part === "string" && part).join(" ") || undefined,
-  acceptsBareIds: false,
 };

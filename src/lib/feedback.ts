@@ -7,7 +7,7 @@
 //   4. Email draft mode: staff changed Clara's draft before sending it
 //
 // Every rating counts towards the weekly score. Negative feedback and real corrections wait for
-// staff, who turn them into an approved answer ("CDA approved FAQ") or dismiss them. Nothing
+// staff, who turn them into an approved answer ("NDI approved FAQ") or dismiss them. Nothing
 // reaches Clara without that approval: an edit fixes one reply for one customer, and often carries
 // their name or order, so making it the answer for everyone is a separate decision.
 

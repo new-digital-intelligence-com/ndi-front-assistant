@@ -1,5 +1,5 @@
 import { hasValidWebhookSignature } from "@/lib/agentAuth";
-import { addAppliances, addNote } from "@/lib/customers";
+import { addInterests, addNote } from "@/lib/customers";
 import { recordSaidFeedback } from "@/lib/feedback";
 import { recordGaps } from "@/lib/knowledge";
 import { recordConversationMood, type ConversationForMood } from "@/lib/mood";
@@ -62,11 +62,11 @@ export async function POST(request: Request) {
       console.error("knowledge gap could not be stored", error),
     );
   }
-  // The customer's appliances (model, type, purchase date): Clara gets them back on every channel,
-  // so she never asks twice for a model number she has already seen on a receipt or rating plate.
-  if (event.data?.conversation_id && results?.appliance?.value) {
-    await addAppliances(event.data.conversation_id, results.appliance.value).catch((error) =>
-      console.error("appliances could not be stored", error),
+  // What the customer wants from NDI (her "interest" analysis item: the AI Employee or topic, their
+  // company and role): Clara gets it back on every channel, so she never asks twice.
+  if (event.data?.conversation_id && results?.interest?.value) {
+    await addInterests(event.data.conversation_id, results.interest.value).catch((error) =>
+      console.error("interests could not be stored", error),
     );
   }
 

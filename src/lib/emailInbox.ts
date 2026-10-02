@@ -1,4 +1,4 @@
-// Email on the CDA mailbox, without Freshdesk:
+// Email on the NDI mailbox:
 //
 //   customer email -> Gmail -> Pub/Sub push -> /api/email/gmail-push
 //        -> rules skip codes, alerts and newsletters (no credits spent)
@@ -268,7 +268,7 @@ async function handleIncoming(gmailId: string) {
 
   // The sender's customer record comes first, so the conversation can be tied to it the moment
   // ElevenLabs names it: Clara's customer_lookup runs a second or so later and finds it. Receiving
-  // an email from an address is taken as that address, as it was with Freshdesk.
+  // an email from an address is taken as proof of that address.
   const customer = email.fromEmail
     ? await customerForChannel({ channel: "email", key: email.fromEmail, name: email.fromName ?? undefined }, true).catch(
         (error) => {
@@ -392,7 +392,7 @@ export async function handleAssistantReply(payload: ReplyWebhook): Promise<{ out
   try {
     if (!to) throw new Error("The email has no address to reply to");
     const raw = buildReply({
-      from: `"CDA Customer Care (demo)" <${mailboxAddress()}>`,
+      from: `"NDI - New Digital Intelligence" <${mailboxAddress()}>`,
       to,
       subject: replySubject(row.subject ?? ""),
       inReplyTo: row.message_id,

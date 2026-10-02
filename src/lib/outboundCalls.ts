@@ -88,13 +88,14 @@ async function agentNumber(): Promise<string> {
   return agentNumberId;
 }
 
-const REASON_SYSTEM = `You help CDA's virtual assistant open a phone call she makes to a customer.
-From the CDA staff notes, write only the words that finish the sentence "I'm calling about ...",
+const REASON_SYSTEM = `You help NDI's virtual assistant open a phone call she makes to a customer.
+NDI (New Digital Intelligence) builds and runs AI Employees for organisations.
+From the NDI staff notes, write only the words that finish the sentence "I'm calling about ...",
 spoken to the customer: at most 8 words, starting in lower case, no full stop, no quotes.
-Name the topic only, for example: your new dishwasher's warranty / your recent oven repair.
+Name the topic only, for example: your demo request for the AI SDR / your enquiry about our AI Employees.
 Never include names, phone numbers, prices or dates.`;
 
-/** "your new dishwasher's warranty", from the staff instructions. Null when Claude is slow or unsure. */
+/** "your demo request for the AI SDR", from the staff instructions. Null when Claude is slow or unsure. */
 async function callReason(instructions: string): Promise<string | null> {
   if (!anthropicConfigured() || !instructions.trim()) return null;
   try {
@@ -108,8 +109,8 @@ async function callReason(instructions: string): Promise<string | null> {
 }
 
 /**
- * What Clara says as the person picks up (her usual greeting is for people calling CDA): their first
- * name, from the list or else from what CDA already knows about that number, and why she is calling,
+ * What Clara says as the person picks up (her usual greeting is for people calling NDI): their first
+ * name, from the list or else from what NDI already knows about that number, and why she is calling,
  * so nobody hangs up during the moment she takes to look them up.
  */
 async function greeting(item: CallItem): Promise<string> {
@@ -118,7 +119,7 @@ async function greeting(item: CallItem): Promise<string> {
     callReason(item.instructions),
   ]);
   const first = (item.name ?? known?.customer.name ?? "").trim().split(/\s+/)[0];
-  return `Hello${first ? ` ${first}` : ""}, this is Clara, the virtual assistant from CDA.${reason ? ` I'm calling about ${reason}.` : ""} Have you got a moment?`;
+  return `Hello${first ? ` ${first}` : ""}, this is Clara, the virtual assistant from NDI.${reason ? ` I'm calling about ${reason}.` : ""} Have you got a moment?`;
 }
 
 function errorText(body: { message?: string; detail?: unknown }, status: number): string {

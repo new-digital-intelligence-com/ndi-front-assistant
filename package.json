@@ -1,5 +1,5 @@
 {
-  "name": "cda-web-app",
+  "name": "ndi-web-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   },
   "dependencies": {
     "@anam-ai/js-sdk": "^4.27.0",

@@ -1,7 +1,8 @@
-// Emails CDA staff when a customer is upset, so someone follows up while it still matters.
-// Recipients: STAFF_ALERT_EMAIL (one address, or several separated by commas; the CDA mailbox itself
+// Emails NDI staff when a customer is upset, so someone follows up while it still matters.
+// Recipients: STAFF_ALERT_EMAIL (one address, or several separated by commas; the NDI mailbox itself
 // works too). Without it nobody is emailed and the conversation simply waits on /admin → 😊 Mood.
 
+import { appUrl } from "./appUrl";
 import { mailConfigured, sendMail } from "./mailer";
 
 const escapeHtml = (value: string) =>
@@ -14,7 +15,6 @@ const CHANNEL_NAMES: Record<string, string> = {
   email: "Email",
   phone: "Phone",
   website: "Website",
-  alexa: "Alexa",
   slack: "Slack",
   messaging: "Messaging app",
   intercom: "Intercom",
@@ -36,7 +36,7 @@ function listedAddresses(): string[] {
 }
 
 /**
- * The CDA mailbox itself is fine: the alert is sent from that mailbox, and the email channel ignores
+ * The NDI mailbox itself is fine: the alert is sent from that mailbox, and the email channel ignores
  * mail from itself and anything marked Sent (src/lib/emailInbox.ts), so Clara never answers an alert.
  */
 function recipients(): string[] {
@@ -65,11 +65,12 @@ export function moodAlertStatus(): MoodAlertStatus {
 }
 
 function adminLink(): string | null {
-  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  return host ? `https://${host}/admin` : null;
+  const base = appUrl();
+  return base ? `${base}/admin` : null;
 }
 
-const LONDON = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", dateStyle: "medium", timeStyle: "short" });
+/** NDI's home time (Zug, Cologne, Milan, Paris), in the British date format. */
+const NDI_TIME = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Zurich", dateStyle: "medium", timeStyle: "short" });
 
 type Alert =
   | {
@@ -105,45 +106,45 @@ export async function sendMoodAlert(alert: Alert): Promise<boolean> {
       ? [
           ["Customer", alert.customerName ?? "Not identified"],
           ["Channel", channelName(alert.channel)],
-          ["When", `${LONDON.format(alert.when)} (UK time)`],
+          ["When", `${NDI_TIME.format(alert.when)} (Central European time)`],
           ["Mood", `${alert.label}, sentiment ${alert.score.toFixed(1)}, frustration ${Math.round(alert.frustration * 100)}%`],
-          ...(alert.followUp ? ([["Follow-up", "Clara told the customer that the CDA team will get back to them"]] as [string, string][]) : []),
+          ...(alert.followUp ? ([["Follow-up", "Clara told the customer that the NDI team will get back to them"]] as [string, string][]) : []),
           ...(alert.lowPoint ? ([["Where it turned", `“${alert.lowPoint}”`]] as [string, string][]) : []),
           ...(alert.summary ? ([["Summary", alert.summary]] as [string, string][]) : []),
         ]
       : [
           ["From", alert.fromName ? `${alert.fromName} <${alert.fromEmail ?? ""}>` : alert.fromEmail ?? "Unknown sender"],
           ["Subject", alert.subject || "(no subject)"],
-          ["When", `${LONDON.format(alert.when)} (UK time)`],
+          ["When", `${NDI_TIME.format(alert.when)} (Central European time)`],
           ["Mood", `upset, frustration ${Math.round(alert.frustration * 100)}%${alert.reason ? ` (${alert.reason})` : ""}`],
           ["What Clara did", "She did not reply. Her answer is waiting as a Gmail draft labelled “Clara/Upset customer” for you to check."],
         ];
 
   const heading =
     alert.kind === "email"
-      ? "An upset customer emailed CDA"
+      ? "An upset customer emailed NDI"
       : alert.followUp && alert.frustration < 0.6
         ? "A customer is waiting for a follow-up"
         : "A customer was upset talking to Clara";
   const subject =
     alert.kind === "email"
-      ? `[CDA demo] Upset customer email: ${alert.subject || "(no subject)"}`
-      : `[CDA demo] ${heading} (${channelName(alert.channel)})`;
+      ? `[NDI assistant] Upset customer email: ${alert.subject || "(no subject)"}`
+      : `[NDI assistant] ${heading} (${channelName(alert.channel)})`;
   const link = adminLink();
 
   const text = [heading, "", ...rows.map(([name, value]) => `${name}: ${value}`), "", link ? `Open /admin → 😊 Mood: ${link}` : ""]
     .join("\n")
     .trim();
-  const html = `<div style="font-family:Arial,sans-serif;max-width:620px;color:#333333">
-<h2 style="margin:0 0 12px;font-size:18px;color:#c8362d">${escapeHtml(heading)}</h2>
+  const html = `<div style="font-family:Arial,sans-serif;max-width:620px;color:#1e293b">
+<h2 style="margin:0 0 12px;font-size:18px;color:#002a6c">${escapeHtml(heading)}</h2>
 <table style="border-collapse:collapse;font-size:14px;width:100%">${rows
     .map(
       ([name, value]) =>
-        `<tr><td style="padding:6px 10px;color:#666666;vertical-align:top;white-space:nowrap">${escapeHtml(name)}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>`,
+        `<tr><td style="padding:6px 10px;color:#475569;vertical-align:top;white-space:nowrap">${escapeHtml(name)}</td><td style="padding:6px 10px">${escapeHtml(value)}</td></tr>`,
     )
     .join("")}</table>
-${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#e84339">Open /admin → 😊 Mood</a></p>` : ""}
-<p style="margin-top:18px;color:#999999;font-size:12px">Sent by the CDA customer assistant demo (NDI). Mood scores come from ElevenLabs and Claude.</p>
+${link ? `<p style="margin-top:18px"><a href="${escapeHtml(link)}" style="color:#1190cb">Open /admin → 😊 Mood</a></p>` : ""}
+<p style="margin-top:18px;color:#999999;font-size:12px">Sent by NDI's assistant Clara. Mood scores come from ElevenLabs and Claude.</p>
 </div>`;
 
   await sendMail({ to: to.join(", "), subject, text, html });

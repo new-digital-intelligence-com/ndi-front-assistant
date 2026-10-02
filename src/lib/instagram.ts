@@ -1,8 +1,9 @@
 // Instagram direct messages for @new_digital_intelligence (how it works: src/lib/metaChat.ts).
 //
 // Meta's Instagram tokens last at most 60 days. The current token is kept in Supabase
-// (channel_tokens) and the daily cron refreshes it every 7 days, so it never runs out.
-// INSTAGRAM_ACCESS_TOKEN is only the starting token, used until the first refresh.
+// (channel_tokens) and the daily jobs refresh it every 7 days, so it never runs out.
+// INSTAGRAM_ACCESS_TOKEN is only the starting token, used until the first refresh. The CDA demo
+// uses the same account and refreshes its own copy the same way.
 
 import type { MetaChannel } from "./metaChat";
 import { supabaseRest as rest } from "./supabase";
@@ -44,7 +45,6 @@ export const instagram: MetaChannel = {
   profileFields: "name,username",
   profileName: (profile) =>
     (typeof profile.name === "string" && profile.name) || (typeof profile.username === "string" && profile.username) || undefined,
-  acceptsBareIds: true,
 };
 
 /**

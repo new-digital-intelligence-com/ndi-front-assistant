@@ -1,4 +1,4 @@
-// The CDA mailbox through the Gmail API, signed in once with Google OAuth (scope gmail.modify):
+// The NDI mailbox through the Gmail API, signed in once with Google OAuth (scope gmail.modify):
 // read new inbox mail, send or draft replies in the customer's thread, and put Clara's labels on
 // the customer's email. Server side only; the refresh token is as good as the mailbox password.
 

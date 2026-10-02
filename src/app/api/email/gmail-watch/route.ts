@@ -1,10 +1,10 @@
 import { secretMatches } from "@/lib/agentAuth";
 import { emailChannelConfigured, processInbox, startInboxWatch } from "@/lib/emailInbox";
 
-// Gmail stops posting to Pub/Sub 7 days after a watch starts, so Vercel Cron renews it once a day
-// (vercel.json). Vercel sends `Authorization: Bearer <CRON_SECRET>`; GMAIL_PUSH_SECRET also works,
-// to start the watch by hand the first time. It then catches up on anything a missed
-// notification left behind.
+// Gmail stops posting to Pub/Sub 7 days after a watch starts. The daily jobs renew it (the app's
+// own scheduler, src/lib/dailyJobs.ts, calls /api/cron/daily); this route does the same by hand,
+// with `Authorization: Bearer <CRON_SECRET>` or GMAIL_PUSH_SECRET, for example to start the watch
+// the first time. It then catches up on anything a missed notification left behind.
 export async function GET(request: Request) {
   const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null;
   const allowed =

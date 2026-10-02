@@ -5,7 +5,8 @@ import { refreshInstagramToken } from "@/lib/instagram";
 import { importMoods } from "@/lib/mood";
 import { supabaseConfigured } from "@/lib/supabase";
 
-// Vercel Cron, once a day (vercel.json), with `Authorization: Bearer <CRON_SECRET>`:
+// The daily jobs, once a day: the app's own scheduler calls this (src/lib/dailyJobs.ts, started by
+// src/instrumentation.ts), with `Authorization: Bearer <CRON_SECRET>`. It can also be called by hand.
 // - renews the Gmail watch (it stops after 7 days) and catches up on any missed email
 // - refreshes the Instagram token every 7 days (Meta's tokens last 60 days)
 // - compares email drafts staff have sent with Clara's draft (📚 Knowledge → Feedback)

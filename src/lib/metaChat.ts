@@ -1,4 +1,4 @@
-// Messenger and Instagram direct messages, handled by the web app (no Make.com):
+// Messenger and Instagram direct messages, handled by the web app:
 //
 //   message        → Meta webhook → /api/<channel>/webhook → Clara via that channel's Custom Channel trigger
 //   Clara's answer → /api/<channel>/reply → that channel's Send API
@@ -8,6 +8,8 @@
 // so a repeated delivery never sends twice. No message text is stored.
 //
 // The two channels differ only in the settings below (src/lib/messenger.ts, src/lib/instagram.ts).
+// They are the same Instagram account and Facebook Page as the CDA demo: Meta's webhooks point at
+// one of the two apps at a time, switched before a demo (CHANNEL_SETUP.md, section 5).
 
 import { hasValidWebhookSignature, secretMatches } from "./agentAuth";
 import { constantTimeEqual, sha256Hex } from "./auth";
@@ -38,8 +40,6 @@ export type MetaChannel = {
   messagingType: boolean;
   profileFields: string;
   profileName: (profile: Record<string, unknown>) => string | undefined;
-  /** Replies to conversations the old Make scenarios started carry "<id>|<mid>" without our prefix. */
-  acceptsBareIds: boolean;
 };
 
 const CONTINUE_MS = 10 * 60_000;
@@ -185,7 +185,6 @@ function recipientFrom(ch: MetaChannel, ids: string[] | undefined): string | und
   for (const id of ids ?? []) {
     if (typeof id !== "string") continue;
     if (id.startsWith(ch.prefix)) return id.slice(ch.prefix.length).split("|")[0];
-    if (ch.acceptsBareIds && /^\d+\|/.test(id)) return id.split("|")[0];
   }
   return undefined;
 }

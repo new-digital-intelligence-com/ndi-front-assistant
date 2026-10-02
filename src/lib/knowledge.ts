@@ -3,10 +3,10 @@
 //   conversation ends → ElevenLabs' post-call analysis fills "unanswered_question" → post-call
 //   webhook → knowledge_gaps → /admin "Knowledge" tab: Claude groups repeats and suggests wording
 //   → staff edit and approve → knowledge_faq → published to Clara as one document,
-//   "CDA approved FAQ", which is always in her context (usage mode "prompt")
+//   "NDI approved FAQ", which is always in her context (usage mode "prompt")
 //
 // Nothing reaches Clara without a staff member approving it. Claude's suggestion is only a starting
-// point: where it would need a CDA fact it cannot know, it writes [check: …], and an answer still
+// point: where it would need an NDI fact it cannot know, it writes [check: …], and an answer still
 // holding such a marker cannot be approved.
 
 import { anthropicConfigured, askClaude, parseJsonObject } from "./anthropic";
@@ -16,14 +16,17 @@ import { supabaseRest as rest } from "./supabase";
 
 const q = encodeURIComponent;
 const API = "https://api.elevenlabs.io/v1/convai";
-export const DOC_NAME = "CDA approved FAQ";
-/** Clara's live branch ("Main", 100% of traffic). */
-const BRANCH_ID = process.env.ELEVENLABS_BRANCH_ID || "agtbrch_9301m2p375xzetbbsyymxnbnsf1s";
+export const DOC_NAME = "NDI approved FAQ";
+/** Clara's live branch ("Main", 100% of traffic). Without it, it is read from the agent, as for Aida. */
+const BRANCH_ID = process.env.ELEVENLABS_BRANCH_ID || null;
 const MAX_GAPS_PER_CONVERSATION = 5;
 const MAX_QUESTION = 300;
 const MAX_ANSWER = 1_500;
-/** Clara's other documents; far fewer on the agent means something is wrong, so nothing is changed. */
-const MIN_OTHER_DOCUMENTS = 5;
+/**
+ * Clara's other documents (her knowledge base from Google Drive). None at all on the agent means the
+ * read went wrong, so nothing is changed.
+ */
+const MIN_OTHER_DOCUMENTS = 1;
 
 export type Gap = { id: number; conversation_id: string | null; channel: string | null; question: string; created_at: string };
 export type Faq = { id: number; question: string; answer: string; approved_by: string | null; updated_at: string };
@@ -83,13 +86,14 @@ export async function knowledgeState(): Promise<KnowledgeState> {
   return { gaps, feedback, score, drafts, faq, published: published[0] ?? { document_id: null, entries: 0, published_at: null } };
 }
 
-const GROUP_SYSTEM = `You help CDA customer care staff (CDA: UK kitchen appliance brand) improve their virtual assistant.
+const GROUP_SYSTEM = `You help NDI staff improve their virtual assistant (NDI, New Digital Intelligence: a company that
+builds, runs and improves AI Employees, role-specific AI agents, for medium and large organisations).
 You get questions customers asked that the assistant could not answer, each with an id.
 Group the questions that ask the same thing. For each group:
 - "question": the question once, clear and general, in British English, no personal details
-- "answer": a suggested answer of 1 to 3 sentences for staff to check. Never invent CDA-specific facts
-  (prices, policies, phone numbers, opening hours, model details, delivery areas, availability, dates),
-  and never say whether CDA does or does not offer something: you do not know. Wherever such a fact is
+- "answer": a suggested answer of 1 to 3 sentences for staff to check. Never invent NDI-specific facts
+  (prices, fees, policies, phone numbers, opening hours, AI Employee details, clients, timelines, availability, dates),
+  and never say whether NDI does or does not offer something: you do not know. Wherever such a fact is
   needed, write [check: what staff must confirm] in its place. If the whole answer depends on it, the
   answer is only the [check: …].
 - "ids": the ids of every question in the group
@@ -123,14 +127,15 @@ export async function groupGaps(gaps: Gap[]): Promise<GapGroup[]> {
   return groups;
 }
 
-const GENERAL_SYSTEM = `You turn one customer's case into a general FAQ entry for CDA's virtual assistant
-(CDA: UK kitchen appliance brand). You get the customer's question, the assistant's first answer, and
-either the answer CDA staff sent instead (facts confirmed by staff) or what the customer said was wrong.
+const GENERAL_SYSTEM = `You turn one customer's case into a general FAQ entry for NDI's virtual assistant
+(NDI, New Digital Intelligence: builds, runs and improves AI Employees for organisations). You get the
+customer's question, the assistant's first answer, and either the answer NDI staff sent instead (facts
+confirmed by staff) or what the customer said was wrong.
 Write:
 - "question": the general question, clear, in British English, no personal details
-- "answer": 1 to 3 sentences for any customer, using the facts staff gave. Leave out names, order or
-  serial numbers, addresses, this customer's dates and anything true only for them. Without a staff
-  answer, never invent CDA facts: write [check: what staff must confirm] where one is needed.
+- "answer": 1 to 3 sentences for any customer, using the facts staff gave. Leave out names, company
+  names, contract or order numbers, addresses, this customer's dates and anything true only for them.
+  Without a staff answer, never invent NDI facts: write [check: what staff must confirm] where one is needed.
 Reply with JSON only: {"question":"...","answer":"..."}`;
 
 /** One customer's case → a question and answer fit for everyone. Null when Claude is unsure. */
@@ -147,7 +152,7 @@ export async function generalise(input: {
     prompt: [
       part("Customer asked", input.question),
       part("Assistant answered", input.originalAnswer),
-      part("CDA staff sent instead", input.correctedAnswer),
+      part("NDI staff sent instead", input.correctedAnswer),
       part("Customer said about the answer", input.comment),
     ]
       .filter(Boolean)
@@ -256,7 +261,7 @@ function documentText(entries: Faq[]): string {
   return [
     `${DOC_NAME}`,
     "",
-    "Answers written and approved by CDA customer care staff for questions customers asked.",
+    "Answers written and approved by NDI staff for questions customers asked.",
     "They are correct and current: when a customer asks one of these questions, give this answer.",
     "If another document says something different, this document is right.",
     "",
@@ -268,10 +273,11 @@ type AgentKnowledge = { conversation_config: { agent: { prompt: { knowledge_base
 
 /**
  * The agents that get the approved answers: Clara, and Aida, whose drafts for staff should say the
- * same. Each is changed on its live branch; for Clara that is known, for Aida it is read.
+ * same. Each is changed on its live branch: ELEVENLABS_BRANCH_ID for Clara when it is set, otherwise
+ * the branch is read from the agent.
  */
 function agentsToTeach(): { id: string; branch: string | null }[] {
-  const agents = [{ id: process.env.ELEVENLABS_AGENT_ID ?? "", branch: BRANCH_ID as string | null }];
+  const agents = [{ id: process.env.ELEVENLABS_AGENT_ID ?? "", branch: BRANCH_ID }];
   if (process.env.AIDA_AGENT_ID) agents.push({ id: process.env.AIDA_AGENT_ID, branch: null });
   return agents.filter((agent) => agent.id);
 }
@@ -279,7 +285,7 @@ function agentsToTeach(): { id: string; branch: string | null }[] {
 /**
  * Rebuilds the document from every approved answer and swaps it in on Clara and Aida: a new document
  * is created, each agent's list gets it in place of the old one, and the old one is deleted. Only
- * the entry named "CDA approved FAQ" is touched; every other document is kept exactly as it is.
+ * the entry named "NDI approved FAQ" is touched; every other document is kept exactly as it is.
  */
 export async function publish(): Promise<Published> {
   const entries = await rest<Faq[]>("knowledge_faq?select=id,question,answer,approved_by,updated_at&order=id.asc");

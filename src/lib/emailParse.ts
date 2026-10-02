@@ -219,7 +219,7 @@ export function automatedReason(email: IncomingEmail, ownAddress: string | null)
 // --- what Clara is given, and what comes back ---------------------------------------------------
 
 /** The marker Clara's prompt looks for: it tells her this message is an email. */
-export const EMAIL_MARKER = "[Email to CDA customer care]";
+export const EMAIL_MARKER = "[Email to NDI]";
 
 export function textForAssistant(email: IncomingEmail): string {
   const sender = email.fromName ? `${email.fromName} <${email.fromEmail}>` : email.fromEmail;
@@ -232,13 +232,13 @@ export function textForAssistant(email: IncomingEmail): string {
   return `${EMAIL_MARKER}\nFrom: ${sender}\nSubject: ${email.subject || "(no subject)"}\n\n${body}${attachments}`;
 }
 
-/** Clara's answer when an email was not written by someone who wants help from CDA. */
+/** Clara's answer when an email was not written by someone who wants help from NDI. */
 export function isSkip(reply: string): boolean {
   return /^\W*skip\W*$/i.test(reply.trim());
 }
 
 /**
- * Clara is handed the email under a small header ([Email to CDA customer care], From, Subject) and
+ * Clara is handed the email under a small header ([Email to NDI], From, Subject) and
  * sometimes copies that header to the top of her answer. The customer should only see the answer.
  */
 function withoutEchoedHeader(reply: string): string {
@@ -266,7 +266,7 @@ export function plainReply(reply: string): string {
 // --- the reply itself ----------------------------------------------------------------------------
 
 export function replySubject(subject: string): string {
-  if (!subject) return "Re: your email to CDA";
+  if (!subject) return "Re: your email to NDI";
   return /^re:/i.test(subject) ? subject : `Re: ${subject}`;
 }
 

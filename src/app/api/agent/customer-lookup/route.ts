@@ -18,7 +18,7 @@ const LATE_REGISTRATION_WAIT_MS = 400;
 
 /**
  * Only say "found" when there is something worth saying, not merely that a row exists. On a call
- * CDA made from a staff call list, outbound_call tells Clara whom she rang and why (never the number).
+ * NDI made from a staff call list, outbound_call tells Clara whom she rang and why (never the number).
  */
 function answer(profile: Profile | null, brief: CallBrief | null) {
   const found = profile ? Boolean(profile.name) || profile.recent.length > 0 : false;
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     // First time on this channel: remember it anyway, so the next conversation on the same channel
     // picks up where this one left off. An email address comes from the email itself (the Gmail
-    // message or the Freshdesk ticket), which is taken as proof; a Telegram chat id or a phone number
+    // message), which is taken as proof; a Telegram chat id or a phone number
     // proves nothing until the person links it from their account.
     const customer = await customerForChannel(identity, identity.channel === "email");
     const [profile] = await Promise.all([

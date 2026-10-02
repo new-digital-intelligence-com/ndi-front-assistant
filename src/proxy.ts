@@ -14,20 +14,16 @@ export async function proxy(request: NextRequest) {
   // — see src/lib/agentAuth.ts — and each route rejects anything unsigned.
   if (pathname.startsWith("/api/agent/")) return NextResponse.next();
 
-  // The email channel: Google Pub/Sub, ElevenLabs and Vercel Cron call these, never a browser with
+  // The email channel: Google Pub/Sub, ElevenLabs and the daily jobs call these, never a browser with
   // the site password. Each route checks its own proof: the secret in the Pub/Sub URL, the reply's
   // HMAC signature, the cron secret, or the Aida staff token for the staff switch.
   if (pathname.startsWith("/api/email/")) return NextResponse.next();
 
   // Messenger and Instagram: Meta posts messages (secret in the URL) and ElevenLabs posts Clara's
-  // replies (HMAC signature). The daily cron sends the cron secret. Each route checks its own proof.
+  // replies (HMAC signature). The daily jobs send the cron secret. Each route checks its own proof.
   if (pathname.startsWith("/api/messenger/") || pathname.startsWith("/api/instagram/") || pathname.startsWith("/api/cron/")) {
     return NextResponse.next();
   }
-
-  // Alexa: Amazon signs every request to /api/alexa, and ElevenLabs signs Clara's answers to
-  // /api/alexa/reply. Both routes check their signature.
-  if (pathname === "/api/alexa" || pathname.startsWith("/api/alexa/")) return NextResponse.next();
 
   // Aida has its own staff password, separate from this one. Its pages and routes are open here and
   // every route decides for itself: the Aida staff token makes you an employee, a signed room ticket

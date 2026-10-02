@@ -39,10 +39,10 @@ export function VoiceOrb({ active, isSpeaking, getInputVolume, getOutputVolume }
         className={`h-36 w-36 rounded-full transition-[background] duration-500 ${
           active
             ? isSpeaking
-              ? "bg-[radial-gradient(circle_at_35%_30%,#ff8a80,#e84339_55%,#8f1f19)]"
-              : "bg-[radial-gradient(circle_at_35%_30%,#ffffff,#9dbdcb_55%,#4f7382)]"
-            : "bg-[radial-gradient(circle_at_35%_30%,#ffffff,#e7e6e6_60%,#b9b8b8)]"
-        } shadow-[0_20px_60px_rgba(34,34,34,0.25)]`}
+              ? "bg-[radial-gradient(circle_at_35%_30%,#7cc8ee,#1190cb_55%,#002a6c)]"
+              : "bg-[radial-gradient(circle_at_35%_30%,#ffffff,#9fc3e6_55%,#3d6a99)]"
+            : "bg-[radial-gradient(circle_at_35%_30%,#ffffff,#dfeaf6_60%,#a9bccf)]"
+        } shadow-[0_20px_60px_rgba(0,42,108,0.25)]`}
       />
     </div>
   );

@@ -1,5 +1,5 @@
--- Customer memory shared by every channel (Telegram, Instagram, email, website, Slack), Aida
--- rooms, and the email channel's record of what Clara did with each email.
+-- Customer memory shared by every channel (Telegram, Instagram, Messenger, email, phone, website),
+-- Aida rooms, and the email channel's record of what Clara did with each email.
 -- Run this once in the Supabase project: SQL Editor -> New query -> paste -> Run.
 --
 -- A customer is a person. Every way of reaching them - a Telegram chat, an Instagram sender id, an
@@ -73,7 +73,7 @@ alter table customer_conversations enable row level security;
 alter table customer_notes         enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Aida: live rooms where CDA employees and a customer talk, with Aida drafting replies that only
+-- Aida: live rooms where NDI staff and a customer talk, with Aida drafting replies that only
 -- the employees see. Voice and chat travel through LiveKit; these tables keep the record.
 -- ---------------------------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ create table if not exists aida_rooms (
 
 create index if not exists aida_rooms_open_idx on aida_rooms (status, created_at desc);
 
--- The customer in the room, when they joined signed in to their CDA account: Aida then gets what we
+-- The customer in the room, when they joined signed in to their NDI account: Aida then gets what we
 -- remember about them, and the call is added to their memory when the room is closed.
 alter table aida_rooms add column if not exists customer_id uuid references customers (id) on delete set null;
 
@@ -115,7 +115,7 @@ alter table aida_rooms  enable row level security;
 alter table aida_events enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
--- Email: mail to the CDA mailbox arrives through Gmail push, Clara answers through a Custom
+-- Email: mail to the NDI mailbox arrives through Gmail push, Clara answers through a Custom
 -- Channel, and the web app sends her reply or leaves it as a Gmail draft (src/lib/emailInbox.ts).
 -- ---------------------------------------------------------------------------------------------
 
@@ -193,17 +193,6 @@ create table if not exists channel_tokens (
 
 alter table channel_tokens enable row level security;
 
--- Alexa: Clara's answer, kept only until the skill reads it out (seconds; anything older than
--- 15 minutes is deleted). src/lib/alexa.ts
-create table if not exists alexa_replies (
-  message_id      text primary key,               -- alexa|<Amazon request id>
-  conversation_id text,
-  reply           text not null,
-  created_at      timestamptz not null default now()
-);
-
-alter table alexa_replies enable row level security;
-
 -- ---------------------------------------------------------------------------------------------
 -- Call lists: staff enter phone numbers with instructions on /admin, and Clara phones them one by
 -- one from the Twilio number, up to 3 tries each (src/lib/outboundCalls.ts). current_item is the
@@ -224,7 +213,7 @@ create table if not exists call_list_items (
   id              uuid primary key default gen_random_uuid(),
   list_id         uuid not null references call_lists (id) on delete cascade,
   position        int not null,
-  phone           text not null,                   -- +447…, as dialled
+  phone           text not null,                   -- +<country code>…, as dialled
   name            text,
   instructions    text not null default '',        -- for Clara, never read out
   status          text not null default 'waiting', -- waiting | calling | reached | failed | stopped
@@ -245,8 +234,8 @@ alter table call_list_items enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
 -- Knowledge gaps: questions Clara could not answer (ElevenLabs' post-call data collection item
--- "unanswered_question", on every channel), and the answers CDA staff approve for them on /admin.
--- Approved answers are published to Clara's knowledge as one document, "CDA approved FAQ"
+-- "unanswered_question", on every channel), and the answers NDI staff approve for them on /admin.
+-- Approved answers are published to Clara's knowledge as one document, "NDI approved FAQ"
 -- (src/lib/knowledge.ts). Nothing reaches Clara without a staff member approving it.
 -- ---------------------------------------------------------------------------------------------
 
@@ -326,7 +315,7 @@ create index if not exists feedback_ratings_recent_idx on feedback_ratings (crea
 
 -- Email draft mode: Clara's draft is kept so that what staff finally send can be compared with it.
 alter table email_messages add column if not exists draft_id         text;
-alter table email_messages add column if not exists assistant_reply      text;
+alter table email_messages add column if not exists assistant_reply  text;
 alter table email_messages add column if not exists reply_checked_at timestamptz;
 
 alter table knowledge_feedback enable row level security;
@@ -347,20 +336,20 @@ create index if not exists draft_outcomes_recent_idx on draft_outcomes (created_
 
 alter table draft_outcomes enable row level security;
 
--- The CDA appliances a customer has told Clara about: model, type and purchase date, from the
--- post-call analysis item "appliance" (a receipt, a photo of the rating plate, or what they said).
--- customer_lookup gives them back to Clara on every channel, so she never asks for the model twice.
-create table if not exists customer_appliances (
+-- What a customer told Clara they want from NDI: the AI Employee or topic, their company and role,
+-- numbers and timing, from the post-call analysis item "interest". customer_lookup gives them back to
+-- Clara on every channel, so she never asks twice. One row per topic: the newest description wins.
+create table if not exists customer_interests (
   id          bigint generated always as identity primary key,
   customer_id uuid not null references customers (id) on delete cascade,
-  model       text not null,                   -- e.g. FW952, as on the rating plate
-  description text not null,                   -- e.g. "Fridge freezer FW952, bought 4 August 2026"
+  topic       text not null,                   -- e.g. "ai sdr": the part before the dash, lower case
+  description text not null,                   -- e.g. "AI SDR – Acme GmbH (Head of Sales), wants a demo in November"
   updated_at  timestamptz not null default now()
 );
 
-create unique index if not exists customer_appliances_once_idx on customer_appliances (customer_id, model);
+create unique index if not exists customer_interests_once_idx on customer_interests (customer_id, topic);
 
-alter table customer_appliances enable row level security;
+alter table customer_interests enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
 -- Customer mood (sentiment). ElevenLabs scores every conversation after it ends: a label, a
@@ -382,7 +371,7 @@ create table if not exists conversation_moods (
   low_point         text,                       -- excerpt of the message where the mood was lowest
   title             text,                       -- ElevenLabs' short title for the conversation
   summary           text,
-  follow_up         boolean not null default false, -- Clara promised a CDA follow-up or the customer asked for a person
+  follow_up         boolean not null default false, -- Clara promised an NDI follow-up or the customer asked for a person
   started_at        timestamptz not null,
   alerted_at        timestamptz,                -- when staff were emailed about it
   handled_at        timestamptz,                -- when staff marked it followed up
