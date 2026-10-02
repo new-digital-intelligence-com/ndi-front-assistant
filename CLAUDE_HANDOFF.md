@@ -1,8 +1,9 @@
-# Claude handoff – CDA multi-channel assistant demo
+# Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project on another device. Last updated: **27 September 2026**.
-Public plain-words documentation of every feature: **https://cda-demo.vercel.app/docs** (`src/app/docs/page.tsx`; keep it up to date when a feature changes).
-Full channel-by-channel setup (IDs, steps, costs, troubleshooting): [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
+Read this first when continuing the project. Last updated: **2 October 2026**.
+Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
+date when a feature or a channel's status changes). Full channel-by-channel setup: [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
+`<APP_URL>` = `https://ndi-assistant.up.railway.app` (planned Railway address).
 
 > **This repository is public.** Never write API keys, tokens, passwords or secrets into any committed file.
 
@@ -10,39 +11,49 @@ Full channel-by-channel setup (IDs, steps, costs, troubleshooting): [CHANNEL_SET
 
 ## 1. What this project is
 
-NDI (New Digital Intelligence) is building a **demo** multi-channel front-office assistant for **CDA**
-(UK kitchen appliance brand, www.cda.co.uk). It is not an official CDA service.
+NDI (New Digital Intelligence, new-digital-intelligence.com) runs **its own** multi-channel front-office assistant:
+a live example of NDI's product "Multi-Channel Front Office Assistant". It was copied on 2 Oct 2026 from the CDA demo
+(`../cda`, `github.com/new-digital-intelligence-com/cda`, commit `0d343f7`) — **same features, same everything** —
+and turned into NDI's. The first commit of this repository is the untouched CDA copy, so `git diff 2882596` shows
+every NDI change.
 
-One AI agent, **Ellie**, runs on **ElevenLabs Agents** and answers on every channel with the same prompt,
-knowledge base and model. Ellie replies directly (Agent mode); email can be switched to Gmail drafts
-for staff, and Aida rooms draft answers for staff on live calls.
+One AI agent, **Clara**, runs on **ElevenLabs Agents** and answers on every channel with the same prompt, knowledge
+and model. The staff copilot is **Aida**.
 
 | Channel | Status | How |
 |---|---|---|
-| Telegram @CDA_2026_Support_Bot | ✅ Live | Native ElevenLabs Telegram trigger |
-| Email cda_domestic_appliances@new-digital-intelligence.com | ✅ Live (21 Sep) | Gmail push → web app → Ellie's "CDA email" Custom Channel → sent, or a Gmail draft (`email_mode` on Aida). Freshdesk no longer used |
-| Instagram DMs @new_digital_intelligence | ✅ Live | Meta webhook → web app (`src/lib/metaChat.ts`) → Ellie's "CDA Instagram" Custom Channel; token auto-refreshed by the daily cron. Make scenarios switched off (backup) |
-| Facebook Messenger (Page "New Digital Intelligence") | ✅ Live 21 Sep (tested from an account with no role: works, no App Review) | Meta webhook → web app (`src/lib/messenger.ts`) → Ellie's "CDA Messenger" Custom Channel. Not Make: its free plan allows 2 active scenarios, both used by Instagram |
-| Alexa skill "CDA Assistant" (Echo / Alexa app) | ✅ Built 22 Sep (development mode) | Amazon → web app (`src/lib/alexa.ts`, request signature checked) → Ellie's "CDA Alexa" Custom Channel; answers wait in Supabase `alexa_replies` until read out. CHANNEL_SETUP.md §6 |
-| Hosted web page / QR code | ✅ Live | ElevenLabs talk-to link (not password protected) |
-| **This web app** (chat, file upload, voice, video avatar, Aida calls, channel links) | ✅ Live | Next.js on Vercel: https://cda-demo.vercel.app (site password) — customers only |
-| **Admin page** `/admin` (Aida rooms, customers + Claude insights, 😊 Mood, call list, knowledge, email switch) | ✅ Live | Same app, behind the Aida staff password — staff only |
-| **Customer mood** (sentiment on every channel, staff alerts, live mood in Aida rooms, upset emails held as drafts) | ✅ Built 27 Sep | `src/lib/mood.ts`, CHANNEL_SETUP.md §10 “Customer mood”. Needs `supabase/schema.sql` run again + `STAFF_ALERT_EMAIL` on Vercel |
-| **Docs page** `/docs` | ✅ 27 Sep | Public, no password, no secrets |
-| Video avatar (Avatar tab) | ✅ Live | **Anam** avatar "Sofia" (the user's own Ellie picture) joined to the ElevenLabs agent |
-| Slack (bot "CDA_Support") | ⏳ In progress | Native ElevenLabs Slack integration, own Slack app (CHANNEL_SETUP.md §14) |
-| WhatsApp, phone number | ⏸ Parked | See CHANNEL_SETUP.md §14 |
+| Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ⏳ Code ready, to deploy on Railway | Next.js on Railway |
+| Telegram | ⏳ New bot to create | Native ElevenLabs Telegram trigger |
+| Email | ⏳ Mailbox to choose | Gmail push → web app → Custom Channel "NDI email" |
+| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo, switched per demo | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
+| Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
+| Video avatar | ⏳ New Anam avatar (the user sets it up) | Anam joined to Clara |
+| Intercom | Optional | Needs NDI's own Intercom workspace |
+| Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link |
+| Alexa | ❌ Removed on purpose (user's decision) | — |
+| Slack, WhatsApp | Not built | — |
+
+**What differs from CDA** (decisions of the user, 2 Oct 2026): assistant **Clara** (not Ellie), voice **Katie X**
+(close to Shelley), call languages **English + German, Italian, French**, hosting on **Railway** from a **public**
+repository the user creates (not Vercel), **no Alexa**, a **new Twilio number**, a **new Anam avatar**, Instagram and
+Messenger **shared with CDA and switched per demo**, and the **AI Employees knowledge comes from the user's Google
+Drive** — never build or change AI Employee knowledge yourself. "Appliances" became **interests** (what the
+customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them).
 
 ---
 
 ## 2. How the user wants you to work (important)
 
-- **Never use subagents or workflows.** Do all work yourself.
-- **Git commits:** author **HelmiDev03 <helmipaty@gmail.com>**, and **no `Co-Authored-By` trailer**. **Push straight after committing** — the user said (21 Sep 2026) not to wait for their confirmation. Vercel deploys `main` automatically, so a push is a deploy: build, type-check and lint first, and never push secrets (the repo is public).
-- **Don't spend credits testing.** Never start conversations with Ellie (chat, voice, avatar calls, simulate-conversation) or start avatar/phone sessions yourself. Free read-only API checks are fine. Give the user test questions with expected answers instead.
+- **Never use subagents or workflows.** Do all work yourself (the user repeated this on 2 Oct 2026).
+- **Git commits:** author **HelmiDev03 <helmipaty@gmail.com>**, and **no `Co-Authored-By` trailer**. **Push straight
+  after committing** — once the GitHub repository exists, a push is a deploy on Railway: build, type-check and lint
+  first, and never push secrets (the repository is public).
+- **Don't spend credits testing.** Never start conversations with Clara or Aida (chat, voice, avatar calls,
+  simulate-conversation) or start avatar/phone sessions yourself. Free read-only API checks are fine. Give the user
+  test questions with expected answers instead: **the user does the testing**.
 - **One step at a time, simple English** (the user is not a native English speaker). Wait until a step is finished before the next.
-- **Channels:** prefer native ElevenLabs integrations. Where there is none, the user chose (21 Sep 2026) to build the channel in the web app rather than Make.com: email, Instagram and Messenger all run there now.
-- **Verify before claiming a cause.** Use API checks, docs and logs; don't guess (e.g. plan limits).
+- **Channels:** prefer native ElevenLabs integrations; otherwise build the channel in the web app (not Make.com).
+- **Verify before claiming a cause.** Use API checks, docs and logs; don't guess.
 - When something fails in the browser (avatar, voice), ask the user for the **F12 → Console** output.
 
 ---
@@ -50,165 +61,78 @@ for staff, and Aida rooms draft answers for staff on live calls.
 ## 3. Getting set up on a new device
 
 ```bash
-git clone git@github.com:new-digital-intelligence-com/cda.git
-cd cda
+git clone <the NDI repository>
+cd <folder>
 npm install
 ```
 
-Create `.env.local` (git-ignored). Copy the values from **Vercel → project `cda` → Settings → Environment Variables**
-(or `npx vercel env pull .env.local` after `vercel login` + `vercel link`):
-
-| Variable | What |
-|---|---|
-| `ELEVENLABS_API_KEY` | ElevenLabs key (needs Agents read/write, `convai_read`, `user_read`, `voices_read`) |
-| `ELEVENLABS_AGENT_ID` | Ellie's agent ID |
-| `SITE_PASSWORD` | Password for the demo site |
-| `ANAM_API_KEY` | Anam API key |
-| `ANAM_AVATAR_ID` | Anam avatar Sofia |
-| `ANAM_MAX_SESSION_SECONDS` | `180` (Anam free plan limit) |
-| `SUPABASE_URL` | Supabase project for the cross-channel customer memory |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
-| `AGENT_TOOL_SECRET` | Secret the agent's tools send in `x-cda-agent-secret` |
-| `ELEVENLABS_WEBHOOK_SECRET` | Signing secret of the post-call webhook |
-| `FRESHDESK_API_KEY` / `FRESHDESK_SUBDOMAIN` | Only for old Freshdesk tickets (`_fd_` conversations) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GMAIL_REFRESH_TOKEN` | Gmail API access to the CDA mailbox (email channel, server only) |
-| `GMAIL_PUBSUB_TOPIC` / `GMAIL_PUSH_SECRET` / `CRON_SECRET` | Gmail push topic, the secret in the Pub/Sub push URL, and the daily cron's secret |
-| `EMAIL_CHANNEL_INBOUND_URL` / `EMAIL_CHANNEL_INBOUND_SECRET` / `EMAIL_CHANNEL_SIGNING_SECRET` | Ellie's "CDA email" Custom Channel trigger |
-| `INSTAGRAM_ACCESS_TOKEN` / `INSTAGRAM_USER_ID` / `INSTAGRAM_WEBHOOK_SECRET` / `INSTAGRAM_CHANNEL_*` (3) | Instagram in the web app (starting token; refreshed copy lives in Supabase `channel_tokens`) |
-| `MESSENGER_PAGE_TOKEN` / `MESSENGER_PAGE_ID` / `MESSENGER_WEBHOOK_SECRET` / `MESSENGER_CHANNEL_*` (3) | Messenger Page token (never expires), Page ID, Meta Callback URL secret, "CDA Messenger" Custom Channel |
-| `ALEXA_SKILL_ID` / `ALEXA_CHANNEL_*` (3) | Alexa skill ID and the "CDA Alexa" Custom Channel |
-| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | Claude Haiku (`claude-haiku-4-5`) for the insights on `/admin` and the email / Aida moods |
-| `STAFF_ALERT_EMAIL` | Optional: who gets the “upset customer” emails (comma-separated). The CDA mailbox itself is fine (mail from itself is ignored by the email channel) |
-| `LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | LiveKit Cloud project for Aida rooms (server only) |
-| `AIDA_AGENT_ID` | The Aida copilot agent, `agent_2601m31rbrn8emrbfe8vgxgxdta9` |
-| `AIDA_STAFF_PASSWORD` | Aida's own staff password; the site password does **not** make anyone staff |
-| `gmail_sender` / `gmail_app_password` | Gmail mailbox + app password that send conversation emails (lower-case names) |
+Create `.env.local` (git-ignored) with the variables of CHANNEL_SETUP.md §13 — copy the values from **Railway → the
+service → Variables**. On the first device, `.env.local` was written on 2 Oct 2026 from CDA's `.env.local` (shared
+values) plus new NDI secrets.
 
 ```bash
-npm run dev      # http://localhost:3000
-npm run build    # run before `npx tsc --noEmit` (stale .next types otherwise)
+npm run dev      # http://localhost:3000 (the daily jobs do not run in dev)
+npm run build    # run before `npx tsc --noEmit` (or `npx next typegen`), else the Next.js route types are stale
 npm run lint
 ```
-
-Use the keys from `.env.local` for API work (ElevenLabs, Anam). Never print them in full or commit them.
-
-Only this repository is needed on the new device. The folders `CDA_Knowledge_Base/` and `CDA_Demo_Assets/`
-stayed on the old device: the knowledge PDFs already live in Google Drive (synced to ElevenLabs) and the QR code
-can be regenerated from the talk-to link. The script that generated the PDFs was temporary and is not kept.
 
 ---
 
 ## 4. Key facts
 
-**ElevenLabs** (Creator plan, 121,005 credits/month, resets ~17th)
-- Agent "CDA Assistant – Demo", ID `agent_3601m2p374tce96b7p6hdfz5f1tv`, branch `agtbrch_9301m2p375xzetbbsyymxnbnsf1s`
-- Gemini 3.7 Flash (temperature 0), voice **Shelley** (British), TTS **Eleven Flash v2** for English, STT **Scribe Realtime**, turn model turn_v3
-- **Polish** (21 Sep): language preset `pl` (Polish greeting, TTS Flash v2.5, still Shelley); the `language` override is allowed in Security. The website's Voice and Avatar tabs have an English | Polski switch (`src/components/LanguagePicker.tsx`); the avatar passes it through Anam's `conversationConfigOverride`. The built-in **language_detection** tool is on, so during a call Ellie switches between English and Polish when the customer does (it shows as `system:language_detection` in her tools list)
-- **Audio: input PCM 16000 Hz (required by Anam), output PCM 24000 Hz**
-- 31 knowledge documents (21 cda.co.uk URLs + 10 PDFs synced from Google Drive), RAG every turn
-- Prompt has per-channel rules ("Telegram only", "Instagram only", "Website chat", "Email only", phone/avatar short answers)
-- Settings changes via API: `PATCH /v1/convai/agents/{id}?branch_id=…` with only the changed `conversation_config` part, then re-read to confirm; back up the agent JSON first
-- Voice/avatar minutes cost about **600 credits per minute**
+**ElevenLabs** (same account as CDA: Creator plan, 121,005 credits/month shared with CDA, resets ~17th)
+- **Clara**: "NDI Assistant – Clara", `agent_0901m3y1xemxeg2s0tjk20fjfgbv` — Ellie's settings copied: Gemini 3.7
+  Flash (temperature 0), TTS Eleven Flash v2 (English) / Flash v2.5 (presets `de`, `it`, `fr`), Scribe Realtime,
+  turn_v3, input PCM 16000 / output PCM 24000, files on, retention unlimited, sentiment on, overrides `first_message`,
+  `language`, `text_only` allowed. Voice **Katie X** `MzqUf1HbJ8UmQ0wUsx2p` (added to the workspace voices)
+- Tools `customer_lookup` `tool_3301m3y1xcjef3srtynq0bez04w0`, `customer_link` `tool_3501m3y1xdv2ecqrhdbbp4tyzgb8`
+  (header `x-ndi-agent-secret` = workspace secret `NDI_AGENT_TOOL_SECRET` `8MesPm8j0zm9MlKnLKCq` = `AGENT_TOOL_SECRET`)
+- Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
+  (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
+- **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only, `email_mode` placeholder)
+- Knowledge base: **empty until the user's Google Drive documents are attached** (to Clara **and** Aida)
+- Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026)
+- Settings changes via API: `PATCH /v1/convai/agents/{id}` with only the changed part, then read it back; back up first
 
 **Web app** (Next.js 16 – read `node_modules/next/dist/docs/` before using unfamiliar APIs; see AGENTS.md)
-- `src/proxy.ts` + `src/lib/auth.ts`: password lock on every page and API route
-- `src/components/AssistantApp.tsx`: tabs Chat / Voice / Avatar / **Aida** (the customer side of
-  Aida rooms: join with a code or open a room; always a customer there)
-- **`/admin`** (`src/app/admin/`, `src/components/admin/`, `src/app/api/admin/*`, `src/lib/adminData.ts`,
-  `src/lib/anthropic.ts`): staff only, Aida staff password. Tabs Aida rooms (the old lobby) /
-  Customers (list, channels, history, Claude Haiku insights per customer and for the week; nothing
-  stored) / Email (auto/draft switch). `/aida` redirects there. CHANNEL_SETUP.md §10
-- `src/app/api/elevenlabs/*`: signed URL (chat) and conversation token (voice)
-- `src/app/api/anam/session/route.ts` + `src/components/AvatarPanel.tsx`: Anam avatar. The server gets an ElevenLabs signed URL and creates an Anam session token (`avatarModel: cara-4`, `maxSessionLengthSeconds`, `directorNotes` warm 0.5, `sessionOptions` 1152×768 or 768×1152, `environment.elevenLabsAgentSettings`). Anam Lab stores **no** ElevenLabs link; the "Olivia" persona in Lab is not used
-- `src/components/ChannelLinks.tsx`: Email (Gmail compose), Telegram and Instagram buttons (Instagram opens @new_digital_intelligence)
-- **Cross-channel customer memory** (CHANNEL_SETUP.md §8), live and tested against production:
-  - `src/app/api/agent/*`: the two agent tools and the post-call webhook. Exempt from the site
-    password in `src/proxy.ts`, protected by a shared secret / HMAC instead (`src/lib/agentAuth.ts`)
-  - `src/lib/customers.ts` + `supabase/schema.sql`: one customer, many channel rows, link codes, notes
-  - `src/lib/account.ts` + `src/app/api/account/` + `src/components/AccountPanel.tsx`: customer
-    accounts on Supabase Auth, and the panel where a channel is linked with a code
-  - `src/lib/websiteSession.ts`: chat, voice and the avatar register their conversation server-side,
-    because a website-only dynamic variable would break every other channel
-- **Aida rooms** (CHANNEL_SETUP.md §9): live calls between staff and a customer on LiveKit, each
-  browser transcribing its own mic with Scribe, and the Aida agent drafting replies only staff see
-  (approve → sent in the chat). `src/app/aida/`, `src/components/aida/`, `src/app/api/aida/*`,
-  `src/lib/aida.ts`, `src/lib/livekit.ts`, `src/lib/aidaStaff.ts`. `/aida`, `/aida/join` and
-  `/api/aida/*` are open past the site password; the separate Aida staff password is what makes
-  someone staff, kept per browser tab
-- **Email channel** (CHANNEL_SETUP.md §4): Gmail API + Pub/Sub push (Google Cloud project
-  `cda-email-509312`) → `src/app/api/email/gmail-push` → rules in `src/lib/emailParse.ts` skip robots →
-  Ellie through her own Custom Channel trigger "CDA email" → `src/app/api/email/ellie-reply` sends
-  the reply or leaves a Gmail draft, and labels the email Ellie/Replied, Draft ready, Skipped or
-  Failed. The switch is the placeholder `email_mode` (`auto` / `draft`) on the **Aida** agent,
-  flipped from the staff card on `/aida` or by Claude through the ElevenLabs connector. The Gmail
-  watch is renewed daily by Vercel Cron (`vercel.json`). `src/lib/emailInbox.ts` holds the flow
-- Vercel deploys `main` automatically; after changing env vars on Vercel, redeploy
+- Same structure as CDA; see CHANNEL_SETUP.md §13 for routes and who may call them
+- Railway: `src/instrumentation.ts` + `src/lib/dailyJobs.ts` replace Vercel Cron; `src/lib/appUrl.ts` gives the
+  public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
+- Values still to fill in the code once known: `SUPPORT_EMAIL`, `TELEGRAM_BOT`, `PHONE_LINE`
+  (`src/components/ChannelLinks.tsx`, buttons hidden while empty) and `DEMO_LINE` (`src/components/admin/CallListPanel.tsx`)
+- Colours: neutral Tailwind tokens (`brand`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`) with NDI's
+  navy `#002a6c` and blue `#1190cb` (`src/app/globals.css`)
+- Times: Central European (Europe/Zurich)
 
-**Anam** (free plan: 30 min/month, 3-min calls, 1 custom avatar) – avatar Sofia, Cara 4, supports horizontal and vertical.
-The earlier HeyGen LiveAvatar tab was removed (commit `69eb3da` has it).
-
-**Make.com** (eu1, free plan: 2 active scenarios, 1,000 operations/month): no longer used. The old Instagram
-scenarios "IG – Instagram in" (7456234) and "IG – Ellie reply out" (7456248) are switched off as a backup.
+**Shared with CDA on purpose**: the ElevenLabs account, the Google Cloud project `cda-email-509312` (OAuth client;
+NDI gets its own Pub/Sub topic), the LiveKit project (for now), the Anthropic key, the Meta app "Customer Support"
+with the Instagram account and the Facebook Page (switched per demo), the Twilio account (new number).
 
 ---
 
 ## 5. Open tasks (in order)
 
-00. **Customer mood** (27 Sep 2026) – built and pushed. The user still has to: run `supabase/schema.sql` again
-   (tables `conversation_moods`, `aida_moods`, columns `email_messages.mood_*`), add `STAFF_ALERT_EMAIL` on Vercel
-   and redeploy, then `/admin` → 😊 Mood → **Import past conversations**. Ellie got the prompt section *When the
-   customer is upset* and the analysis item `needs_follow_up` (backup of her agent before the change in the
-   session scratchpad). Test without spending credits: an angry email (draft + label + alert), an Aida room
-   (mood dots, meter, Aida's apology draft).
+1. **GitHub**: the user creates the public repository → add it as `origin` and push `main` (author HelmiDev03).
+2. **Supabase**: the user creates a new project → run `supabase/schema.sql` → `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+3. **Railway**: new service from the repository, variables from `.env.local`, domain `ndi-assistant.up.railway.app`
+   (CHANNEL_SETUP.md §3). If the domain must differ, update `APP_URL`, both tools and the post-call webhook.
+4. **Knowledge**: the user connects Google Drive in ElevenLabs and attaches the NDI documents to Clara and Aida.
+5. **Telegram**: new bot → ElevenLabs trigger → `TELEGRAM_BOT` in ChannelLinks.
+6. **Email**: the user chooses the mailbox → consent (refresh token) → Pub/Sub topic `gmail-inbox-ndi` + push
+   subscription → Custom Channel "NDI email" → variables → `SUPPORT_EMAIL`; app password for `gmail_sender`.
+7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`.
+8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
+9. **Instagram/Messenger**: Custom Channels "NDI Instagram" and "NDI Messenger" → variables; switch the 2 Meta
+   Callback URLs when NDI should answer (CHANNEL_SETUP.md §7).
+10. Optional: Intercom (own workspace), Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`.
 
-0. **Cross-channel customer memory** - **live** on Telegram, email and the website (chat, voice,
-   avatar). Details: CHANNEL_SETUP.md §8. Customers create an account on the site and link each
-   channel by pasting a short code into it; Ellie never asks anyone to identify themselves.
-   - **Never** bind a tool parameter to a channel-specific dynamic variable: it breaks every other
-     channel, and a placeholder on `integration__telegram_chat_id` took Telegram down completely
-   - Instagram recognised since 21 Sep: the web app reads Make's `instagram_id` from the stored
-     ElevenLabs conversation (never bound to a tool). Left: Slack (`integration__slack_user_id`
-     exists, not wired up)
-   - Weak spot: Telegram identity relies on the undocumented `_tg_` ending of the conversation id
-   - Parked by the user: no memory notes were seen from Telegram/email conversations since 18 Sep
-     (probably simply no such conversations; check once there are some)
-
-0a. **Email via Gmail push** – live from 21 Sep 2026, replacing Freshdesk. 33 local route checks
-   passed without spending credits, and the user tested live: auto mode replies in the thread,
-   draft mode leaves a Gmail draft. Two bugs found live and fixed (reply text is at
-   `data[].event.agent_response`; Ellie copied the email header into her reply). No new agent:
-   Ellie answers, Aida only stores `email_mode`. Still to do: **remove the Freshdesk trigger from
-   Ellie** (Channels → Freshdesk) so nobody gets two answers.
-
-0c. **Customer site / admin split** – 21 Sep 2026. `/` is customers only (site password, Aida tab);
-   `/admin` is staff (Aida staff password). 17 local checks passed, including one real Claude
-   insight per endpoint. `ANTHROPIC_API_KEY` + `ANTHROPIC_MODEL` must also be on Vercel.
-
-0b. **Aida rooms** – built, Aida agent created, tables created, LiveKit project connected
-   (`wss://test-o70a5e7x.livekit.cloud`). All 45 route checks pass locally: roles, forged tickets,
-   customers never seeing drafts, ending rooms. Still to do: the four `LIVEKIT_*` / `AIDA_AGENT_ID`
-   variables on Vercel, push, and a real call tested by the user (voice + transcript + drafts).
-   The Vercel MCP connector is on another account ("Medi" team) and cannot see `cda-demo`.
-   Staff are decided by the separate Aida password (`AIDA_STAFF_PASSWORD`), kept per browser tab.
-   Closed rooms are read-only forever and can be emailed; signed-in customers are recognised and
-   their history is given to Aida (needs `aida_rooms.customer_id` — run `supabase/schema.sql` again).
-   Website chat/voice/avatar can also be emailed (`src/app/api/transcript/email`).
-1. **Slack** – waiting for the user:
-   - The "New Digital Intelligence" Slack workspace hit the free plan's 10-app limit → use a new demo workspace or remove an unused app.
-   - User creates the **CDA_Support** app from the manifest in CHANNEL_SETUP.md §14, installs it, and gives the **Bot User OAuth Token** + **Signing Secret** and the mode (mention-only or all messages).
-   - Then: ElevenLabs Integrations → Slack → "Bring your own bot" → Slack Event Subscriptions + Interactivity URLs → triggers Channel Message + Direct Message → test (user tests).
-2. **Confirm the Voice tab still works** after the input format change to PCM 16000 (the user confirmed the avatar, not voice yet).
-3. Optional: label Anam sessions in the session token (`clientLabel` / persona `name`, e.g. "Ellie – CDA website") so calls are easy to find in Anam Lab.
-4. **Security decision (ask the user):** the public repo exposes the agent ID and talk-to link, so anyone can use ElevenLabs credits without the site password. Options: make the repo private (check Vercel still deploys) or enable agent authentication (breaks the public page/QR/widget; retest channels).
-5. For the CDA demo: Anam **Explorer ($49/month)** removes the watermark and allows 10-minute calls (then raise `ANAM_MAX_SESSION_SECONDS`).
-6. Ideas the user may pick: Facebook Messenger (copy the Instagram Make setup), phone number via Twilio, Flash v2.5 voice model for non-English voice.
+---
 
 ## 6. Dates and housekeeping
 
 | When | What |
 |---|---|
-| ~1 Oct 2026 | Freshdesk trial ends — email no longer uses it |
-| Daily, automatic | Vercel Cron renews the Gmail watch; if emails stop, open `/api/email/gmail-watch` with the push secret |
-| ~17 Oct 2026 | ElevenLabs credits reset |
-| Automatic | The Instagram token is refreshed every 7 days by `/api/cron/daily` (stored in Supabase `channel_tokens`) |
-| After the demo | Rotate keys that were shared in chat (ElevenLabs, Anam, **Supabase service role**, **LiveKit**, **Google OAuth client secret** + new Gmail consent, the email Custom Channel secrets, Freshdesk), delete the Make API token, delete the unused LiveAvatar API key/secret/voice agent |
+| Daily, automatic | The app's daily jobs renew the Gmail watch and refresh the Instagram token |
+| ~17 Oct 2026 | ElevenLabs credits reset (shared with CDA) |
+| After 20 Dec 2026, if Messenger stops | New Page token in both apps |
+| Later | Rotate keys that were shared in chat (shared with CDA: rotate in both apps) |

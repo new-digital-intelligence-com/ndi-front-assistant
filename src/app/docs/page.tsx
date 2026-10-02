@@ -2,22 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// Public documentation of the demo: every channel, module and feature, in plain words. No password
-// (see src/proxy.ts) and therefore no secrets: no keys, passwords, tokens or private settings.
+// Public documentation of NDI's assistant: every channel, module and feature, in plain words. No
+// password (see src/proxy.ts) and therefore no secrets: no keys, passwords, tokens or private settings.
 
 export const metadata: Metadata = {
-  title: "Documentation – CDA Customer Assistant Demo",
-  description: "How the CDA multi-channel customer assistant demo works: Clara, every channel, customer memory, Aida, admin, learning and mood.",
+  title: "Documentation – NDI Assistant",
+  description: "How NDI's multi-channel assistant works: Clara, every channel, customer memory, Aida, admin, learning and mood.",
 };
 
 const SECTIONS: { id: string; title: string }[] = [
   { id: "overview", title: "Overview" },
-  { id: "ellie", title: "Clara, the AI agent" },
+  { id: "clara", title: "Clara, the AI agent" },
   { id: "website", title: "Website" },
   { id: "phone", title: "Phone" },
   { id: "email", title: "Email" },
   { id: "messaging", title: "Telegram, Instagram, Messenger" },
-  { id: "alexa", title: "Alexa" },
   { id: "more-channels", title: "Intercom, widget and QR code" },
   { id: "memory", title: "Customer memory" },
   { id: "aida", title: "Aida rooms (live copilot)" },
@@ -33,19 +32,19 @@ const SECTIONS: { id: string; title: string }[] = [
 export default function DocsPage() {
   return (
     <div className="flex-1 bg-surface">
-      <header className="bg-heading text-white">
+      <header className="bg-brand text-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md bg-brand px-2.5 py-1 text-xl font-extrabold tracking-wider">CDA</span>
-            <span className="text-lg font-semibold">Customer Assistant · Documentation</span>
+            <span className="rounded-md bg-white px-2.5 py-1 text-xl font-extrabold tracking-wider text-brand">NDI</span>
+            <span className="text-lg font-semibold">Assistant · Documentation</span>
           </div>
           <p className="mt-3 max-w-3xl text-white/80">
-            One AI assistant, <strong className="text-white">Clara</strong>, answers CDA customers on the website, the phone, email,
-            Telegram, Instagram, Messenger, Alexa and Intercom, remembers them across all of them, and hands over to CDA staff
-            with <strong className="text-white">Aida</strong>, a copilot that drafts answers during live calls.
+            One AI assistant, <strong className="text-white">Clara</strong>, answers NDI&apos;s customers on the website, the phone,
+            email, Telegram, Instagram, Messenger and Intercom, remembers them across all of them, and hands over to NDI staff with{" "}
+            <strong className="text-white">Aida</strong>, a copilot that drafts answers during live calls.
           </p>
           <p className="mt-2 text-xs text-white/60">
-            A demo built by NDI (New Digital Intelligence) for CDA, the UK kitchen appliance brand. Not an official CDA service.
+            NDI (New Digital Intelligence) runs it for itself: a live example of NDI&apos;s Multi-Channel Front Office Assistant.
           </p>
         </div>
       </header>
@@ -78,21 +77,20 @@ export default function DocsPage() {
         <main className="min-w-0 space-y-6">
           <Section id="overview" title="Overview">
             <P>
-              CDA customers can reach the same assistant wherever they already are. Every channel ends up at one agent, Clara, on
-              ElevenLabs Agents, with the same instructions, the same knowledge of CDA and the same memory of the customer. When a
-              person is needed, CDA staff take over in an <A href="#aida">Aida room</A>, or check Clara&apos;s email answers first.
+              NDI&apos;s customers can reach the same assistant wherever they already are. Every channel ends up at one agent, Clara,
+              on ElevenLabs Agents, with the same instructions, the same knowledge of NDI and the same memory of the customer. When a
+              person is needed, NDI staff take over in an <A href="#aida">Aida room</A>, or check Clara&apos;s email answers first.
             </P>
             <Table
               head={["Channel", "What the customer does", "Status"]}
               rows={[
                 ["Website", "Chat (with photos and PDFs), voice call or video avatar in the browser", "Live"],
-                ["Phone", "Calls the demo number, or Clara calls them from a staff call list", "Live"],
-                ["Email", "Emails the CDA demo mailbox and gets a reply in the same thread", "Live"],
-                ["Telegram", "Messages the bot @CDA_2026_Support_Bot", "Live"],
-                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Live"],
-                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Live"],
-                ["Alexa", "“Alexa, ask cda assistant …” on an Echo or the Alexa app", "Live (development)"],
-                ["Intercom", "Types in the chat bubble on the customer page", "Live"],
+                ["Phone", "Calls NDI's number, or Clara calls them from a staff call list", "Setting up"],
+                ["Email", "Emails the NDI mailbox and gets a reply in the same thread", "Setting up"],
+                ["Telegram", "Messages NDI's Telegram bot", "Setting up"],
+                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Shared with the CDA demo"],
+                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Shared with the CDA demo"],
+                ["Intercom", "Types in the chat bubble on the customer page", "Optional"],
                 ["Hosted page, QR code, widget", "ElevenLabs’ own page and chat bubble", "Live"],
                 ["Slack, WhatsApp", "—", "Not built yet"],
               ]}
@@ -102,11 +100,10 @@ Phone (Twilio) ─────────────────────�
 Telegram ───────────────────────────┤
 Email ─► Gmail ─► web app ──────────┤──►  Clara (ElevenLabs agent)  ──►  answer on the same channel
 Instagram / Messenger ─► web app ───┤         │  knowledge base (RAG) · customer_lookup tool
-Alexa ─► web app ───────────────────┤         │
 Intercom / hosted page / widget ────┘         ▼
-                                   web app (Next.js on Vercel)  ─  Supabase database
+                                   web app (Next.js on Railway)  ─  Supabase database
                                    customer memory · Aida rooms · admin · learning · mood`}</Flow>
-            <P>The demo has three pages:</P>
+            <P>There are three pages:</P>
             <List
               items={[
                 <>
@@ -124,32 +121,31 @@ Intercom / hosted page / widget ────┘         ▼
             />
           </Section>
 
-          <Section id="ellie" title="Clara, the AI agent">
+          <Section id="clara" title="Clara, the AI agent">
             <P>
-              Clara is CDA&apos;s virtual assistant. She answers questions about CDA appliances, warranties, spare parts, repairs and
-              where to buy, collects the details CDA needs for a repair or a complaint, and passes the conversation to a person when
-              needed.
+              Clara is NDI&apos;s virtual assistant. She explains NDI and its AI Employees, helps visitors find the AI Employee that
+              fits their process, collects the details the NDI team needs for a meeting or a demo, and passes the conversation to a
+              person when needed.
             </P>
             <Table
               head={["", ""]}
               rows={[
                 ["Platform", "ElevenLabs Agents (one agent for every channel)"],
                 ["Language model", "Gemini 3.7 Flash, temperature 0 (the same question gets the same answer)"],
-                ["Voice", "Shelley, a clear British voice, in every language"],
-                ["Languages", "English by default and Polish; during a call she follows the customer between them by herself"],
+                ["Voice", "Katie X, a clear British voice, in every language"],
+                ["Languages", "English by default, and German, Italian and French; during a call she follows the customer between them by herself"],
                 ["Speech to text", "ElevenLabs Scribe, real time"],
-                ["Knowledge", "cda.co.uk pages and CDA PDFs (products, warranty, parts, FAQs, where to buy), searched on every turn, plus the “CDA approved FAQ” written by staff"],
-                ["Files", "In the website chat she reads photos and PDFs, for example a receipt or a rating plate"],
+                ["Knowledge", "NDI's documents from Google Drive (the AI Employees and more), searched on every turn, plus the “NDI approved FAQ” written by staff"],
+                ["Files", "In the website chat she reads photos and PDFs, for example a process description or an RFP"],
                 ["Tools", "customer_lookup (who is this customer?), customer_link (link a channel with a code), end call, voicemail detection, language detection"],
               ]}
             />
             <H3>Rules she follows</H3>
             <List
               items={[
-                "She answers only from CDA's knowledge; when she does not know, she says so and points to the right place. Those questions are collected for staff (see Clara learns).",
-                "Channel rules: short spoken answers on the phone, Alexa and the avatar; plain text on Instagram; one plain-text reply by email; she ignores robots and newsletters.",
-                "Safety first: a smell of gas or any danger gets safety advice and the emergency number straight away.",
-                "She never asks for card details or passwords, and never claims something is booked when it is not.",
+                "She answers only from NDI's knowledge; when she does not know, she says so and offers the NDI team. Those questions are collected for staff (see Clara learns).",
+                "Channel rules: short spoken answers on the phone and the avatar; plain text on Instagram and Messenger; one plain-text reply by email; she ignores robots and newsletters.",
+                "She never invents prices, clients or dates, never asks for passwords, card details or confidential documents, and never claims a meeting is booked when it is not.",
                 "When a customer is upset she apologises once, slows down, and offers a person (see Customer mood).",
                 "She never asks customers to identify themselves: if she recognises them, she uses what she knows (see Customer memory).",
               ]}
@@ -157,14 +153,14 @@ Intercom / hosted page / widget ────┘         ▼
           </Section>
 
           <Section id="website" title="Website">
-            <P>The customer site (password protected for the demo) has four tabs, all talking to the same Clara:</P>
+            <P>The customer site (password protected) has four tabs, all talking to the same Clara:</P>
             <Table
               head={["Tab", "What happens"]}
               rows={[
-                ["💬 Chat", "Typed chat. The customer can attach photos or PDFs (a receipt, a rating plate); each answer has 👍 / 👎 buttons."],
-                ["🎙️ Voice", "A spoken call with Clara in the browser, with a live transcript. English or Polish."],
-                ["🧑‍💼 Avatar", "The same conversation with a video face (Anam avatar “Sofia”) that listens and speaks. Free plan: 3-minute calls."],
-                ["📞 Aida", "A live call with CDA staff: open a room or join one with a code (see Aida rooms)."],
+                ["💬 Chat", "Typed chat. The customer can attach photos or PDFs (a process description, an RFP, a screenshot); each answer has 👍 / 👎 buttons."],
+                ["🎙️ Voice", "A spoken call with Clara in the browser, with a live transcript. English, German, Italian or French."],
+                ["🧑‍💼 Avatar", "The same conversation with a video face (NDI's Anam avatar) that listens and speaks."],
+                ["📞 Aida", "A live call with NDI staff: open a room or join one with a code (see Aida rooms)."],
               ]}
             />
             <List
@@ -177,10 +173,11 @@ Intercom / hosted page / widget ────┘         ▼
                   <B>Email me this conversation</B>: the transcript of a chat, voice or avatar conversation by email.
                 </>,
                 <>
-                  <B>Channel links</B>: buttons that open email, the phone line, Telegram, Instagram and Messenger.
+                  <B>Channel links</B>: buttons that open email, the phone line, Telegram, Instagram and Messenger (each one appears
+                  once that channel is set up).
                 </>,
                 <>
-                  <B>Intercom bubble</B>: a second way to chat, answered by Clara through Intercom.
+                  <B>Intercom bubble</B>: a second way to chat, answered by Clara through Intercom (optional).
                 </>,
               ]}
             />
@@ -188,7 +185,7 @@ Intercom / hosted page / widget ────┘         ▼
 
           <Section id="phone" title="Phone">
             <P>
-              A real UK mobile number, bought on Twilio and connected natively to ElevenLabs. Customers call it and talk to Clara; she
+              A phone number bought on Twilio and connected natively to ElevenLabs. Customers call it and talk to Clara; she
               recognises them by the number saved in their account and greets them by name. She hangs up politely at the end and,
               when she calls out and reaches voicemail, leaves a short message.
             </P>
@@ -199,7 +196,7 @@ Intercom / hosted page / widget ────┘         ▼
           </Section>
 
           <Section id="email" title="Email">
-            <Flow>{`1. A customer emails the CDA demo mailbox (Gmail)
+            <Flow>{`1. A customer emails the NDI mailbox (Gmail)
 2. Google notifies the web app at once (Gmail watch + Pub/Sub)
 3. Robots, codes, alerts and newsletters are skipped (no cost)
 4. Claude rates the email's mood (see Customer mood)
@@ -230,27 +227,17 @@ Intercom / hosted page / widget ────┘         ▼
               On Instagram and Messenger one person&apos;s messages stay in one conversation for 10 minutes, and “typing…” shows while
               Clara writes. Photos and files are not passed on: Clara asks the customer to type the details.
             </P>
-          </Section>
-
-          <Section id="alexa" title="Alexa">
-            <Flow>{`"Alexa, ask cda assistant why my oven shows F3"
-   → Amazon → web app (checks Amazon's signature)
-   → Clara through the "CDA Alexa" Custom Channel, marked [Alexa] so she answers in 1–3 short sentences
-   → Alexa reads the answer out and the customer can ask a follow-up`}</Flow>
-            <List
-              items={[
-                "The skill “CDA Assistant” is in development mode (the developer's own Amazon account); publishing it needs Amazon's certification.",
-                "A question starts with a question word (why, how, what, where, can, my, it's…), as Alexa requires for free speech.",
-                "Alexa speaks in its own voice, in English. The same Alexa account is remembered between conversations.",
-              ]}
-            />
+            <P>
+              Instagram @new_digital_intelligence and the Facebook Page “New Digital Intelligence” are shared with NDI&apos;s CDA demo:
+              Meta sends their messages to one of the two demos at a time, switched before a demo.
+            </P>
           </Section>
 
           <Section id="more-channels" title="Intercom, widget and QR code">
             <List
               items={[
                 <>
-                  <B>Intercom</B>: the chat bubble on the customer page. Intercom sends the conversation to Clara through
+                  <B>Intercom</B> (optional): the chat bubble on the customer page. Intercom sends the conversation to Clara through
                   ElevenLabs&apos; native Intercom integration, and staff see the same conversations in Intercom&apos;s inbox.
                 </>,
                 <>
@@ -261,7 +248,7 @@ Intercom / hosted page / widget ────┘         ▼
                   <B>Widget</B>: ElevenLabs&apos; chat bubble, which any website can add with two lines of HTML.
                 </>,
                 <>
-                  <B>Not built yet</B>: Slack (waiting for a workspace) and WhatsApp (parked).
+                  <B>Not built yet</B>: Slack and WhatsApp.
                 </>,
               ]}
             />
@@ -272,8 +259,8 @@ Intercom / hosted page / widget ────┘         ▼
               Clara recognises the same person on every channel and remembers what they asked before. She never asks anyone to
               identify themselves: someone she cannot place is simply helped.
             </P>
-            <Flow>{`Start of every conversation → customer_lookup → known? greet by name, use the last notes and their appliances
-End of every conversation   → post-call webhook  → one short note, the appliance model if mentioned, the mood`}</Flow>
+            <Flow>{`Start of every conversation → customer_lookup → known? greet by name, use the last notes and their interests
+End of every conversation   → post-call webhook  → one short note, their interests if they said, the mood`}</Flow>
             <Table
               head={["Channel", "How the person is recognised"]}
               rows={[
@@ -282,22 +269,21 @@ End of every conversation   → post-call webhook  → one short note, the appli
                 ["Email", "The sender's address"],
                 ["Telegram", "The Telegram chat"],
                 ["Instagram, Messenger", "The sender, kept by the web app"],
-                ["Alexa", "The Alexa account"],
                 ["Aida rooms", "The customer's account, when they join signed in"],
               ]}
             />
             <List
               items={[
                 "Linking a channel: in their account the customer gets a short code (for example NDI-4F2K9M) and sends it from Telegram, Instagram, Messenger or another email address. One code works once, for 30 minutes.",
-                "Appliances: when a model is known (a receipt, a photo of the rating plate, or what they said), it is saved, so Clara never asks for the model number twice.",
-                "What is stored: which conversation belongs to whom, one short note per conversation, their appliances and the mood scores. Full transcripts stay in ElevenLabs.",
+                "Interests: what the customer wants from NDI (the AI Employee or topic, their company and role, numbers and timing) is saved, so Clara never asks twice.",
+                "What is stored: which conversation belongs to whom, one short note per conversation, their interests and the mood scores. Full transcripts stay in ElevenLabs.",
               ]}
             />
           </Section>
 
           <Section id="aida" title="Aida rooms (live copilot)">
             <P>
-              A live call between CDA staff and a customer. Everyone can talk or type, the call is transcribed live, and{" "}
+              A live call between NDI staff and a customer. Everyone can talk or type, the call is transcribed live, and{" "}
               <B>Aida</B>, a second agent, drafts a reply to each thing the customer says. Only staff see the drafts; they approve,
               edit or decline each one, and an approved draft is sent to the customer in the chat.
             </P>
@@ -312,7 +298,7 @@ End of every conversation   → post-call webhook  → one short note, the appli
               items={[
                 "Voice and chat travel over LiveKit. Each browser transcribes only its own microphone (ElevenLabs Scribe), so every line is known to come from the person who said it.",
                 "Aida runs in one staff browser (the first employee to join; the next takes over if they leave).",
-                "A signed-in customer is recognised: Aida gets what CDA already knows about them, and the call is added to their memory.",
+                "A signed-in customer is recognised: Aida gets what NDI already knows about them, and the call is added to their memory.",
                 "Live mood: each customer line gets a mood dot and the staff see a mood meter; when the customer is frustrated Aida's next draft opens with an apology (see Customer mood).",
                 "Closing a room is final: its history stays readable and can be emailed. Rooms expire after 4 hours.",
                 "What staff change in Aida's drafts is compared with what she wrote, and a real correction becomes a lesson (see Clara learns).",
@@ -326,7 +312,7 @@ End of every conversation   → post-call webhook  → one short note, the appli
               head={["Tab", "What staff do"]}
               rows={[
                 ["📞 Aida rooms", "Create, join and close rooms; read and email closed ones."],
-                ["👥 Customers", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, products, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
+                ["👥 Customers", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, the AI Employees they asked about, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
                 ["😊 Mood", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
                 ["📲 Call list", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
                 ["📚 Knowledge", "Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
@@ -338,13 +324,13 @@ End of every conversation   → post-call webhook  → one short note, the appli
 
           <Section id="calls" title="Outbound call list">
             <P>
-              Staff type phone numbers, an optional name and <B>instructions for Clara</B> for each call (for example “their
-              dishwasher warranty is not registered yet: explain the lifetime parts warranty and how to register”), then press{" "}
-              <B>Start calling</B>.
+              Staff type phone numbers, an optional name and <B>instructions for Clara</B> for each call (for example “they asked
+              for a demo of the AI SDR on our website: ask what they want to automate and offer a call with the NDI team”), then
+              press <B>Start calling</B>.
             </P>
             <List
               items={[
-                "Clara calls one number at a time from the demo line. Her greeting says why she is calling: “Hello Helmi, this is Clara, the virtual assistant from CDA. I'm calling about your dishwasher warranty. Have you got a moment?”",
+                "Clara calls one number at a time from NDI's phone line. Her greeting says why she is calling: “Hello Helmi, this is Clara, the virtual assistant from NDI. I'm calling about your demo request for the AI SDR. Have you got a moment?”",
                 "No answer, busy or voicemail: she tries again a minute later, up to 3 times, then moves to the next number. On voicemail she leaves a short message.",
                 "The page shows each call's status live (calling, try 1 of 3, reached ✓ with a summary, not reached). Stop lets the current call finish.",
                 "She learns the instructions through customer_lookup at the start of the call, so no other channel is affected.",
@@ -357,9 +343,9 @@ End of every conversation   → post-call webhook  → one short note, the appli
             <H3>Questions she could not answer</H3>
             <List
               items={[
-                "After every conversation, ElevenLabs' analysis lists the questions Clara could not answer from CDA's knowledge. They appear on /admin → 📚 Knowledge with the channel.",
-                "✨ Group and suggest answers: Claude merges questions that ask the same thing and suggests wording, marking [check: …] wherever a CDA fact is needed; it never invents one.",
-                "Approve and teach Clara: the answer goes into the “CDA approved FAQ”, which is always in Clara's (and Aida's) context, so it works from her very next conversation.",
+                "After every conversation, ElevenLabs' analysis lists the questions Clara could not answer from NDI's knowledge. They appear on /admin → 📚 Knowledge with the channel.",
+                "✨ Group and suggest answers: Claude merges questions that ask the same thing and suggests wording, marking [check: …] wherever an NDI fact is needed; it never invents one.",
+                "Approve and teach Clara: the answer goes into the “NDI approved FAQ”, which is always in Clara's (and Aida's) context, so it works from her very next conversation.",
               ]}
             />
             <H3>Feedback and corrections</H3>
@@ -386,8 +372,8 @@ End of every conversation   → post-call webhook  → one short note, the appli
             <Table
               head={["Part", "What it does"]}
               rows={[
-                ["1. Measured mood", "ElevenLabs scores every voice and website conversation with Clara when it ends: a label (positive, neutral, negative), sentiment from −1 to +1 and frustration from 0 to 100%, overall and for each customer message. It does not score email, Instagram, Messenger or Alexa, so Claude rates those the same way, message by message. The scores are saved with the channel and the customer."],
-                ["2. Staff alerts", "When a customer was upset, or Clara promised that the CDA team will get back to them, staff get an email within a minute: who, which channel, the summary and the exact message where the mood turned."],
+                ["1. Measured mood", "ElevenLabs scores every voice and website conversation with Clara when it ends: a label (positive, neutral, negative), sentiment from −1 to +1 and frustration from 0 to 100%, overall and for each customer message. It does not score email, Instagram or Messenger, so Claude rates those the same way, message by message. The scores are saved with the channel and the customer."],
+                ["2. Staff alerts", "When a customer was upset, or Clara promised that the NDI team will get back to them, staff get an email within a minute: who, which channel, the summary and the exact message where the mood turned."],
                 ["3. Live mood in Aida rooms", "Claude rates each customer line as it is said (about a second). Staff see a mood dot on every line and a mood meter; when the customer is frustrated, Aida is told before she drafts, so her draft opens with an apology and offers to escalate."],
                 ["4. Upset emails", "Claude rates each incoming email before Clara sees it. An upset customer is never answered automatically: Clara's answer waits as a Gmail draft labelled “Clara/Upset customer”, and staff are alerted."],
                 ["5. Clara reacts", "When a customer sounds frustrated, Clara apologises once, slows down, gives one clear next step and offers a person. Her promise of a follow-up is recorded and reaches staff through the alert."],
@@ -413,10 +399,10 @@ End of every conversation   → post-call webhook  → one short note, the appli
             <List
               items={[
                 "Two separate passwords: the site password for the customer site, and the staff password for /admin. Being on the site never makes anyone staff.",
-                "Everything that calls the web app from outside proves who it is: ElevenLabs' tools send a secret, its webhooks are signed, Google, Meta and Amazon send their own proof, and the daily job has its own secret.",
-                "Keys and passwords live only in Vercel and the servers' settings, never in the code (the repository is public).",
+                "Everything that calls the web app from outside proves who it is: ElevenLabs' tools send a secret, its webhooks are signed, Google and Meta send their own proof, and the daily job has its own secret.",
+                "Keys and passwords live only in Railway and the servers' settings, never in the code (the repository is public).",
                 "The database is locked down (row level security) and only the server reads it. No message text is stored for memory: short notes and scores only; transcripts stay in ElevenLabs.",
-                "The demo uses fake customers only. For real customers, the use of Anthropic (Claude) for insights and mood would belong in the privacy notice.",
+                "For real customers, the use of Anthropic (Claude) for insights and mood belongs in the privacy notice.",
               ]}
             />
           </Section>
@@ -426,14 +412,14 @@ End of every conversation   → post-call webhook  → one short note, the appli
               head={["Service", "Used for", "Plan / cost"]}
               rows={[
                 ["ElevenLabs Agents", "Clara and Aida: conversations, voice, speech to text, knowledge search, analysis, sentiment", "Creator plan; a voice or avatar minute ≈ 600 credits, a text reply ≈ 60–100"],
-                ["Next.js on Vercel", "The web app: customer site, admin, channel connectors, webhooks, daily job", "Deploys from GitHub on every push"],
+                ["Next.js on Railway", "The web app: customer site, admin, channel connectors, webhooks, daily jobs (the app runs them itself)", "Deploys from GitHub on every push"],
                 ["Supabase", "Database: customers, memory, rooms, email log, knowledge, feedback, moods", "Free tier"],
                 ["Anthropic Claude (Haiku)", "Insights, grouping questions, general answers, call reasons, email and Aida mood", "A fraction of a cent per use"],
                 ["LiveKit Cloud", "Voice and chat in Aida rooms", "Free plan, 5,000 participant-minutes a month"],
                 ["Anam", "The video avatar", "Free plan: 30 minutes a month, 3-minute calls"],
-                ["Twilio", "The phone number (calls in and out)", "About $2.50 a month plus calls"],
+                ["Twilio", "The phone number (calls in and out)", "A monthly fee for the number, plus calls"],
                 ["Google Cloud", "Gmail API and Pub/Sub for the email channel", "Free tier"],
-                ["Meta, Amazon, Telegram, Intercom", "Instagram, Messenger, Alexa, Telegram and the Intercom bubble", "Free for the demo (Intercom trial)"],
+                ["Meta, Telegram, Intercom", "Instagram, Messenger, Telegram and the Intercom bubble", "Free (Intercom: a trial)"],
               ]}
             />
           </Section>
@@ -443,19 +429,18 @@ End of every conversation   → post-call webhook  → one short note, the appli
               head={["Word", "Meaning"]}
               rows={[
                 ["Agent", "An AI assistant on ElevenLabs: Clara for customers, Aida for staff."],
-                ["Channel", "A way a customer reaches Clara: website, phone, email, Telegram, Instagram, Messenger, Alexa, Intercom."],
+                ["AI Employee", "NDI's product: a role-specific AI agent that NDI builds, connects to a company's systems, runs and improves."],
+                ["Channel", "A way a customer reaches Clara: website, phone, email, Telegram, Instagram, Messenger, Intercom."],
                 ["Custom Channel", "ElevenLabs' connector for channels it has no built-in support for; the web app passes messages in and sends answers out."],
                 ["Webhook", "An address a service calls when something happens, for example ElevenLabs at the end of a conversation."],
-                ["RAG", "Retrieval: Clara looks up the relevant parts of CDA's documents before answering."],
+                ["RAG", "Retrieval: Clara looks up the relevant parts of NDI's documents before answering."],
                 ["Sentiment / frustration", "How positive (−1 to +1) and how frustrated (0 to 100%) a customer sounds."],
                 ["Draft mode", "Clara's email answer waits in Gmail for staff to check and send."],
               ]}
             />
           </Section>
 
-          <footer className="pb-6 text-center text-xs text-muted">
-            CDA Customer Assistant demo · NDI (New Digital Intelligence) · Not an official CDA service
-          </footer>
+          <footer className="pb-6 text-center text-xs text-muted">NDI Assistant · NDI (New Digital Intelligence)</footer>
         </main>
       </div>
     </div>

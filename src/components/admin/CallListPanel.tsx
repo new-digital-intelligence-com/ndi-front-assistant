@@ -165,7 +165,7 @@ export function CallListPanel({ staffToken, onSignOut }: { staffToken: string; o
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="List name (optional), e.g. Warranty reminders"
+          placeholder="List name (optional), e.g. Demo follow-ups"
           maxLength={80}
           className="w-full rounded-lg border border-line px-3 py-2 text-sm"
         />
