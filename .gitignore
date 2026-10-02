@@ -45,3 +45,6 @@ file-to-test/
 
 # Clara's knowledge PDFs and their sources: kept on this machine and in the approved Drive folder, not in the public repo
 /knowledge-base/
+
+# Local deploy notes (how a pushed commit is deployed to Railway), kept on this machine only
+/DEPLOY.md
