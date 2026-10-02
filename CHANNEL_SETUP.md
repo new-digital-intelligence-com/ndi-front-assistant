@@ -226,11 +226,14 @@ tables never mix with other PoCs' schemas (CDA's database is not shared).
 1. **SQL Editor** (pocs project) → New query → paste `supabase/schema.sql` → **Run**. It creates the schema `fo01_ndi`
    and its 25 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
    `customers` table next to it).
-2. **Project Settings → Data API → Exposed schemas** → add `fo01_ndi` → Save. Without this the API answers
-   "The schema must be one of the following…". (If the team account cannot change it, ask the project admin.)
-3. **Project Settings → API keys**: Project URL → `SUPABASE_URL`; `service_role` (secret) key → `SUPABASE_SERVICE_ROLE_KEY`
-   (server only); `SUPABASE_SCHEMA=fo01_ndi` → Railway variables. The app sends the schema with every request
-   (`src/lib/supabase.ts`).
+2. **Project Settings → Data API** (older menus: **API**) **→ Exposed schemas** → add `fo01_ndi` → Save. Without this
+   the API answers "The schema must be one of the following…". (If the team account cannot change it, ask the
+   project admin.)
+3. **Project Settings → API Keys → Create new secret key**, named `fo01-ndi`: NDI's own key in the shared project, so it
+   can be revoked without touching the other PoCs → `SUPABASE_SERVICE_ROLE_KEY` (server only). The Project URL
+   (Project Settings → Data API) → `SUPABASE_URL`; `SUPABASE_SCHEMA=fo01_ndi`. All three into `.env.local` and Railway.
+   A secret key (`sb_secret_…`) is sent only as `apikey`; a legacy `service_role` JWT works too, until Supabase retires
+   those keys at the end of 2026. The app sends the schema with every request (`src/lib/supabase.ts`).
 
 Tables: customers, **customer_accounts** (website sign-ins), channels, link codes, conversations, notes, **customer_interests**, Aida rooms/events/moods, email
 log, Gmail state, Instagram/Messenger threads, channel tokens, call lists and hand-over lines, knowledge, feedback, draft outcomes,

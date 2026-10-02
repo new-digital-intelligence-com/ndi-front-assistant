@@ -15,6 +15,8 @@ function credentials() {
   return { url: url.replace(/\/+$/, ""), key };
 }
 
+const isJwt = (key: string) => key.split(".").length === 3;
+
 export function supabaseConfigured(): boolean {
   return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
@@ -26,7 +28,9 @@ export async function supabaseRest<T>(path: string, init: RequestInit & { prefer
     ...options,
     headers: {
       apikey: key,
-      Authorization: `Bearer ${key}`,
+      // A legacy service_role key is a JWT and is also sent as the bearer token. A secret key
+      // (sb_secret_…) is not a JWT: Supabase wants it in apikey only, or it fails JWT checks.
+      ...(isJwt(key) ? { Authorization: `Bearer ${key}` } : {}),
       "Content-Type": "application/json",
       "Accept-Profile": schema(),
       "Content-Profile": schema(),
