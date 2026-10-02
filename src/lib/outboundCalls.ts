@@ -10,6 +10,9 @@
 // Clara learns why she is calling from customer_lookup, which she calls at the start of every
 // conversation anyway: for a call from a list it also returns the staff instructions. No dynamic
 // variable is added to her prompt, so no other channel is touched.
+//
+// A call can also name a colleague to hand over to (src/lib/handover.ts). While the customer is with
+// that colleague the line stays busy: the list waits until their call is over too.
 
 import { anthropicConfigured, askClaude } from "./anthropic";
 import { findByChannel } from "./customers";
@@ -27,6 +30,8 @@ export const MAX_CALLS_PER_LIST = 50;
 const STUCK_AFTER_MS = 20 * 60_000;
 /** ElevenLabs can take a moment to create the conversation record after the call is placed. */
 const RECORD_GRACE_MS = 90_000;
+/** A hand-over still going after this long is treated as over (a missed status callback). */
+const HANDOVER_STUCK_AFTER_MS = 3 * 3_600_000;
 
 export type ItemStatus = "waiting" | "calling" | "reached" | "failed" | "stopped";
 
@@ -45,6 +50,12 @@ export type CallItem = {
   summary: string | null;
   started_at: string | null;
   finished_at: string | null;
+  call_sid: string | null;
+  handover_name: string | null;
+  handover_phone: string | null;
+  handover_when: string | null;
+  handover_status: string | null;
+  handover_started_at: string | null;
 };
 
 export type CallList = {
@@ -58,7 +69,8 @@ export type CallList = {
   items?: CallItem[];
 };
 
-export type NewCall = { phone: string; name?: string | null; instructions: string };
+export type Handover = { name: string | null; phone: string; when: string | null };
+export type NewCall = { phone: string; name?: string | null; instructions: string; handover?: Handover | null };
 
 // --- ElevenLabs --------------------------------------------------------------------------------
 
@@ -129,8 +141,8 @@ function errorText(body: { message?: string; detail?: unknown }, status: number)
   return body.message || `ElevenLabs could not place the call (${status})`;
 }
 
-/** Places the call and returns its conversation id. Throws when it could not be placed at all. */
-async function placeCall(item: CallItem): Promise<string> {
+/** Places the call: its conversation id, and Twilio's id of the call. Throws when it could not be placed at all. */
+async function placeCall(item: CallItem): Promise<{ conversationId: string; callSid: string | null }> {
   const response = await fetch(`${API}/twilio/outbound-call`, {
     method: "POST",
     headers: { "xi-api-key": apiKey(), "Content-Type": "application/json" },
@@ -148,10 +160,11 @@ async function placeCall(item: CallItem): Promise<string> {
     success?: boolean;
     message?: string;
     conversation_id?: string | null;
+    callSid?: string | null;
     detail?: unknown;
   };
   if (!response.ok || !body.success || !body.conversation_id) throw new Error(errorText(body, response.status));
-  return body.conversation_id;
+  return { conversationId: body.conversation_id, callSid: body.callSid ?? null };
 }
 
 type Outcome = { state: "running" } | { state: "reached"; summary: string | null } | { state: "missed"; why: string };
@@ -166,6 +179,11 @@ type ConversationRecord = {
 /** Whether the latest try is still going, reached someone, or did not (no answer, busy, voicemail). */
 async function outcomeOf(item: CallItem): Promise<Outcome> {
   const age = Date.now() - (item.started_at ? Date.parse(item.started_at) : 0);
+  // Clara handed the customer over to a colleague: her part is over, theirs may not be.
+  if (item.handover_status === "ringing" || item.handover_status === "live") {
+    const since = Date.parse(item.handover_started_at ?? item.started_at ?? "") || 0;
+    if (Date.now() - since < HANDOVER_STUCK_AFTER_MS) return { state: "running" };
+  }
   if (!item.conversation_id) {
     return age > RECORD_GRACE_MS ? { state: "missed", why: item.last_outcome ?? "the call could not be placed" } : { state: "running" };
   }
@@ -259,16 +277,17 @@ async function startNext(listId: string): Promise<void> {
       attempts: calling.attempts,
       started_at: calling.started_at,
       conversation_id: null,
+      call_sid: null,
       next_attempt_at: null,
     }),
   });
 
   try {
-    const conversationId = await placeCall(calling);
+    const placed = await placeCall(calling);
     await rest(`call_list_items?id=eq.${q(next.id)}`, {
       method: "PATCH",
       prefer: "return=minimal",
-      body: JSON.stringify({ conversation_id: conversationId }),
+      body: JSON.stringify({ conversation_id: placed.conversationId, call_sid: placed.callSid }),
     });
   } catch (error) {
     // Not placed at all (a wrong number, a country Twilio is not allowed to call): one try used up.
@@ -325,6 +344,9 @@ export async function createList(input: { title: string | null; createdBy: strin
         phone: call.phone,
         name: call.name || null,
         instructions: call.instructions,
+        handover_name: call.handover?.name || null,
+        handover_phone: call.handover?.phone || null,
+        handover_when: call.handover?.when || null,
       })),
     ),
   });
@@ -355,15 +377,27 @@ export async function recentLists(limit = 6): Promise<CallList[]> {
 
 // --- Clara and ElevenLabs' webhook ---------------------------------------------------------------
 
-export type CallBrief = { phone: string; customer_name: string | null; instructions: string };
+export type CallBrief = {
+  phone: string;
+  customer_name: string | null;
+  instructions: string;
+  /** Set when staff named a colleague Clara may hand the call over to (src/lib/handover.ts). */
+  handover: { colleague: string; when: string | null } | null;
+};
 
 /** For customer_lookup: when Clara is on a call from a list, whom she called and why. */
 export async function callBrief(conversationId: string): Promise<CallBrief | null> {
   if (!conversationId) return null;
-  const [item] = await rest<Pick<CallItem, "phone" | "name" | "instructions">[]>(
-    `call_list_items?conversation_id=eq.${q(conversationId)}&select=phone,name,instructions&limit=1`,
+  const [item] = await rest<Pick<CallItem, "phone" | "name" | "instructions" | "handover_name" | "handover_phone" | "handover_when">[]>(
+    `call_list_items?conversation_id=eq.${q(conversationId)}&select=phone,name,instructions,handover_name,handover_phone,handover_when&limit=1`,
   );
-  return item ? { phone: item.phone, customer_name: item.name, instructions: item.instructions } : null;
+  if (!item) return null;
+  return {
+    phone: item.phone,
+    customer_name: item.name,
+    instructions: item.instructions,
+    handover: item.handover_phone ? { colleague: item.handover_name || "a colleague", when: item.handover_when } : null,
+  };
 }
 
 const FAILURE_WORDS: Record<string, string> = { busy: "busy", "no-answer": "no answer" };

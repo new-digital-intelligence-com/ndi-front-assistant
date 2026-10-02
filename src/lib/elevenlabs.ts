@@ -34,8 +34,16 @@ export type ConversationRecord = {
     text_only?: boolean;
     /** Set for conversations started by a channel trigger, e.g. external_system "custom_channel". */
     async_metadata?: { external_system?: string | null; external_id?: string | null } | null;
-    /** Phone calls: external_number is the customer's own number, whichever side dialled. */
-    phone_call?: { direction?: "inbound" | "outbound" | string; external_number?: string | null } | null;
+    /**
+     * Phone calls: external_number is the customer's own number, whichever side dialled; agent_number is
+     * NDI's; call_sid is Twilio's id of the call.
+     */
+    phone_call?: {
+      direction?: "inbound" | "outbound" | string;
+      external_number?: string | null;
+      agent_number?: string | null;
+      call_sid?: string | null;
+    } | null;
   };
 };
 

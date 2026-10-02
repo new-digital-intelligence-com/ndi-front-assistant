@@ -18,11 +18,14 @@ const LATE_REGISTRATION_WAIT_MS = 400;
 
 /**
  * Only say "found" when there is something worth saying, not merely that a row exists. On a call
- * NDI made from a staff call list, outbound_call tells Clara whom she rang and why (never the number).
+ * NDI made from a staff call list, outbound_call tells Clara whom she rang and why (never the number),
+ * and outbound_call.handover which colleague she may hand the call over to, and when.
  */
 function answer(profile: Profile | null, brief: CallBrief | null) {
   const found = profile ? Boolean(profile.name) || profile.recent.length > 0 : false;
-  const outbound = brief ? { customer_name: brief.customer_name, instructions: brief.instructions } : null;
+  const outbound = brief
+    ? { customer_name: brief.customer_name, instructions: brief.instructions, ...(brief.handover ? { handover: brief.handover } : {}) }
+    : null;
   return Response.json({ found, ...(profile ?? {}), ...(outbound ? { outbound_call: outbound } : {}) });
 }
 

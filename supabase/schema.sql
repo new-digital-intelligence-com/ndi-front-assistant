@@ -249,6 +249,39 @@ create index if not exists call_list_items_conversation_idx on call_list_items (
 alter table call_lists      enable row level security;
 alter table call_list_items enable row level security;
 
+-- Hand-over to a colleague (src/lib/handover.ts): staff may name a colleague and their phone number for
+-- a call. When the moment comes, Clara says she is connecting the customer and uses her tool
+-- transfer_to_human; the web app puts the customer on hold and rings the colleague from the Twilio
+-- number. Once they press a key, both are joined in a Twilio conference and Clara is gone. Twilio
+-- transcribes the conversation live (handover_lines), and /admin shows it with Aida's suggestions.
+alter table call_list_items add column if not exists handover_name       text;        -- the colleague, e.g. Michael
+alter table call_list_items add column if not exists handover_phone      text;        -- their phone, +<country code>…
+alter table call_list_items add column if not exists handover_when       text;        -- when Clara should hand over
+alter table call_list_items add column if not exists call_sid            text;        -- Twilio's id of the call to the customer
+alter table call_list_items add column if not exists handover_status     text;        -- ringing | live | ended | missed | abandoned | failed
+alter table call_list_items add column if not exists handover_summary    text;        -- what Clara told the colleague
+alter table call_list_items add column if not exists handover_language   text;        -- en | de | it | fr
+alter table call_list_items add column if not exists handover_call_sid   text;        -- the call to the colleague
+alter table call_list_items add column if not exists handover_started_at timestamptz;
+alter table call_list_items add column if not exists handover_live_at    timestamptz;
+alter table call_list_items add column if not exists handover_ended_at   timestamptz;
+alter table call_list_items add column if not exists handover_note       text;        -- the talk in one line, afterwards
+
+-- What the customer and the colleague said, line by line. Not kept for anything else: the talk ends up
+-- as one short note in the customer's memory, like every other conversation.
+create table if not exists handover_lines (
+  id         bigint generated always as identity primary key,
+  item_id    uuid not null references call_list_items (id) on delete cascade,
+  speaker    text not null,                     -- customer | colleague
+  text       text not null,
+  ref        text unique,                       -- <transcription sid>:<sequence id>: a repeated callback is stored once
+  created_at timestamptz not null default now()
+);
+
+create index if not exists handover_lines_item_idx on handover_lines (item_id, id);
+
+alter table handover_lines enable row level security;
+
 -- ---------------------------------------------------------------------------------------------
 -- Knowledge gaps: questions Clara could not answer (ElevenLabs' post-call data collection item
 -- "unanswered_question", on every channel), and the answers NDI staff approve for them on /admin.

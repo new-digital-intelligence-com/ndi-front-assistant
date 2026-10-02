@@ -105,6 +105,7 @@ Same ElevenLabs account as CDA (Creator plan, 121,005 credits a month, resets ~1
 | Workspace secret `NDI_AGENT_TOOL_SECRET` (= `AGENT_TOOL_SECRET`) | `8MesPm8j0zm9MlKnLKCq` |
 | Tool `customer_lookup` → `<APP_URL>/api/agent/customer-lookup` | `tool_3301m3y1xcjef3srtynq0bez04w0` |
 | Tool `customer_link` → `<APP_URL>/api/agent/customer-link` | `tool_3501m3y1xdv2ecqrhdbbp4tyzgb8` |
+| Tool `transfer_to_human` → `<APP_URL>/api/agent/handover` (runs after Clara has spoken: `execution_mode` `post_tool_speech`) | `tool_6801m3yg54pjeryaqk377j7114gv` |
 | Post-call webhook "NDI customer memory (post-call)" → `<APP_URL>/api/agent/post-call` | `a33b3560435a4e30b00aabc89012e165` |
 | Aida agent "Aida – NDI copilot (drafts for staff)" | `agent_0301m3y1xgv9ee8tr3qf8w110kbb` |
 
@@ -120,7 +121,7 @@ email address, answers `SKIP` to robots) · Goal · Knowledge rules (only knowle
 written in the knowledge base; no prices: explain pay-per-use and offer a call) · Collecting details for a meeting or
 a request · Data and security · Handover to a human · When the customer is upset · Style (British English) ·
 Operating mode: AGENT (summary of the request, never claims a meeting is booked) · Recognising the customer
-(section 10) · Calls NDI makes to customers (section 12).
+(section 10) · Calls NDI makes to customers, with the hand-over to a colleague (section 12).
 
 **Analysis items** (post-call data collection): `unanswered_question`, `feedback_sentiment`, `feedback_comment`,
 `feedback_question`, `feedback_answer`, `interest` (what the customer wants from NDI), `needs_follow_up`.
@@ -223,7 +224,7 @@ NDI uses the team's shared **"pocs"** Supabase project (the team's rule), in **i
 tables never mix with other PoCs' schemas (CDA's database is not shared).
 
 1. **SQL Editor** (pocs project) → New query → paste `supabase/schema.sql` → **Run**. It creates the schema `fo01_ndi`
-   and its 24 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
+   and its 25 tables, touches nothing else, and is safe to run again (tested twice on a copy with another PoC's
    `customers` table next to it).
 2. **Project Settings → Data API → Exposed schemas** → add `fo01_ndi` → Save. Without this the API answers
    "The schema must be one of the following…". (If the team account cannot change it, ask the project admin.)
@@ -232,7 +233,7 @@ tables never mix with other PoCs' schemas (CDA's database is not shared).
    (`src/lib/supabase.ts`).
 
 Tables: customers, **customer_accounts** (website sign-ins), channels, link codes, conversations, notes, **customer_interests**, Aida rooms/events/moods, email
-log, Gmail state, Instagram/Messenger threads, channel tokens, call lists, knowledge, feedback, draft outcomes,
+log, Gmail state, Instagram/Messenger threads, channel tokens, call lists and hand-over lines, knowledge, feedback, draft outcomes,
 conversation moods. Row level security on, no policies, and only the `service_role` role has rights on the schema:
 only the server reads it.
 
@@ -373,8 +374,12 @@ photos or files. The Meta app must stay **Published**. Don't put "CDA" in any Me
    assign agent **NDI Assistant – Clara**. (The Twilio account is already known to ElevenLabs from CDA's number.)
 3. Put the number in `PHONE_LINE` (`src/components/ChannelLinks.tsx`) and `DEMO_LINE`
    (`src/components/admin/CallListPanel.tsx`), commit, push.
-4. **Twilio → Voice → Settings → Geo permissions**: switch on every country Clara should call.
-5. **Test:** call the number → Clara answers with her English greeting.
+4. **Twilio → Voice → Settings → Geo permissions**: switch on every country Clara should call, and the countries of the
+   colleagues calls are handed over to.
+5. **Hand-over to a colleague** (section 12): Railway variables `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` (Twilio →
+   Account → API keys & tokens). Nothing to set up in Twilio itself: the app moves the call and Twilio calls the app back
+   on `/api/twilio/handover/*`.
+6. **Test:** call the number → Clara answers with her English greeting.
 
 ---
 
@@ -513,6 +518,21 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 - **Call list**: Clara phones one number at a time from the number attached to her in ElevenLabs (section 8), up to
   3 tries, with a greeting written from the instructions: *"Hello Helmi, this is Clara, the virtual assistant from
   NDI. I'm calling about your demo request for the AI SDR. Have you got a moment?"*. Keep the page open while a list runs
+- **Hand-over to a colleague** (`src/lib/handover.ts`): per number, staff may tick *Hand the call over to a colleague*
+  and give a name, a phone number and *when* (optional). `customer_lookup` then returns `outbound_call.handover`, and
+  when the moment comes Clara says she is connecting them and calls `transfer_to_human`:
+  1. The app moves the customer's call off Clara (Twilio call update → `/api/twilio/handover/hold`): hold music in a
+     Twilio conference `ndi-handover-<item>`, and Twilio's live transcription of both voices in the call's language.
+  2. The colleague's phone rings from NDI's number (25 s). They hear who is waiting and Clara's summary, and press any
+     key to join (`/accept`); a voicemail cannot press a key. Customer and colleague talk; Clara is gone.
+  3. Every finished sentence arrives at `/transcript` (`handover_lines`); `/admin` opens the live view by itself:
+     the conversation, Aida's suggestions (Aida runs in that browser while they talk), what Clara learnt and what NDI
+     knows about the customer.
+  4. No answer → the customer hears *"nobody from the NDI team can take the call right now; NDI will call you back"*
+     in their language. When the customer's call ends (`/status`), Claude writes one note for the customer's memory
+     and the list moves on. While a hand-over runs, the list waits.
+  Costs: Twilio live transcription $0.027/min, conference $0.0018 per person per minute, the call to the colleague,
+  and Aida's suggestions (ElevenLabs credits, as in Aida rooms)
 - **Knowledge**: nothing reaches Clara without a staff member approving it (`src/lib/knowledge.ts`); the FAQ
   document is swapped in on Clara and Aida on their live branch (`ELEVENLABS_BRANCH_ID` if set, otherwise read from the agent)
 
@@ -532,7 +552,8 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 
 | Routes | Called by | Protected by |
 |---|---|---|
-| `/api/agent/customer-lookup`, `/customer-link` | Clara's tools | `x-ndi-agent-secret` |
+| `/api/agent/customer-lookup`, `/customer-link`, `/handover` | Clara's tools | `x-ndi-agent-secret` |
+| `/api/twilio/handover/*` (`hold`, `accept`, `status`, `transcript`) | Twilio, during a hand-over | `?key=` made from `TWILIO_AUTH_TOKEN` and the call |
 | `/api/agent/post-call` | ElevenLabs post-call webhook | HMAC signature (`ELEVENLABS_WEBHOOK_SECRET`) |
 | `/api/email/gmail-push` | Google Pub/Sub | `?token=` `GMAIL_PUSH_SECRET` |
 | `/api/email/assistant-reply` | ElevenLabs (email replies) | HMAC signature (`EMAIL_CHANNEL_SIGNING_SECRET`) |
@@ -561,6 +582,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Aida rooms (CDA's LiveKit project for now, copied) |
 | `AIDA_AGENT_ID`, `AIDA_STAFF_PASSWORD` | Aida `agent_0301m3y1xgv9ee8tr3qf8w110kbb`, staff password (new for NDI) |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Claude Haiku for insights and moods (copied) |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | NDI's Twilio account, for handing call-list calls over to a colleague (section 12) |
 | `gmail_sender`, `gmail_app_password`, `STAFF_ALERT_EMAIL` | Mailbox that sends conversation emails and alerts; who gets the alerts |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Gmail API (client copied from CDA; refresh token for the NDI mailbox) |
 | `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUSH_SECRET` | `projects/cda-email-509312/topics/gmail-inbox-ndi`; the secret in the push URL |
@@ -585,7 +607,7 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | Telegram bot token | ElevenLabs Telegram connection | From @BotFather |
 | Instagram token | Supabase `channel_tokens` (refreshed every 7 days); starting token in `INSTAGRAM_ACCESS_TOKEN` | Shared with the CDA demo |
 | Google Drive access | ElevenLabs Google Drive integration | Read-only, picked files |
-| Twilio | ElevenLabs phone number import | NDI's Twilio account |
+| Twilio | ElevenLabs phone number import, and Railway (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`) for hand-overs | NDI's Twilio account |
 
 Values copied from CDA's `.env.local` on 2 Oct 2026: ElevenLabs, Anam key, LiveKit, Anthropic, Google OAuth client,
 Instagram and Messenger (tokens, IDs, webhook secrets). New for NDI: site password, staff password, tool secret,

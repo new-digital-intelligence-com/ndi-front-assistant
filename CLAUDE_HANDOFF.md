@@ -87,8 +87,9 @@ npm run lint
   Flash (temperature 0), TTS Eleven Flash v2 (English) / Flash v2.5 (presets `de`, `it`, `fr`), Scribe Realtime,
   turn_v3, input PCM 16000 / output PCM 24000, files on, retention unlimited, sentiment on, overrides `first_message`,
   `language`, `text_only` allowed. Voice **Katie X** `MzqUf1HbJ8UmQ0wUsx2p` (added to the workspace voices)
-- Tools `customer_lookup` `tool_3301m3y1xcjef3srtynq0bez04w0`, `customer_link` `tool_3501m3y1xdv2ecqrhdbbp4tyzgb8`
-  (header `x-ndi-agent-secret` = workspace secret `NDI_AGENT_TOOL_SECRET` `8MesPm8j0zm9MlKnLKCq` = `AGENT_TOOL_SECRET`)
+- Tools `customer_lookup` `tool_3301m3y1xcjef3srtynq0bez04w0`, `customer_link` `tool_3501m3y1xdv2ecqrhdbbp4tyzgb8`,
+  `transfer_to_human` `tool_6801m3yg54pjeryaqk377j7114gv` (header `x-ndi-agent-secret` = workspace secret
+  `NDI_AGENT_TOOL_SECRET` `8MesPm8j0zm9MlKnLKCq` = `AGENT_TOOL_SECRET`)
 - Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
   (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
 - **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only, `email_mode` placeholder)
@@ -125,7 +126,9 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 5. **Telegram**: new bot → ElevenLabs trigger → `TELEGRAM_BOT` in ChannelLinks.
 6. **Email**: the user chooses the mailbox → consent (refresh token) → Pub/Sub topic `gmail-inbox-ndi` + push
    subscription → Custom Channel "NDI email" → variables → `SUPPORT_EMAIL`; app password for `gmail_sender`.
-7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`.
+7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
+   `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** (built 2 Oct 2026,
+   `src/lib/handover.ts`, CHANNEL_SETUP.md §12; tested only with fakes so far: the first real test is the user's).
 8. **Avatar**: the user creates the NDI Anam avatar → `ANAM_AVATAR_ID` (and `ANAM_API_KEY` if a new account).
 9. **Instagram/Messenger**: Custom Channels "NDI Instagram" and "NDI Messenger" → variables; switch the 2 Meta
    Callback URLs when NDI should answer (CHANNEL_SETUP.md §7).

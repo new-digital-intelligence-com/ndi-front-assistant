@@ -26,6 +26,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Twilio, during the hand-over of a call-list call to a colleague: what to play, call status and the
+  // live transcript. Each URL carries a key made from the Twilio Auth Token (src/lib/twilio.ts).
+  if (pathname.startsWith("/api/twilio/")) return NextResponse.next();
+
   // Aida has its own staff password, separate from this one. Its pages and routes are open here and
   // every route decides for itself: the Aida staff token makes you an employee, a signed room ticket
   // proves you are in the room, and anyone else is a customer.
