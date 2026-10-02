@@ -12,7 +12,8 @@ function credentials() {
   if (!url || !key) {
     throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.local");
   }
-  return { url: url.replace(/\/+$/, ""), key };
+  // The dashboard shows the API URL with /rest/v1/ at the end; both forms work here.
+  return { url: url.trim().replace(/\/+$/, "").replace(/\/rest\/v1$/, ""), key: key.trim() };
 }
 
 const isJwt = (key: string) => key.split(".").length === 3;
