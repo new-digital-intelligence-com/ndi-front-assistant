@@ -277,6 +277,8 @@ Authentication.
 
 **How it works:** ElevenLabs connects to Telegram by itself (a native trigger). No web app code is involved.
 
+**NDI's bot:** **@ndi2026bot** (https://t.me/ndi2026bot), linked to Clara on 2 Oct 2026.
+
 **Set it up from zero**
 1. In Telegram, message **@BotFather** → `/newbot` → a name (e.g. `NDI Assistant`) and a username ending in `bot`
    (e.g. `NDI_Assistant_Bot`) → copy the **token**.
@@ -294,7 +296,7 @@ Authentication.
 
 ## 6. Email
 
-**What the customer does:** sends an email to **NDI's mailbox** (address to be chosen) and gets Clara's answer as a
+**What the customer does:** sends an email to **contact@new-digital-intelligence.com** and gets Clara's answer as a
 normal reply in the same email thread.
 
 ```
@@ -309,23 +311,26 @@ normal reply in the same email thread.
 
 | Where | Value |
 |---|---|
-| Mailbox | An address of the new-digital-intelligence.com Google Workspace (to be chosen by the user) |
-| Google Cloud | The **same project as CDA**, `cda-email-509312`: Gmail API + Pub/Sub, OAuth client "Desktop", consent screen **Internal** (works for every mailbox of the Workspace), scope `gmail.modify` |
-| Pub/Sub | **New** topic `gmail-inbox-ndi`; subscription `gmail-inbox-ndi-push` → `<APP_URL>/api/email/gmail-push?token=<GMAIL_PUSH_SECRET>` |
+| Mailbox | **contact@new-digital-intelligence.com** (Google Workspace) |
+| Google Cloud | NDI's **own** project **`ndi-front-assistant`**, owned by contact@ (not CDA's): Gmail API + Pub/Sub (billing linked), OAuth client "NDI Assistant" (**Desktop app**), consent screen **Internal**, scope `gmail.modify` |
+| Pub/Sub | Topic `gmail-inbox-ndi` (`gmail-api-push@system.gserviceaccount.com` = Pub/Sub Publisher); subscription `gmail-inbox-ndi-push` → `<APP_URL>/api/email/gmail-push?token=<GMAIL_PUSH_SECRET>` |
 | ElevenLabs | Clara → Channels → Custom Channel, connection **NDI email**, Reply Webhook URL `<APP_URL>/api/email/assistant-reply` |
 | Auto or draft | `email_mode` (`auto` / `draft`), stored on the **Aida** agent |
 
 **Set it up from zero**
-1. Choose the mailbox. Put its address in `SUPPORT_EMAIL` in `src/components/ChannelLinks.tsx` (the Email button appears).
-2. **Allow access once** (new refresh token, same OAuth client as CDA): open Google's consent link for that client
-   with scope `gmail.modify` (`access_type=offline`, `prompt=consent`, a `http://localhost` redirect), sign in as
-   **the NDI mailbox**, click **Allow**, and exchange the returned code for a **refresh token** → `GMAIL_REFRESH_TOKEN`.
-   (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are copied from CDA.)
-3. **Pub/Sub** (project `cda-email-509312`) → create topic `gmail-inbox-ndi` → on the topic, add principal
+1. The mailbox's address is in `SUPPORT_EMAIL` in `src/components/ChannelLinks.tsx` (the Email button).
+2. **Google Cloud, signed in as contact@**: project `ndi-front-assistant` → billing linked → enable **Gmail API** and
+   **Cloud Pub/Sub API** → Google Auth Platform: app `NDI Assistant`, audience **Internal**, scope `gmail.modify` →
+   **Clients → Desktop app** → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+   **Allow access once:** open Google's consent link for that client with scope `gmail.modify`
+   (`access_type=offline`, `prompt=consent`, a `http://localhost:<port>` redirect), sign in as contact@, click
+   **Allow**, and exchange the returned code for a **refresh token** → `GMAIL_REFRESH_TOKEN` (done on 2 Oct 2026 with
+   a small local helper that catches the code; a token belongs to the client that asked for it).
+3. **Pub/Sub** (project `ndi-front-assistant`) → create topic `gmail-inbox-ndi` → on the topic, add principal
    `gmail-api-push@system.gserviceaccount.com` with role **Pub/Sub Publisher** → create subscription
    `gmail-inbox-ndi-push`: type **Push**, endpoint `<APP_URL>/api/email/gmail-push?token=<GMAIL_PUSH_SECRET>`,
-   expiration **never**, acknowledgement deadline **60 s**. (`GMAIL_PUBSUB_TOPIC` is already
-   `projects/cda-email-509312/topics/gmail-inbox-ndi`.)
+   expiration **never**, acknowledgement deadline **60 s**. `GMAIL_PUBSUB_TOPIC` =
+   `projects/ndi-front-assistant/topics/gmail-inbox-ndi`.
 4. **ElevenLabs** → Clara → Channels → **Custom Channel** → Add trigger → new connection `NDI email` →
    Reply Webhook URL `<APP_URL>/api/email/assistant-reply` → copy the **Inbound URL**, **Inbound Secret** and
    **Outbound Signing Secret** → `EMAIL_CHANNEL_INBOUND_URL`, `EMAIL_CHANNEL_INBOUND_SECRET`, `EMAIL_CHANNEL_SIGNING_SECRET`.
@@ -612,8 +617,8 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Claude Haiku for insights and moods (copied) |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | NDI's Twilio account, for handing call-list calls over to a colleague (section 12) |
 | `gmail_sender`, `gmail_app_password`, `STAFF_ALERT_EMAIL` | Mailbox that sends conversation emails and alerts; who gets the alerts |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Gmail API (client copied from CDA; refresh token for the NDI mailbox) |
-| `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUSH_SECRET` | `projects/cda-email-509312/topics/gmail-inbox-ndi`; the secret in the push URL |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Gmail API: NDI's own OAuth client (project `ndi-front-assistant`); refresh token for contact@ |
+| `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUSH_SECRET` | `projects/ndi-front-assistant/topics/gmail-inbox-ndi`; the secret in the push URL |
 | `CRON_SECRET`, `DAILY_JOBS` (optional, `off`) | The daily jobs |
 | `EMAIL_CHANNEL_INBOUND_URL`, `EMAIL_CHANNEL_INBOUND_SECRET`, `EMAIL_CHANNEL_SIGNING_SECRET` | "NDI email" Custom Channel |
 | `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_USER_ID`, `INSTAGRAM_WEBHOOK_SECRET` | Instagram (copied from CDA: the same account) |

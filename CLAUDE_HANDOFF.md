@@ -23,8 +23,8 @@ and model. The staff copilot is **Aida**.
 | Channel | Status | How |
 |---|---|---|
 | Website `<APP_URL>` (chat, voice, avatar, Aida tab) + `/admin` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
-| Telegram | ⏳ New bot to create | Native ElevenLabs Telegram trigger |
-| Email | ⏳ Mailbox to choose | Gmail push → web app → Custom Channel "NDI email" |
+| Telegram | ✅ **@ndi2026bot**, linked to Clara (2 Oct 2026) | Native ElevenLabs Telegram trigger |
+| Email | ⏳ contact@new-digital-intelligence.com: Gmail access + Pub/Sub done; Custom Channel next | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo, switched per demo | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ New Anam avatar (the user sets it up) | Anam joined to Clara |
@@ -109,8 +109,7 @@ npm run lint
   The logo is drawn by `src/components/NdiLogo.tsx` (Archivo Black, like the logo's capitals); emails use the same colours
 - Times: Central European (Europe/Zurich)
 
-**Shared with CDA on purpose**: the ElevenLabs account, the Google Cloud project `cda-email-509312` (OAuth client;
-NDI gets its own Pub/Sub topic), the LiveKit project (for now), the Anthropic key, the Meta app "Customer Support"
+**Shared with CDA on purpose**: the ElevenLabs account, the LiveKit project (for now), the Anthropic key, the Meta app "Customer Support"
 with the Instagram account and the Facebook Page (switched per demo), the Twilio account (new number).
 
 ---
@@ -129,9 +128,11 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.
-5. **Telegram**: new bot → ElevenLabs trigger → `TELEGRAM_BOT` in ChannelLinks.
-6. **Email**: the user chooses the mailbox → consent (refresh token) → Pub/Sub topic `gmail-inbox-ndi` + push
-   subscription → Custom Channel "NDI email" → variables → `SUPPORT_EMAIL`; app password for `gmail_sender`.
+5. ✅ **Telegram**: bot **@ndi2026bot** linked to Clara; `TELEGRAM_BOT` in ChannelLinks.
+6. **Email** (contact@new-digital-intelligence.com): ✅ NDI's own Google Cloud project `ndi-front-assistant` (owned by
+   contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
+   subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`. Next: Custom Channel "NDI email" → its 3 values →
+   Railway variables → start the watch → test.
 7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
    `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** (built 2 Oct 2026,
    `src/lib/handover.ts`, CHANNEL_SETUP.md §12; tested only with fakes so far: the first real test is the user's).

@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 // Still to come (CHANNEL_SETUP.md): while one of these is empty, its button is not shown.
 /** The NDI mailbox Clara answers. */
-const SUPPORT_EMAIL = "";
+const SUPPORT_EMAIL = "contact@new-digital-intelligence.com";
 /** The Telegram bot's username, without the @. */
-const TELEGRAM_BOT = "";
+const TELEGRAM_BOT = "ndi2026bot";
 /** Clara's phone line (Twilio, answered by ElevenLabs), as shown and as dialled (+...). */
 const PHONE_LINE = { display: "", dial: "" };
 

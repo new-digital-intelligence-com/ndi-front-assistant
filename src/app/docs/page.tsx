@@ -88,8 +88,8 @@ export default function DocsPage() {
               rows={[
                 ["Website", "Chat (with photos and PDFs), voice call or video avatar in the browser", "Live"],
                 ["Phone", "Calls NDI's number, or Clara calls them from a staff call list", "Setting up"],
-                ["Email", "Emails the NDI mailbox and gets a reply in the same thread", "Setting up"],
-                ["Telegram", "Messages NDI's Telegram bot", "Setting up"],
+                ["Email", "Emails contact@new-digital-intelligence.com and gets a reply in the same thread", "Setting up"],
+                ["Telegram", "Messages NDI's Telegram bot @ndi2026bot", "Live"],
                 ["Instagram", "Sends a direct message to @new_digital_intelligence", "Shared with the CDA demo"],
                 ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Shared with the CDA demo"],
                 ["Intercom", "Types in the chat bubble on the customer page", "Optional"],
