@@ -123,6 +123,9 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 3. ✅ **Railway** (2 Oct 2026): team NDI → project POCs → service `[FO-01] ndi-front-assistant` (europe-west4),
    from GitHub `main`, domain `ndi-assistant.up.railway.app`, 29 variables from `.env.local` (empty ones left out).
    Checked: pages, protections, `daily jobs: scheduled`, staff admin reading Supabase (CHANNEL_SETUP.md §3).
+   **Pushes do not deploy by themselves** until a GitHub organisation owner gives Railway's GitHub App access to the
+   repository (the user is a member, not an owner): after each push, deploy the commit with the `railway api`
+   command in CHANNEL_SETUP.md §3.
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.

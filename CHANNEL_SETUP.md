@@ -212,6 +212,17 @@ railway logs                     # the running app's logs
 railway variables --set "KEY=value"   # one variable (redeploys)
 ```
 
+> **Pushes do not deploy by themselves yet.** Railway built the first version because the repository is public, but
+> GitHub only tells Railway about new pushes when Railway's GitHub App has access to the repository, and only an
+> organisation owner can give it (GitHub → organisation settings → GitHub Apps → Railway → Configure → add
+> `ndi-front-assistant`). Until then, deploy the latest commit after each push (or Railway dashboard → the service →
+> Ctrl/Cmd+K → "Deploy latest commit"):
+>
+> ```bash
+> railway api 'mutation($s: String!, $e: String!, $c: String) { serviceInstanceDeployV2(serviceId: $s, environmentId: $e, commitSha: $c) }' \
+>   --raw-var s=3e214933-0335-4992-b922-69621d692587 --raw-var e=432764db-ebfc-44ea-8536-4143fdef2b04 --raw-var c="$(git rev-parse HEAD)"
+> ```
+
 **Set it up from zero**
 1. **railway.com** → the POCs project → **New → GitHub repo** → pick the NDI repository (branch `main`), or with the
    CLI: `railway add --service "[FO-01] ndi-front-assistant" --repo new-digital-intelligence-com/ndi-front-assistant --branch main`.
