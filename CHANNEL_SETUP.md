@@ -125,7 +125,9 @@ read it out, point to "Schedule a Meeting" on the contact page; collect details 
 be contacted) · Collecting details for a meeting or a request · Data and security · Handover to a human · When the customer is upset · Style (British English) ·
 Operating mode: AGENT (booking link first for meetings and demos; summary of other requests; never claims a meeting
 is booked) · Recognising the customer
-(section 10) · Calls NDI makes to customers, with the hand-over to a colleague (section 12).
+(section 10) · Calls NDI makes to customers, with the hand-over to a colleague (section 12) · Calls to NDI: handing
+over to a colleague (since 3 Oct 2026: when `customer_lookup` returns `inbound_call.handover`, Clara connects a caller
+who asks for a person, and offers it when they are upset or need the team; backups `scratchpad/agents/backup9_*`).
 
 **Analysis items** (post-call data collection): `unanswered_question`, `feedback_sentiment`, `feedback_comment`,
 `feedback_question`, `feedback_answer`, `interest` (what the customer wants from NDI), `needs_follow_up`.
