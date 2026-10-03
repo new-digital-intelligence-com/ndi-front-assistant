@@ -1,6 +1,6 @@
 # Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project. Last updated: **2 October 2026**.
+Read this first when continuing the project. Last updated: **3 October 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
 date when a feature or a channel's status changes). Full channel-by-channel setup: [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
 `<APP_URL>` = `https://ndi-assistant.up.railway.app` (Railway, live since 2 Oct 2026).
@@ -96,7 +96,10 @@ npm run lint
 - Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, plus the URL document
   "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, auto-sync, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
   attached to Clara **and** Aida on their live branches
-- Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026)
+- Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026).
+  The booking link from the contact page ("Schedule a Meeting", `https://calendly.com/michael-burian-ndi`, Michael
+  Burian, NDI's CEO) is in Clara's prompt (section "Booking a meeting or a demo") and Aida's company context since
+  3 Oct 2026, on the user's request; backups `scratchpad/agents/backup8_*`
 - Settings changes via API: `PATCH /v1/convai/agents/{id}` with only the changed part, then read it back; back up first
 
 **Web app** (Next.js 16 – read `node_modules/next/dist/docs/` before using unfamiliar APIs; see AGENTS.md)
@@ -161,7 +164,8 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
     API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
     links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
     refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos").
-11. Optional: Slack, a separate LiveKit project, `STAFF_ALERT_EMAIL`. (Intercom was removed on the user's decision.)
+11. ✅ **Staff alerts** (3 Oct 2026): `STAFF_ALERT_EMAIL` = contact@new-digital-intelligence.com (the user's choice).
+12. Optional: Slack, a separate LiveKit project. (Intercom was removed on the user's decision.)
 
 ---
 

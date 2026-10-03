@@ -3,7 +3,7 @@
 NDI's (New Digital Intelligence) own front-office assistant, and a live example of NDI's
 **Multi-Channel Front Office Assistant**. Copied on 2 October 2026 from the CDA demo
 (`github.com/new-digital-intelligence-com/cda`) and turned into NDI's: same features, NDI's content.
-Last updated: **2 October 2026**. A public, plain-words version of this guide is at **`<APP_URL>/docs`**.
+Last updated: **3 October 2026**. A public, plain-words version of this guide is at **`<APP_URL>/docs`**.
 
 > **This repository is public. No secrets in this file.** Keys and tokens live in the tools themselves,
 > in Railway and in `.env.local` — see [Credentials](#14-credentials).
@@ -114,13 +114,17 @@ then read it back. API changes go live at once; dashboard changes need **Publish
 
 **Prompt sections:** Personality · Company context (stable NDI facts from new-digital-intelligence.com: founded 2023
 in Zug, 8 markets, pay-per-use model, 7 offices, mail@new-digital-intelligence.com; numbers that change, such as team
-size or delivery locations, are left to the knowledge base) · Environment (channel
+size or delivery locations, are left to the knowledge base; the booking link from the contact page's "Schedule a
+Meeting": `https://calendly.com/michael-burian-ndi`, with Michael Burian, NDI's CEO) · Environment (channel
 rules: phone/avatar short answers; *Telegram only* text; *Instagram and Messenger only* plain text under 900
 characters; *Website chat* (the chat tells Clara so when it connects, a contextual update) gives links in full and reads images and PDFs; *Email only*: body of one plain-text reply, never asks for the
 email address, answers `SKIP` to robots) · Goal · Knowledge rules (only knowledge-base facts; AI Employees only as
-written in the knowledge base; no prices: explain pay-per-use and offer a call) · Collecting details for a meeting or
-a request · Data and security · Handover to a human · When the customer is upset · Style (British English) ·
-Operating mode: AGENT (summary of the request, never claims a meeting is booked) · Recognising the customer
+written in the knowledge base; no prices: explain pay-per-use and offer a call) · Booking a meeting or a demo (the
+user's decision, 3 Oct 2026: offer the booking link first, in full in written channels; on calls and the avatar never
+read it out, point to "Schedule a Meeting" on the contact page; collect details instead when the customer would rather
+be contacted) · Collecting details for a meeting or a request · Data and security · Handover to a human · When the customer is upset · Style (British English) ·
+Operating mode: AGENT (booking link first for meetings and demos; summary of other requests; never claims a meeting
+is booked) · Recognising the customer
 (section 10) · Calls NDI makes to customers, with the hand-over to a colleague (section 12).
 
 **Analysis items** (post-call data collection): `unanswered_question`, `feedback_sentiment`, `feedback_comment`,
@@ -564,7 +568,9 @@ to one browser tab: a section opened in a new tab asks for the password again.
 - **Claude insights** (Claude Haiku, `ANTHROPIC_MODEL`, only when a staff member clicks, nothing stored)
 - **Customer mood**: ElevenLabs' sentiment for voice and website; Claude rates Custom Channel conversations (email,
   Instagram, Messenger). Upset (frustration ≥ 0.6, sentiment ≤ −0.5, or one message ≥ 0.7) or `needs_follow_up` →
-  one email to **`STAFF_ALERT_EMAIL`** with a link to `<APP_URL>/admin/mood`. Upset emails always become drafts,
+  one email to **`STAFF_ALERT_EMAIL`** (contact@new-digital-intelligence.com since 3 Oct 2026, the user's choice: the
+  alert comes from that same mailbox, and the email channel ignores mail from itself, so Clara never answers an alert)
+  with a link to `<APP_URL>/admin/mood`. Upset emails always become drafts,
   labelled **Clara/Upset customer**. Times are shown in Central European time (Europe/Zurich)
 - **Call list**: Clara phones one number at a time from the number attached to her in ElevenLabs (section 8), up to
   3 tries, with a greeting written from the instructions: *"Hello Helmi, this is Clara, the virtual assistant from

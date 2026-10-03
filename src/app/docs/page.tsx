@@ -125,8 +125,8 @@ Hosted page / widget ───────────────┘         �
           <Section id="clara" title="Clara, the AI agent">
             <P>
               Clara is NDI&apos;s virtual assistant. She explains NDI and its AI Employees, helps visitors find the AI Employee that
-              fits their process, collects the details the NDI team needs for a meeting or a demo, and passes the conversation to a
-              person when needed.
+              fits their process, shares the link to book a meeting or a demo with Michael Burian, NDI&apos;s CEO (or collects the
+              details so the NDI team can follow up), and passes the conversation to a person when needed.
             </P>
             <Table
               head={["", ""]}
