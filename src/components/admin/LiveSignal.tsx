@@ -1,22 +1,20 @@
 "use client";
 
 import { AudioLines } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-// The live sound of a phone call (src/lib/liveSignal.ts): two moving bars, the customer and NDI's side
-// (Clara, or the colleague after a hand-over), ten times a second, from the app's WebSocket (server.mjs).
-// It shows loudness only: nobody hears the call from here.
+// The live sound of a phone call, in its live view (src/components/admin/LiveCall.tsx): two moving bars, the
+// customer and NDI's side (Clara, or the colleague after a hand-over), ten times a second, from the app's
+// WebSocket (server.mjs). It shows loudness only: nobody hears the call from here.
+//
+// Being connected is what keeps the call's live sound and transcript running (src/lib/liveCall.ts): they
+// start when the first page connects and stop shortly after the last one has gone.
 
 type Frame = { c: number; n: number };
-type State = "connecting" | "waiting" | "live" | "ended" | "unavailable";
+type State = "connecting" | "waiting" | "live" | "unavailable";
 
 const BARS = 64;
 const MAX_RETRIES = 5;
-
-function clockOf(ms: number): string {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 export function LiveSignal({
   staffToken,
@@ -24,22 +22,15 @@ export function LiveSignal({
   id,
   customerLabel = "Customer",
   ndiLabel = "Clara",
-  problem = null,
 }: {
   staffToken: string;
   kind: "list" | "incoming";
   id: string;
   customerLabel?: string;
   ndiLabel?: string;
-  /** Why the live sound could not start, when the server knows (Twilio's refusal, no Twilio keys). */
-  problem?: string | null;
 }) {
   const [frames, setFrames] = useState<Frame[]>([]);
   const [state, setState] = useState<State>("connecting");
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [endedAt, setEndedAt] = useState<number | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  const endedRef = useRef(false);
 
   useEffect(() => {
     let socket: WebSocket | null = null;
@@ -55,27 +46,21 @@ export function LiveSignal({
       socket.onmessage = (event) => {
         const message = JSON.parse(String(event.data)) as {
           type: "hello" | "state" | "level";
-          state?: Exclude<State, "connecting" | "unavailable">;
-          startedAt?: number | null;
-          endedAt?: number | null;
+          state?: "waiting" | "live";
           history?: Frame[];
           c?: number;
           n?: number;
         };
-        if (message.state) {
-          endedRef.current = message.state === "ended";
-          setState(message.state);
-        }
-        if (message.startedAt) setStartedAt(message.startedAt);
-        setEndedAt(message.endedAt ?? null);
+        if (message.state) setState(message.state);
         if (message.type === "hello") setFrames((message.history ?? []).slice(-BARS));
         if (message.type === "level") setFrames((current) => [...current.slice(-(BARS - 1)), { c: message.c ?? 0, n: message.n ?? 0 }]);
       };
       socket.onclose = () => {
-        if (stopped || endedRef.current) return;
+        if (stopped) return;
         attempts += 1;
         // `npm run dev` has no live sound (server.mjs runs with `npm start` only).
         if (attempts > MAX_RETRIES) return setState("unavailable");
+        setState("connecting");
         retry = setTimeout(connect, 1500 * attempts);
       };
     };
@@ -87,35 +72,23 @@ export function LiveSignal({
     };
   }, [kind, id, staffToken]);
 
-  useEffect(() => {
-    if (state !== "live") return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [state]);
-
   const padded = [...Array<Frame>(Math.max(0, BARS - frames.length)).fill({ c: 0, n: 0 }), ...frames];
   const caption: Record<State, string> = {
     connecting: "Connecting to the live sound…",
-    waiting: problem ? `No live sound: ${problem}` : "Waiting for the call's sound…",
+    waiting: "Waiting for the call's sound…",
     live: "Live",
-    ended: "Call ended",
     unavailable: "The live sound is not available right now.",
   };
 
   return (
     <div className="rounded-2xl bg-night p-4 text-white" aria-label={`Live sound: ${caption[state]}`}>
-      <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="flex min-w-0 items-center gap-2 font-semibold">
-          {state === "live" ? (
-            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-accent" aria-hidden="true" />
-          ) : (
-            <AudioLines className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden="true" />
-          )}
-          <span className={`truncate ${state === "live" ? "" : "text-white/60"}`}>{caption[state]}</span>
-        </span>
-        {startedAt && (state === "live" || endedAt) && (
-          <span className="shrink-0 tabular-nums text-white/60">{clockOf((state === "live" ? now : (endedAt ?? now)) - startedAt)}</span>
+      <div className="flex items-center gap-2 text-xs font-semibold">
+        {state === "live" ? (
+          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-accent" aria-hidden="true" />
+        ) : (
+          <AudioLines className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden="true" />
         )}
+        <span className={`truncate ${state === "live" ? "" : "text-white/60"}`}>{caption[state]}</span>
       </div>
       <div className="mt-3 space-y-2">
         <Bars label={customerLabel} values={padded.map((frame) => frame.c)} tone="bg-accent" dim={state !== "live"} />

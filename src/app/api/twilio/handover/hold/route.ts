@@ -1,8 +1,9 @@
 import { holdTwiml } from "@/lib/handover";
 import { callFromCallback, twimlResponse } from "@/lib/twilio";
 
-// Twilio asks what the customer hears once Clara has handed them over: the live transcript and sound start
-// and they wait on hold until the colleague joins (src/lib/handover.ts). The key in the URL is the proof.
+// Twilio asks what the customer hears once Clara has handed them over: they wait on hold until the
+// colleague joins, with the live sound and transcript if a staff page shows the call (src/lib/handover.ts).
+// The key in the URL is the proof.
 export async function POST(request: Request) {
   const call = await callFromCallback(request);
   if (!call) return new Response("Forbidden", { status: 403 });

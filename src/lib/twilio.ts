@@ -1,5 +1,5 @@
 // Twilio's REST API with NDI's own account (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN), for the hand-over of
-// a phone call to a colleague (src/lib/handover.ts) and its live sound (src/lib/liveSignal.ts). Clara's
+// a phone call to a colleague (src/lib/handover.ts) and its live view (src/lib/liveCall.ts). Clara's
 // calls themselves go through ElevenLabs' Twilio integration; the web app only steps in on a call that is
 // already running.
 //

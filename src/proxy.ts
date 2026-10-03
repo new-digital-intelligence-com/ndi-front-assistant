@@ -31,6 +31,10 @@ export async function proxy(request: NextRequest) {
   // live transcript. Each URL carries a key made from the Twilio Auth Token (src/lib/twilio.ts).
   if (pathname.startsWith("/api/twilio/")) return NextResponse.next();
 
+  // server.mjs telling the app which calls staff pages show live (/api/live/watch), with a key made from
+  // the Twilio Auth Token in a header. The live sound's WebSocket (/api/live/signal) is server.mjs's own.
+  if (pathname.startsWith("/api/live/")) return NextResponse.next();
+
   // Aida has its own staff password, separate from this one. The invite page and the routes are open
   // here and every route decides for itself: the Aida staff token makes you an employee, a signed room
   // ticket proves you are in the room, and anyone else is a customer. (/aida itself is the customer

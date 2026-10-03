@@ -281,8 +281,8 @@ alter table call_list_items enable row level security;
 -- Hand-over to a colleague (src/lib/handover.ts): staff may name a colleague and their phone number for
 -- a call. When the moment comes, Clara says she is connecting the customer and uses her tool
 -- transfer_to_human; the web app puts the customer on hold and rings the colleague from the Twilio
--- number. Once they press a key, both are joined in a Twilio conference and Clara is gone. Twilio
--- transcribes the conversation live (handover_lines), and /admin shows it with Aida's suggestions.
+-- number. Once they press a key, both are joined in a Twilio conference and Clara is gone. While a staff
+-- page shows the call live, Twilio transcribes it (handover_lines), and /admin adds Aida's suggestions.
 alter table call_list_items add column if not exists handover_name       text;        -- the colleague, e.g. Michael
 alter table call_list_items add column if not exists handover_phone      text;        -- their phone, +<country code>…
 alter table call_list_items add column if not exists handover_when       text;        -- when Clara should hand over
@@ -296,12 +296,13 @@ alter table call_list_items add column if not exists handover_live_at    timesta
 alter table call_list_items add column if not exists handover_ended_at   timestamptz;
 alter table call_list_items add column if not exists handover_note       text;        -- the talk in one line, afterwards
 
--- What the customer and the colleague said, line by line. Not kept for anything else: the talk ends up
--- as one short note in the customer's memory, like every other conversation.
+-- What was said on a call while a staff page showed it live (src/lib/liveCall.ts), line by line: the
+-- customer and Clara, then the colleague after a hand-over. Not kept for anything else: a colleague's
+-- talk ends up as one short note in the customer's memory, like every other conversation.
 create table if not exists handover_lines (
   id         bigint generated always as identity primary key,
   item_id    uuid not null references call_list_items (id) on delete cascade,
-  speaker    text not null,                     -- customer | colleague
+  speaker    text not null,                     -- customer | clara | colleague
   text       text not null,
   ref        text unique,                       -- <transcription sid>:<sequence id>: a repeated callback is stored once
   created_at timestamptz not null default now()
@@ -347,7 +348,7 @@ create table if not exists incoming_calls (
   ended_at            timestamptz,
   summary             text,                    -- ElevenLabs' summary of Clara's part
   instructions        text not null default '', -- always empty: call lists only, kept so the hand-over code is shared
-  live_signal         text,                    -- why the live sound could not start, when it could not
+  live_signal         text,                    -- what Twilio refused when the live sound or transcript should have started
   handover_name       text,
   handover_phone      text,
   handover_status     text,                    -- ringing | live | ended | missed | abandoned | failed
@@ -370,8 +371,15 @@ alter table handover_lines alter column item_id drop not null;
 alter table handover_lines add column if not exists incoming_id uuid references incoming_calls (id) on delete cascade;
 create index if not exists handover_lines_incoming_idx on handover_lines (incoming_id, id);
 
--- Why the live sound of a call-list call could not start, when it could not (src/lib/liveSignal.ts).
+-- What Twilio refused when the live sound or transcript of a call-list call should have started.
 alter table call_list_items add column if not exists live_signal text;
+
+-- A call's live view (src/lib/liveCall.ts): Twilio charges by the minute for the call's sound and live
+-- transcript, so they run only while a staff page shows the call (server.mjs knows which pages do).
+alter table call_list_items add column if not exists live_on   boolean not null default false; -- a staff page shows the call live
+alter table call_list_items add column if not exists live_name text;    -- Twilio's name for the running sound and transcript
+alter table incoming_calls  add column if not exists live_on   boolean not null default false;
+alter table incoming_calls  add column if not exists live_name text;
 
 -- ---------------------------------------------------------------------------------------------
 -- Knowledge gaps: questions Clara could not answer (ElevenLabs' post-call data collection item

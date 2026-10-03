@@ -2,10 +2,10 @@ import { isStaffRequest } from "@/lib/aidaStaff";
 import { elevenLabsGet } from "@/lib/elevenlabs";
 import { handoverActive, handoverItem } from "@/lib/handover";
 
-// Opens a text-only session with Aida for the staff member following a hand-over on /admin, so she can
-// suggest what the colleague could say next. Only while the hand-over is under way. ?kind=incoming for a
-// call to NDI. Staff only.
-export async function POST(request: Request, ctx: RouteContext<"/api/admin/calls/handover/[id]/copilot">) {
+// Opens a text-only session with Aida for the staff member following a hand-over in a call's live view on
+// /admin, so she can suggest what the colleague could say next. Only while the hand-over is under way.
+// ?kind=incoming for a call to NDI. Staff only.
+export async function POST(request: Request, ctx: RouteContext<"/api/admin/calls/live/[id]/copilot">) {
   if (!(await isStaffRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Unknown call" }, { status: 404 });

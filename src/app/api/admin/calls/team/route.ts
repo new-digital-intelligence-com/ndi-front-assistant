@@ -3,7 +3,7 @@ import { addTeamMember, moveTeamMember, removeTeamMember, teamMembers, updateTea
 import { twilioConfigured } from "@/lib/twilio";
 
 // The hand-over team for /admin/calls/team (src/lib/handoverTeam.ts). Staff only (Aida staff token).
-//   GET  → { members, twilio }  (twilio: whether hand-overs and the live sound can work yet)
+//   GET  → { members, twilio }  (twilio: whether hand-overs and the live view of calls can work yet)
 //   POST → { action: "add", name, phone } | { action: "update", id, name?, phone?, active? }
 //          | { action: "remove", id } | { action: "move", id, direction: "up" | "down" }, then the same as GET
 

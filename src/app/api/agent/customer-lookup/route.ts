@@ -98,7 +98,8 @@ export async function POST(request: Request) {
       rememberConversation(conversationId, customer.id, identity.channel),
       toNdi && twilioConfigured() ? teamAvailable() : false,
     ]);
-    // Once Clara has her answer: the call is registered and its live sound starts (src/lib/incomingCalls.ts).
+    // Once Clara has her answer: a call to NDI is registered, and a call-list call that a staff page shows
+    // live gets its sound and transcript (src/lib/incomingCalls.ts).
     if (identity.channel === "phone") {
       after(() => trackPhoneCall(conversationId, brief ? { itemId: brief.itemId, callSid: brief.callSid } : null));
     }

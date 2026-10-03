@@ -8,10 +8,11 @@ import { OutgoingCalls } from "./OutgoingCalls";
 import { SectionTabs, useSectionPath } from "./ui";
 
 // The Calls section of the staff console, in three tabs at their own addresses:
-// - Outgoing (/admin/calls): call lists Clara phones, each call with its live sound and hand-over.
+// - Outgoing (/admin/calls): call lists Clara phones, each call with its hand-over and, on request, its live view.
 // - Incoming (/admin/calls/incoming): calls to NDI that Clara answers, the same way.
 // - Hand-over team (/admin/calls/team): the colleagues who can take over a call.
-// Outgoing and Incoming stay mounted while staff look at another tab, so a live view is not cut off.
+// Outgoing and Incoming stay mounted while staff look at another tab, so an open live view goes on (and
+// keeps its sound and transcript running, src/lib/liveCall.ts) until staff close it.
 
 const BASE = "/admin/calls";
 const INCOMING = `${BASE}/incoming`;
@@ -80,7 +81,7 @@ export function CallsPanel({ staffToken, onSignOut }: { staffToken: string; onSi
 
       {twilio === false && view !== "team" && (
         <p className="rounded-xl bg-amber-50 px-4 py-2 text-xs text-amber-900">
-          NDI&apos;s Twilio number and keys are not set up yet: calls, hand-overs to a colleague and the live sound start once they are.
+          NDI&apos;s Twilio number and keys are not set up yet: calls, hand-overs to a colleague and the live view of calls start once they are.
         </p>
       )}
       {teamError && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">{teamError}</p>}

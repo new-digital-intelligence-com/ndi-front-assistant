@@ -278,6 +278,8 @@ async function startNext(listId: string): Promise<void> {
       started_at: calling.started_at,
       conversation_id: null,
       call_sid: null,
+      live_name: null,
+      live_signal: null,
       next_attempt_at: null,
     }),
   });
@@ -369,8 +371,11 @@ export async function stopList(listId: string): Promise<void> {
   });
 }
 
+/** The latest lists with their calls; each call says how many transcript lines it has (`lines`). */
 export async function recentLists(limit = 6): Promise<CallList[]> {
-  const lists = await rest<CallList[]>(`call_lists?select=*,items:call_list_items(*)&order=created_at.desc&limit=${limit}`);
+  const lists = await rest<CallList[]>(
+    `call_lists?select=*,items:call_list_items(*,lines:handover_lines(count))&order=created_at.desc&limit=${limit}`,
+  );
   for (const list of lists) list.items?.sort((a, b) => a.position - b.position);
   return lists;
 }
@@ -383,7 +388,7 @@ export type CallBrief = {
   instructions: string;
   /** Set when staff named a colleague Clara may hand the call over to (src/lib/handover.ts). */
   handover: { colleague: string; when: string | null } | null;
-  /** For the server only (the live sound, src/lib/incomingCalls.ts): never told to Clara. */
+  /** For the server only (the live view, src/lib/incomingCalls.ts): never told to Clara. */
   itemId: string;
   callSid: string | null;
 };

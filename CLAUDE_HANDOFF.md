@@ -108,15 +108,19 @@ npm run lint
   public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
 - Values still to fill in the code once known: `PHONE_LINE` (`src/components/ChannelLinks.tsx`, its button hidden
   while empty) and `DEMO_LINE` (`src/components/admin/OutgoingCalls.tsx`); `SUPPORT_EMAIL` and `TELEGRAM_BOT` are set
-- **Server**: `npm start` runs **`server.mjs`** (since 3 Oct 2026): Next.js plus two WebSockets for the live call sound
+- **Server**: `npm start` runs **`server.mjs`** (since 3 Oct 2026): Next.js plus two WebSockets for a call's live view
   (`/api/twilio/media-stream` from Twilio, `/api/live/signal` to staff pages), which Next.js route handlers cannot
-  hold. It starts the daily jobs like `next start` (checked: "daily jobs: scheduled"). `npm run dev` has no live sound
+  hold; it tells the app which calls staff pages watch (`POST /api/live/watch`). It starts the daily jobs like
+  `next start` (checked: "daily jobs: scheduled"). `npm run dev` has no live view of calls
 - **Calls** (`/admin/calls`, the user's request, 3 Oct 2026): tabs **Outgoing** (call lists), **Incoming** (calls to
   NDI, `src/lib/incomingCalls.ts`, table `incoming_calls`) and **Hand-over team** (`/admin/calls/team`, table
-  `handover_team`). Every live call shows its sound (`src/lib/liveSignal.ts`, Twilio Media Streams, $0.0044/min). A
-  call to NDI is handed over to the team, rung in order (`src/lib/handover.ts` serves both kinds of call; Clara's
-  prompt has "Calls to NDI: handing over to a colleague", and `customer_lookup` returns `inbound_call.handover`).
-  Tested with a fake Twilio (60 checks) and the WebSocket server locally (16 checks); never on a real call yet
+  `handover_team`). A call to NDI is handed over to the team, rung in order (`src/lib/handover.ts` serves both kinds
+  of call; Clara's prompt has "Calls to NDI: handing over to a colleague", and `customer_lookup` returns
+  `inbound_call.handover`). **Live view, only on request** (the user's request, 3 Oct 2026: they cost money): nothing
+  runs until a staff member presses **Open live call**; then the call's sound (Twilio Media Streams, $0.0044/min) and
+  transcript (Twilio real-time transcription, Deepgram `nova-3` `multi`, $0.027/min) run until 15 s after the view is
+  closed (`src/lib/liveCall.ts`, columns `live_on` and `live_name`); Aida's suggestions during a hand-over. Tested
+  with a fake Twilio (44 checks) and `server.mjs` locally (16 checks); never on a real call yet
 - **Design and routing** (the user's request, 2 Oct 2026: "modern, not like CDA", "routing where there are many
   panels"): the customer site is an app with a side menu (on a phone: a bar at the bottom) and one address per way of
   talking: `/` chat, `/voice`, `/avatar`, `/aida` (`src/app/(site)`, `src/components/site/`). The staff console has a
@@ -162,10 +166,10 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
    subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`, Custom Channel "NDI email" (3 values on Railway),
    Gmail watch started (renewed daily). The user tested a reply. Auto or draft: `/admin/replies`.
 7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
-   `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** and the **live sound**
+   `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** and the **live view**
    (CHANNEL_SETUP.md §8, §12); the hand-over team on `/admin/calls/team`. Tested only with fakes so far. On the first
-   real call, check whether the live sound runs during Clara's part: Twilio may refuse a copy of the audio next to
-   ElevenLabs' own stream (the reason then shows on the call, and the sound starts at the hand-over).
+   real call, open it live and check that the sound and the transcript run during Clara's part: Twilio may refuse
+   them next to ElevenLabs' own stream (the view then says "Twilio refused: …"; at a hand-over they start again).
 8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
    (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
    input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (`/avatar`).

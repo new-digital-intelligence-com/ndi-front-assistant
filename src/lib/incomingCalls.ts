@@ -1,9 +1,10 @@
 // Calls to NDI: every call Clara answers on NDI's number (supabase/schema.sql, incoming_calls). They show on
-// /admin/calls/incoming while they happen, with their live sound, and afterwards with ElevenLabs' summary.
+// /admin/calls/incoming while they happen, where staff can open one live (src/lib/liveCall.ts), and
+// afterwards with ElevenLabs' summary.
 //
 //   1. Clara's first move on every call is customer_lookup. For a phone call, right after it answers, the
-//      call is registered here and the live sound starts (src/lib/liveSignal.ts). A call from a staff call
-//      list only gets its live sound: it is followed on the call list already.
+//      call is registered here. A call from a staff call list is followed on the call list already: if a
+//      staff page shows it live while it was ringing, its live sound and transcript start now.
 //   2. When the customer asks for a person (or Clara judges they need one), Clara hands the call over to
 //      the hand-over team (src/lib/handover.ts, src/lib/handoverTeam.ts).
 //   3. ElevenLabs' post-call webhook ends Clara's part: the summary is kept, and the call counts as ended
@@ -11,7 +12,7 @@
 
 import { findByChannel } from "./customers";
 import { elevenLabsConversation, type ConversationRecord } from "./elevenlabs";
-import { startLiveSignal } from "./liveSignal";
+import { ensureLive } from "./liveCall";
 import { normalisePhone } from "./phone";
 import { supabaseRest as rest } from "./supabase";
 
@@ -46,29 +47,26 @@ async function register(conversationId: string, record: ConversationRecord | nul
 
 /**
  * Right after customer_lookup has answered Clara (it must not keep her waiting): a call to NDI is
- * registered, and the live sound of any phone call starts. Never throws.
+ * registered; a call-list call that a staff page shows live gets its sound and transcript, now that it
+ * has been answered. Never throws.
  */
 export async function trackPhoneCall(conversationId: string, listCall: ListCall | null): Promise<void> {
   if (!conversationId) return;
   try {
-    const record = await elevenLabsConversation(conversationId).catch(() => null);
-    const callSid = listCall?.callSid || record?.metadata?.phone_call?.call_sid || null;
     if (listCall) {
-      if (!callSid) return;
-      const problem = await startLiveSignal(callSid, { kind: "list", id: listCall.itemId });
-      await rest(`call_list_items?id=eq.${q(listCall.itemId)}`, {
-        method: "PATCH",
-        prefer: "return=minimal",
-        body: JSON.stringify({ live_signal: problem, ...(listCall.callSid ? {} : { call_sid: callSid }) }),
-      });
+      // Twilio's id of the call came with placing it; ElevenLabs has it too, should that have failed.
+      const callSid = listCall.callSid || (await elevenLabsConversation(conversationId).catch(() => null))?.metadata?.phone_call?.call_sid;
+      if (callSid && !listCall.callSid) {
+        await rest(`call_list_items?id=eq.${q(listCall.itemId)}`, {
+          method: "PATCH",
+          prefer: "return=minimal",
+          body: JSON.stringify({ call_sid: callSid }),
+        });
+      }
+      await ensureLive({ kind: "list", id: listCall.itemId });
       return;
     }
-    const row = await register(conversationId, record);
-    if (!row || !callSid) return;
-    const problem = await startLiveSignal(callSid, { kind: "incoming", id: row.id });
-    if (problem) {
-      await rest(`incoming_calls?id=eq.${q(row.id)}`, { method: "PATCH", prefer: "return=minimal", body: JSON.stringify({ live_signal: problem }) });
-    }
+    await register(conversationId, await elevenLabsConversation(conversationId).catch(() => null));
   } catch (error) {
     console.error("phone call could not be followed", conversationId, error);
   }
@@ -109,10 +107,10 @@ export async function closeIncomingCall(id: string): Promise<void> {
 
 // --- for /admin ------------------------------------------------------------------------------------
 
-/** What staff see; Twilio's ids and the colleagues' numbers stay on the server. */
+/** What staff see; Twilio's ids and the colleagues' numbers stay on the server. `lines`: how many transcript lines. */
 const VIEW_FIELDS =
-  "id,phone,name,status,started_at,ended_at,summary,live_signal,handover_name,handover_status,handover_started_at," +
-  "handover_live_at,handover_ended_at,handover_note";
+  "id,phone,name,status,started_at,ended_at,summary,handover_name,handover_status,handover_started_at," +
+  "handover_live_at,handover_ended_at,handover_note,lines:handover_lines(count)";
 
 export type IncomingCallView = {
   id: string;
@@ -122,13 +120,13 @@ export type IncomingCallView = {
   started_at: string;
   ended_at: string | null;
   summary: string | null;
-  live_signal: string | null;
   handover_name: string | null;
   handover_status: string | null;
   handover_started_at: string | null;
   handover_live_at: string | null;
   handover_ended_at: string | null;
   handover_note: string | null;
+  lines: { count: number }[];
 };
 
 /** The calls happening now, and the last twenty. */

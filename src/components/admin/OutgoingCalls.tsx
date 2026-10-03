@@ -1,13 +1,12 @@
 "use client";
 
-import { ListChecks, PhoneOutgoing, Plus, Square, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AudioLines, ListChecks, PhoneOutgoing, Plus, Square, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import "react-phone-number-input/style.css";
-import { HandoverLive } from "./HandoverLive";
 import type { TeamMember } from "./HandoverTeam";
-import { LiveSignal } from "./LiveSignal";
+import { LiveCall } from "./LiveCall";
 import { COUNTRY_LABELS } from "./phoneLabels";
 import { Panel } from "./ui";
 
@@ -15,9 +14,10 @@ import { Panel } from "./ui";
 // them one by one from NDI's phone line. The server moves a list forward each time this page asks (every
 // few seconds while a list is running) and when ElevenLabs reports that a call ended.
 //
-// The call on the line shows its live sound (src/lib/liveSignal.ts). A call may name a colleague (typed, or
-// picked from the hand-over team): Clara then hands the customer over to them when the moment comes
-// (src/lib/handover.ts), and this page opens the live view with Aida's suggestions by itself.
+// The call on the line can be opened live (src/lib/liveCall.ts): its sound and transcript, which Twilio
+// charges by the minute, run only while that view is open. A call may name a colleague (typed, or picked
+// from the hand-over team): Clara then hands the customer over to them when the moment comes
+// (src/lib/handover.ts), and the live view adds Aida's suggestions.
 
 type ItemStatus = "waiting" | "calling" | "reached" | "failed" | "stopped";
 type HandoverStatus = "ringing" | "live" | "ended" | "missed" | "abandoned" | "failed";
@@ -38,7 +38,8 @@ type CallItem = {
   handover_when: string | null;
   handover_status: HandoverStatus | null;
   handover_note: string | null;
-  live_signal?: string | null;
+  /** How many transcript lines the call has: it was open live at some point. */
+  lines?: { count: number }[];
 };
 
 type CallList = {
@@ -103,6 +104,7 @@ function rememberColleague(name: string, phone: string) {
 }
 
 const handingOver = (item: CallItem) => item.handover_status === "ringing" || item.handover_status === "live";
+const transcribed = (item: CallItem) => (item.lines?.[0]?.count ?? 0) > 0;
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 const when = (iso: string) =>
@@ -119,9 +121,9 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
   const [loadedAt, setLoadedAt] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  /** The call whose hand-over is shown live, and the ones staff closed (they do not open again). */
-  const [liveItemId, setLiveItemId] = useState<string | null>(null);
-  const closedRef = useRef(new Set<string>());
+  /** The call shown in the live view; `at` opens it afresh when staff open the same call again. */
+  const [open, setOpen] = useState<{ id: string; at: number } | null>(null);
+  const openCall = (id: string) => setOpen((current) => ({ id, at: (current?.at ?? 0) + 1 }));
 
   const request = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -137,11 +139,6 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
       if (!response.ok || !body.lists) throw new Error(body.error ?? "Something went wrong. Please try again.");
       setLists(body.lists);
       setLoadedAt(Date.now());
-      // A hand-over that starts opens its live view by itself.
-      const handedOver = body.lists
-        .flatMap((list) => list.items ?? [])
-        .find((item) => handingOver(item) && !closedRef.current.has(item.id));
-      if (handedOver) setLiveItemId((current) => current ?? handedOver.id);
       return body;
     },
     [staffToken, onSignOut],
@@ -243,17 +240,14 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
         </p>
       )}
 
-      {liveItemId && (
-        <HandoverLive
-          key={liveItemId}
+      {open && (
+        <LiveCall
+          key={`${open.id}:${open.at}`}
           staffToken={staffToken}
           kind="list"
-          itemId={liveItemId}
+          callId={open.id}
           onSignOut={onSignOut}
-          onClose={() => {
-            closedRef.current.add(liveItemId);
-            setLiveItemId(null);
-          }}
+          onClose={() => setOpen(null)}
         />
       )}
 
@@ -370,8 +364,8 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
                     />
                     <p className="text-xs text-muted">
                       Clara tells the customer she is connecting them, then {row.colleagueName.trim() || "your colleague"}&apos;s phone rings
-                      from NDI&apos;s number: they hear who is waiting and press any key to take the call. The call&apos;s sound, the
-                      conversation and Aida&apos;s suggestions appear on this page. Without an answer, the customer hears that NDI will call back.
+                      from NDI&apos;s number: they hear who is waiting and press any key to take the call. Open the call live on this page to
+                      follow the conversation with Aida&apos;s suggestions. Without an answer, the customer hears that NDI will call back.
                     </p>
                   </div>
                 )}
@@ -402,7 +396,7 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
         <div className="min-w-0 space-y-4">
           {lists.length === 0 && (
             <Panel title="Call lists" icon={ListChecks}>
-              <p className="text-sm text-muted">No call list yet. The lists you start appear here, with each call&apos;s live sound.</p>
+              <p className="text-sm text-muted">No call list yet. The lists you start appear here; open a call to follow it live.</p>
             </Panel>
           )}
           {lists.map((list) => (
@@ -450,16 +444,14 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
                       </p>
                     )}
                     {item.status === "calling" && !handingOver(item) && list.current_item === item.id && (
-                      <LiveSignal
-                        staffToken={staffToken}
-                        kind="list"
-                        id={item.id}
-                        customerLabel={item.name || "Customer"}
-                        ndiLabel="Clara"
-                        problem={item.live_signal ?? null}
-                      />
+                      <OpenLive onOpen={() => openCall(item.id)} />
                     )}
-                    {item.handover_status && <HandoverBadge item={item} onOpen={() => setLiveItemId(item.id)} />}
+                    {item.handover_status && <HandoverBadge item={item} onOpen={() => openCall(item.id)} />}
+                    {!item.handover_status && item.status !== "calling" && transcribed(item) && (
+                      <button type="button" onClick={() => openCall(item.id)} className="text-xs font-semibold text-brand hover:underline">
+                        View conversation
+                      </button>
+                    )}
                     {item.summary && <p className="rounded-lg bg-white p-2 text-xs text-heading">{item.summary}</p>}
                     {item.handover_note && <p className="rounded-lg bg-white p-2 text-xs text-heading">{item.handover_note}</p>}
                   </li>
@@ -503,6 +495,19 @@ function StatusBadge({ item, now }: { item: CallItem; now: number }) {
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${style}`}>{text}</span>;
 }
 
+/** Opens a running call live, at the top of the page: its sound and transcript start now (src/lib/liveCall.ts). */
+function OpenLive({ onOpen, label = "Open live call" }: { onOpen: () => void; label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="inline-flex items-center gap-1.5 rounded-full bg-heading px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-black"
+    >
+      <AudioLines className="h-3.5 w-3.5" aria-hidden="true" /> {label}
+    </button>
+  );
+}
+
 function HandoverBadge({ item, onOpen }: { item: CallItem; onOpen: () => void }) {
   const status = item.handover_status;
   if (!status) return null;
@@ -518,9 +523,10 @@ function HandoverBadge({ item, onOpen }: { item: CallItem; onOpen: () => void })
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${shown[status].style}`}>{shown[status].text}</span>
-      {(handingOver(item) || status === "ended") && (
+      {handingOver(item) && <OpenLive onOpen={onOpen} label="Open live call · Aida" />}
+      {!handingOver(item) && item.status !== "calling" && (status === "ended" || transcribed(item)) && (
         <button type="button" onClick={onOpen} className="text-xs font-semibold text-brand hover:underline">
-          {handingOver(item) ? "Open live view" : "View conversation"}
+          View conversation
         </button>
       )}
     </div>
