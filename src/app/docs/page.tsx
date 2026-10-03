@@ -325,8 +325,8 @@ End of every conversation   → post-call webhook  → one short note, their int
               head={["Section", "What staff do"]}
               rows={[
                 ["📞 Aida rooms (/admin/rooms)", "Create, join and close rooms; read and email closed ones."],
-                ["👥 Customers (/admin/customers)", "Numbers per channel, a searchable customer list, and one customer's channels, history and measured mood. ✨ Ask Claude writes a summary, topics, the AI Employees they asked about, mood, open issues and a next step; ✨ Summarise with Claude does the same for the whole week."],
-                ["😊 Mood (/admin/mood)", "How customers felt, per channel and per day, and the unhappy conversations to follow up (see Customer mood)."],
+                ["👥 Customers (/admin/customers)", "Two tabs. People: a searchable customer list, and one customer at their own address beside it, with their channels and measured mood, their history, and ✨ Ask Claude (a summary, topics, the AI Employees they asked about, mood, open issues and a next step). Overview: the numbers per channel and ✨ Summarise with Claude for the whole week."],
+                ["😊 Mood (/admin/mood)", "Three tabs: Overview (how customers felt, per channel and per day), Follow-up (the unhappy conversations to follow up) and Emails & Aida calls (see Customer mood)."],
                 ["📲 Call list (/admin/calls)", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
                 ["📚 Knowledge (/admin/knowledge)", "Three tabs: To answer, Feedback (/admin/knowledge/feedback) and Approved answers (/admin/knowledge/approved). Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
                 ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
@@ -401,13 +401,12 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["5. Clara reacts", "When a customer sounds frustrated, Clara apologises once, slows down, gives one clear next step and offers a person. Her promise of a follow-up is recorded and reaches staff through the alert."],
               ]}
             />
-            <H3>The Mood page (/admin/mood)</H3>
+            <H3>The Mood page (/admin/mood): three tabs</H3>
             <List
               items={[
-                "The share of positive, neutral and negative conversations and the average frustration, for 7 or 30 days.",
-                "Mood by channel, and conversations per day.",
-                "The upset emails (sender, subject, why, Open in Gmail) and the frustrated lines in Aida rooms, listed one by one.",
-                "Unhappy conversations: frustration of 60% or more, a very negative moment, or a promised follow-up. Each shows the customer, the channel, the message where it turned, a small mood curve and a Mark followed up button.",
+                "Overview: the share of positive, neutral and negative conversations and the average frustration, for 7 or 30 days; mood by channel, and conversations per day.",
+                "Follow-up (/admin/mood/follow-up): unhappy conversations, meaning a frustration of 60% or more, a very negative moment, or a promised follow-up. The ones waiting come first. Each shows the customer (with a link to their page), the channel, the message where it turned, a small mood curve and a Mark followed up button.",
+                "Emails & Aida calls (/admin/mood/emails-calls): the upset emails (sender, subject, why, Open in Gmail) and the frustrated lines in Aida rooms, listed one by one.",
                 "Import past conversations fills in the last 30 days; opening the page and a daily job bring in new ones (reading from ElevenLabs is free, Claude's rating costs a fraction of a cent).",
               ]}
             />

@@ -559,8 +559,8 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | Section | What staff do |
 |---|---|
 | 📞 **Aida rooms** `/admin/rooms` | Create, join, close rooms; read and email closed ones |
-| 👥 **Customers** `/admin/customers` | Numbers, a searchable list, one customer's channels, activity and timeline; ✨ Ask Claude (summary, topics, AI Employees asked about, mood, open issues, next step) |
-| 😊 **Mood** `/admin/mood` | How customers felt on every channel (7 / 30 days), and the unhappy conversations to follow up |
+| 👥 **Customers** `/admin/customers` | Two tabs: **People** (`/admin/customers`: a searchable list, and one customer at `/admin/customers/<id>` beside it with Profile, History and AI insight: ✨ Ask Claude writes a summary, topics, AI Employees asked about, mood, open issues, next step) and **Overview** (`/admin/customers/overview`: the numbers, the channels and ✨ Summarise with Claude for the week) |
+| 😊 **Mood** `/admin/mood` | Three tabs, with the 7 / 30 days switch, the import and the alert status above them: **Overview** (`/admin/mood`: how customers felt on every channel), **Follow-up** (`/admin/mood/follow-up`: the unhappy conversations, waiting ones first, each with Open customer) and **Emails & Aida calls** (`/admin/mood/emails-calls`) |
 | 📲 **Call list** `/admin/calls` | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
 | 📚 **Knowledge** `/admin/knowledge` | Three tabs, each at its own address: **To answer** (`/admin/knowledge`), **Feedback** (`/admin/knowledge/feedback`, with customer feedback, Aida, email and Instagram & Messenger corrections) and **Approved answers** (`/admin/knowledge/approved`, searchable, add your own). Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
 | ✉️ **Replies** `/admin/replies` | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
@@ -570,7 +570,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
   Instagram, Messenger). Upset (frustration ≥ 0.6, sentiment ≤ −0.5, or one message ≥ 0.7) or `needs_follow_up` →
   one email to **`STAFF_ALERT_EMAIL`** (contact@new-digital-intelligence.com since 3 Oct 2026, the user's choice: the
   alert comes from that same mailbox, and the email channel ignores mail from itself, so Clara never answers an alert)
-  with a link to `<APP_URL>/admin/mood`. Upset emails always become drafts,
+  with a link to `<APP_URL>/admin/mood/follow-up`. Upset emails always become drafts,
   labelled **Clara/Upset customer**. Times are shown in Central European time (Europe/Zurich)
 - **Call list**: Clara phones one number at a time from the number attached to her in ElevenLabs (section 8), up to
   3 tries, with a greeting written from the instructions: *"Hello Helmi, this is Clara, the virtual assistant from

@@ -115,7 +115,10 @@ npm run lint
   `/replies` (`src/app/admin`, `src/components/admin/AdminShell.tsx` + `sections.ts`; `/admin` redirects in
   `next.config.ts`). Both shells live in layouts, so state survives moving between pages (CHANNEL_SETUP.md §9, §12).
   Icons: `lucide-react`. Cards everywhere take `shadow-sm` (redefined in `globals.css`), big panels `shadow-card`.
-  Knowledge has three tabs at their own addresses (`/admin/knowledge`, `/feedback`, `/approved`). The site icon is
+  Sections with several panels have tabs at their own addresses, in the shared tab bar of `src/components/admin/ui.tsx`
+  (with `Empty`, `StatTile`, `Panel` and `useSectionPath`): Knowledge (`/admin/knowledge`, `/feedback`, `/approved`),
+  Customers (`/admin/customers`, one customer at `/admin/customers/<id>`, `/overview`) and Mood (`/admin/mood`,
+  `/follow-up`, `/emails-calls`; staff alert emails link to `/follow-up`). The site icon is
   the NDI letters drawn as shapes (`src/app/icon.svg`, `src/app/apple-icon.png` 180x180 for phone home screens)
 - Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
   Tailwind tokens (`brand`, `brand-soft`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`, `night`) in `src/app/globals.css`:

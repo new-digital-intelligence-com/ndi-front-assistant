@@ -1,6 +1,32 @@
 "use client";
 
+import {
+  Activity,
+  ArrowLeft,
+  Headset,
+  History,
+  IdCard,
+  LayoutDashboard,
+  Mail,
+  MessagesSquare,
+  Radio,
+  RefreshCw,
+  Search,
+  Sparkles,
+  TriangleAlert,
+  UserRound,
+  UserRoundCheck,
+  Users,
+  Waypoints,
+} from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Empty, Panel, SectionTabs, StatTile, useSectionPath, type SectionTab } from "./ui";
+
+// The Customers section of the staff console, in two tabs at their own addresses:
+// - People (/admin/customers): the list, and one customer at /admin/customers/<id> beside it, with
+//   their profile, their history and Claude's insight in three tabs of their own.
+// - Overview (/admin/customers/overview): the numbers, the channels and Claude on the whole week.
 
 // Shapes returned by /api/admin/* (see src/lib/adminData.ts).
 type AdminChannel = { channel: string; label: string; verified: boolean };
@@ -83,6 +109,18 @@ const EMAIL_STATUS: Record<string, string> = {
   replying: "Clara writing",
   new: "Clara writing",
 };
+const EMAIL_DOT: Record<string, string> = { sent: "bg-green-500", draft: "bg-amber-400", skipped: "bg-line", failed: "bg-brand" };
+
+const BASE = "/admin/customers";
+const OVERVIEW = `${BASE}/overview`;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Which tab the address shows, and which customer (/admin/customers/<id>) is open. */
+function routeOf(path: string): { view: "people" | "overview"; selected: string | null } {
+  if (path === OVERVIEW || path.startsWith(`${OVERVIEW}/`)) return { view: "overview", selected: null };
+  const id = path.startsWith(`${BASE}/`) ? path.slice(BASE.length + 1).split("/")[0] : "";
+  return { view: "people", selected: UUID.test(id) ? id : null };
+}
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -109,7 +147,7 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("known");
-  const [selected, setSelected] = useState<string | null>(null);
+  const { view, selected } = routeOf(useSectionPath(BASE));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -148,151 +186,201 @@ export function CustomersPanel({ staffToken, onSignOut }: { staffToken: string; 
     });
   }, [data, filter, search]);
 
+  const tabs: SectionTab[] = [
+    { href: BASE, label: "People", icon: Users, count: data?.customers.filter(isKnown).length },
+    { href: OVERVIEW, label: "Overview", icon: LayoutDashboard },
+  ];
+
   return (
     <div className="space-y-4">
+      <SectionTabs label="Customers" tabs={tabs} active={view === "overview" ? OVERVIEW : BASE} />
       {error && <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-brand-dark">{error}</p>}
-      {data && <OverviewCards overview={data.overview} />}
-      <WeekInsightCard staffToken={staffToken} />
 
-      <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
-        <section className="flex max-h-[75dvh] flex-col rounded-xl bg-white shadow-sm">
-          <div className="space-y-2 border-b border-line p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-heading">
-                Customers <span className="text-sm font-normal text-muted">({visible.length})</span>
-              </h2>
-              <button type="button" onClick={() => void load()} disabled={loading} className="text-xs text-muted underline disabled:opacity-50">
-                {loading ? "Loading…" : "Refresh"}
-              </button>
-            </div>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search a name, email, Telegram chat…"
-              className="w-full rounded-lg border border-line px-3 py-2 text-sm"
-            />
-            <div className="flex flex-wrap gap-1.5">
-              {FILTERS.map((item) => (
+      {view === "overview" ? (
+        <div key="overview" className="animate-fade-up space-y-4">
+          {data ? <OverviewView overview={data.overview} /> : !error && <p className="text-sm text-muted">Loading…</p>}
+          <WeekInsightCard staffToken={staffToken} />
+        </div>
+      ) : (
+        <div
+          key="people"
+          className="animate-fade-up grid grid-cols-1 gap-4 lg:h-[calc(100dvh-13.5rem)] lg:min-h-[520px] lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]"
+        >
+          <section
+            className={`${selected ? "hidden lg:flex" : "flex"} max-h-[78dvh] min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm lg:max-h-none`}
+          >
+            <div className="space-y-3 border-b border-line p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-heading">
+                  {visible.length} {visible.length === 1 ? "person" : "people"}
+                </p>
                 <button
-                  key={item.id}
                   type="button"
-                  onClick={() => setFilter(item.id)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    filter === item.id ? "bg-heading text-white" : "bg-surface text-heading"
-                  }`}
+                  onClick={() => void load()}
+                  disabled={loading}
+                  title="Refresh"
+                  aria-label="Refresh the list"
+                  className="rounded-lg p-1.5 text-muted transition hover:bg-surface hover:text-heading disabled:opacity-50"
                 >
-                  {item.label}
+                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
                 </button>
-              ))}
+              </div>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search a name, email, Telegram chat…"
+                  aria-label="Search customers"
+                  className="w-full rounded-xl border border-line bg-white py-2 pl-9 pr-3 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10"
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show">
+                {FILTERS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-pressed={filter === item.id}
+                    onClick={() => setFilter(item.id)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      filter === item.id ? "bg-heading text-white" : "bg-surface text-heading hover:bg-line"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <ul className="flex-1 space-y-1 overflow-y-auto p-2">
-            {!data && !error && <li className="p-3 text-sm text-muted">Loading customers…</li>}
-            {data && visible.length === 0 && <li className="p-3 text-sm text-muted">Nobody matches.</li>}
-            {visible.map((customer) => (
-              <li key={customer.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelected(customer.id)}
-                  className={`w-full rounded-lg px-3 py-2 text-left transition ${
-                    selected === customer.id ? "bg-red-50 ring-1 ring-brand/40" : "hover:bg-surface"
-                  }`}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      {customer.activeNow && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" title="Active now" />}
-                      <span className="truncate text-sm font-semibold text-heading">{customer.name ?? "Unnamed customer"}</span>
-                      {customer.hasAccount && (
-                        <span className="shrink-0 rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-800">account</span>
-                      )}
-                    </span>
-                    <span className="shrink-0 text-[11px] text-muted">{ago(customer.lastActivity)}</span>
-                  </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-1">
-                    {[...new Set(customer.channels.map((channel) => channel.channel))].map((channel) => (
-                      <span key={channel} className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${channelStyle(channel).className}`}>
-                        {channelStyle(channel).icon} {channelStyle(channel).label}
+            <ul className="scroll-thin min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
+              {!data && !error && <li className="p-3 text-sm text-muted">Loading customers…</li>}
+              {data && visible.length === 0 && <li className="p-3 text-sm text-muted">Nobody matches.</li>}
+              {visible.map((customer) => {
+                const isSelected = selected === customer.id;
+                return (
+                  <li key={customer.id}>
+                    <Link
+                      href={`${BASE}/${customer.id}`}
+                      prefetch={false}
+                      aria-current={isSelected ? "page" : undefined}
+                      className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                        isSelected ? "bg-brand-soft ring-1 ring-brand/30" : "hover:bg-surface"
+                      }`}
+                    >
+                      <Avatar name={customer.name} active={customer.activeNow} />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            <span className="truncate text-sm font-semibold text-heading">{customer.name ?? "Unnamed customer"}</span>
+                            {customer.hasAccount && (
+                              <span className="shrink-0 rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-800">account</span>
+                            )}
+                          </span>
+                          <span className="shrink-0 text-[11px] text-muted">{ago(customer.lastActivity)}</span>
+                        </span>
+                        <span className="mt-1 flex flex-wrap items-center gap-1">
+                          {[...new Set(customer.channels.map((channel) => channel.channel))].map((channel) => (
+                            <ChannelChip key={channel} channel={channel} />
+                          ))}
+                        </span>
+                        <span className="mt-1 block text-[11px] text-muted">
+                          {customer.conversations} chats · {customer.notes} notes
+                        </span>
                       </span>
-                    ))}
-                    <span className="text-[11px] text-muted">
-                      · {customer.conversations} chats · {customer.notes} notes
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {selected ? (
-          <CustomerView key={selected} id={selected} staffToken={staffToken} />
-        ) : (
-          <section className="flex items-center justify-center rounded-xl bg-white p-8 text-sm text-muted shadow-sm">
-            Pick a customer to see their channels, history and an AI insight.
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
-        )}
-      </div>
+
+          <div className={`${selected ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col`}>
+            {selected ? (
+              <CustomerView key={selected} id={selected} staffToken={staffToken} />
+            ) : (
+              <div className="flex flex-1 flex-col justify-center">
+                <Empty icon={IdCard} title="Pick a customer" text="Their channels, history and an AI insight appear here." />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// --- the numbers at the top ----------------------------------------------------------------------
+function Avatar({ name, active = false, large = false }: { name: string | null; active?: boolean; large?: boolean }) {
+  const letter = name?.trim()[0]?.toUpperCase();
+  return (
+    <span
+      className={`relative flex shrink-0 items-center justify-center rounded-full bg-brand-soft font-bold text-brand ${
+        large ? "h-12 w-12 text-lg" : "h-9 w-9 text-sm"
+      }`}
+      aria-hidden="true"
+    >
+      {letter ?? <UserRound className={large ? "h-6 w-6" : "h-4 w-4"} />}
+      {active && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-white" />}
+    </span>
+  );
+}
 
-function OverviewCards({ overview }: { overview: Overview }) {
-  const stats: [string, number | string, string?][] = [
-    ["Customers", overview.customers],
-    ["With an NDI account", overview.withAccount],
-    ["On 2+ channels", overview.multiChannel],
-    ["Active this week", overview.active7Days],
-    ["Active now", overview.activeNow, "last chat under 15 min ago"],
-    ["Aida rooms open", overview.rooms.open, `${overview.rooms.closed} closed`],
-  ];
+function ChannelChip({ channel }: { channel: string | null }) {
+  const style = channelStyle(channel);
+  return (
+    <span className={`shrink-0 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${style.className}`}>
+      {style.icon} {style.label}
+    </span>
+  );
+}
+
+// --- Overview: the numbers -----------------------------------------------------------------------
+
+function OverviewView({ overview }: { overview: Overview }) {
   const week = Object.entries(overview.conversations7Days).sort((a, b) => b[1] - a[1]);
   const emailOrder = ["sent", "draft", "skipped", "failed"];
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {stats.map(([label, value, hint]) => (
-          <div key={label} className="rounded-xl bg-white p-3 shadow-sm" title={hint}>
-            <p className="text-2xl font-bold text-heading">{value}</p>
-            <p className="text-xs text-muted">{label}</p>
-          </div>
-        ))}
+    <>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <StatTile icon={Users} label="Customers" value={overview.customers} />
+        <StatTile icon={UserRoundCheck} label="With an NDI account" value={overview.withAccount} />
+        <StatTile icon={Waypoints} label="On 2+ channels" value={overview.multiChannel} />
+        <StatTile icon={Activity} label="Active this week" value={overview.active7Days} />
+        <StatTile icon={Radio} label="Active now" value={overview.activeNow} note="last chat under 15 min ago" />
+        <StatTile icon={Headset} label="Aida rooms open" value={overview.rooms.open} note={`${overview.rooms.closed} closed`} />
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-heading">Customers per channel</p>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel title="Customers per channel" icon={Users}>
           <Bars values={overview.channels} />
-        </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-heading">Conversations this week</p>
-          {week.length ? <Bars values={Object.fromEntries(week)} /> : <p className="mt-2 text-xs text-muted">None yet.</p>}
-        </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="text-xs font-semibold text-heading">Emails since the switch to Gmail</p>
-          <ul className="mt-2 space-y-1 text-xs text-muted">
+        </Panel>
+        <Panel title="Conversations this week" icon={MessagesSquare}>
+          {week.length ? <Bars values={Object.fromEntries(week)} /> : <p className="text-sm text-muted">None yet.</p>}
+        </Panel>
+        <Panel title="Emails since the switch to Gmail" icon={Mail}>
+          <ul className="space-y-2 text-sm">
             {emailOrder.map((status) => (
-              <li key={status} className="flex justify-between">
-                <span>{EMAIL_STATUS[status]}</span>
+              <li key={status} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-muted">
+                  <span className={`h-2 w-2 rounded-full ${EMAIL_DOT[status]}`} aria-hidden="true" />
+                  {EMAIL_STATUS[status]}
+                </span>
                 <strong className="text-heading">{overview.emails[status] ?? 0}</strong>
               </li>
             ))}
           </ul>
-        </div>
+        </Panel>
       </div>
-    </div>
+    </>
   );
 }
 
 function Bars({ values }: { values: Record<string, number> }) {
   const max = Math.max(1, ...Object.values(values));
   return (
-    <ul className="mt-2 space-y-1.5">
+    <ul className="space-y-2">
       {Object.entries(values).map(([channel, count]) => (
-        <li key={channel} className="flex items-center gap-2 text-xs">
-          <span className="w-20 shrink-0 text-muted">{channelStyle(channel).label}</span>
-          <span className="h-2 flex-1 rounded-full bg-surface">
-            <span className="block h-2 rounded-full bg-brand" style={{ width: `${(count / max) * 100}%` }} />
+        <li key={channel} className="flex items-center gap-3 text-xs">
+          <span className="w-24 shrink-0 truncate text-muted">{channelStyle(channel).label}</span>
+          <span className="h-2.5 flex-1 rounded-full bg-surface">
+            <span className="block h-2.5 rounded-full bg-brand" style={{ width: `${(count / max) * 100}%` }} />
           </span>
           <strong className="w-6 text-right text-heading">{count}</strong>
         </li>
@@ -324,26 +412,29 @@ function WeekInsightCard({ staffToken }: { staffToken: string }) {
   }
 
   return (
-    <section className="rounded-xl bg-white p-4 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="font-semibold text-heading">What customers asked this week</h2>
-          <p className="text-xs text-muted">Claude reads the last 7 days of conversation notes and email subjects, on every channel.</p>
-        </div>
+    <Panel
+      title="What customers asked this week"
+      icon={Sparkles}
+      aside={
         <button
           type="button"
           onClick={() => void ask()}
           disabled={busy}
-          className="rounded-full bg-heading px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-full bg-heading px-4 py-2 text-xs font-semibold text-white transition hover:bg-black disabled:opacity-60"
         >
-          {busy ? "Claude is reading…" : insight ? "✨ Write it again" : "✨ Summarise with Claude"}
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          {busy ? "Claude is reading…" : insight ? "Write it again" : "Summarise with Claude"}
         </button>
-      </div>
-      {error && <p className="mt-2 text-sm text-brand">{error}</p>}
+      }
+    >
+      {!insight && !error && (
+        <p className="text-sm text-muted">Claude reads the last 7 days of conversation notes and email subjects, on every channel. Nothing is stored.</p>
+      )}
+      {error && <p className="text-sm text-brand-dark">{error}</p>}
       {insight && (
-        <div className="mt-3 space-y-3 text-sm text-heading">
-          <p>{insight.summary}</p>
-          <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-4 text-sm text-heading">
+          <p className="leading-relaxed">{insight.summary}</p>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <InsightList title="Top topics" items={insight.topTopics} />
             <InsightList title="Common problems" items={insight.commonProblems} />
             <InsightList title="AI Employees mentioned" items={insight.products} />
@@ -352,16 +443,16 @@ function WeekInsightCard({ staffToken }: { staffToken: string }) {
           <p className="text-xs text-muted">Based on {insight.basedOn} conversations and emails.</p>
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
 
 function InsightList({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
-    <div>
-      <p className="text-xs font-semibold text-muted">{title}</p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-5">
+    <div className="rounded-xl bg-surface p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</p>
+      <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}
@@ -372,9 +463,12 @@ function InsightList({ title, items }: { title: string; items: string[] }) {
 
 // --- one customer --------------------------------------------------------------------------------
 
+type DetailTab = "profile" | "history" | "insight";
+
 function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<DetailTab>("profile");
   const [insight, setInsight] = useState<CustomerInsight | null>(null);
   const [insightBusy, setInsightBusy] = useState(false);
   const [insightError, setInsightError] = useState<string | null>(null);
@@ -411,8 +505,22 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
     }
   }
 
-  if (error) return <section className="rounded-xl bg-white p-6 text-sm text-brand shadow-sm">{error}</section>;
-  if (!detail) return <section className="rounded-xl bg-white p-6 text-sm text-muted shadow-sm">Loading…</section>;
+  const back = (
+    <Link href={BASE} className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-heading lg:hidden">
+      <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All customers
+    </Link>
+  );
+  if (error) {
+    return (
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        {back}
+        <p className="text-sm text-brand-dark">{error}</p>
+      </section>
+    );
+  }
+  if (!detail) {
+    return <section className="flex flex-1 items-center justify-center rounded-2xl bg-white p-6 text-sm text-muted shadow-sm">Loading…</section>;
+  }
 
   const { customer } = detail;
   const perChannel = detail.conversations.reduce<Record<string, number>>((counts, conversation) => {
@@ -436,131 +544,193 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
     })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
+  const tabs: { id: DetailTab; label: string; icon: typeof IdCard; count?: number }[] = [
+    { id: "profile", label: "Profile", icon: IdCard },
+    { id: "history", label: "History", icon: History, count: timeline.length },
+    { id: "insight", label: "AI insight", icon: Sparkles },
+  ];
+
   return (
-    <section className="max-h-[75dvh] space-y-4 overflow-y-auto rounded-xl bg-white p-5 shadow-sm">
-      <header className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-bold text-heading">{customer.name ?? "Unnamed customer"}</h2>
-          <p className="text-xs text-muted">
-            First seen {when(customer.createdAt)} · last active {ago(customer.lastActivity)}
-          </p>
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+      <header className="border-b border-line p-4 sm:p-5">
+        {back}
+        <div className="flex flex-wrap items-start gap-3">
+          <Avatar name={customer.name} active={customer.activeNow} large />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-lg font-bold tracking-tight text-heading">{customer.name ?? "Unnamed customer"}</h2>
+            <p className="text-xs text-muted">
+              First seen {when(customer.createdAt)} · last active {ago(customer.lastActivity)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {customer.activeNow && (
+              <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800">● Active now</span>
+            )}
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${customer.hasAccount ? "bg-green-100 text-green-800" : "bg-surface text-heading"}`}
+            >
+              {customer.hasAccount ? "NDI account" : "No account"}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {customer.activeNow && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">● Active now</span>}
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${customer.hasAccount ? "bg-green-100 text-green-800" : "bg-line text-heading"}`}
-          >
-            {customer.hasAccount ? "NDI account" : "No account"}
-          </span>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <MiniStat label="Conversations" value={detail.conversations.length} />
+          <MiniStat label="Memory notes" value={detail.notes.length} />
+          <MiniStat label="Emails" value={detail.emails.length} />
+          <MiniStat label="Live calls" value={detail.rooms.length} />
+        </div>
+        <div role="tablist" aria-label="About this customer" className="mt-4 flex gap-1 overflow-x-auto rounded-xl bg-surface p-1">
+          {tabs.map((item) => {
+            const Icon = item.icon;
+            const active = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(item.id)}
+                className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition sm:text-sm ${
+                  active ? "bg-white text-heading shadow-sm" : "text-muted hover:text-heading"
+                }`}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {item.label}
+                {item.count !== undefined && <span className="text-[11px] font-bold text-muted">{item.count}</span>}
+              </button>
+            );
+          })}
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <p className="text-xs font-semibold text-muted">Channels</p>
-          <ul className="mt-1 space-y-1">
-            {customer.channels.map((channel) => (
-              <li key={`${channel.channel}-${channel.label}`} className="flex items-center gap-2 text-sm">
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${channelStyle(channel.channel).className}`}>
-                  {channelStyle(channel.channel).icon} {channelStyle(channel.channel).label}
-                </span>
-                <span className="min-w-0 truncate text-heading">{channel.label}</span>
-                {channel.verified && <span className="text-xs text-green-700" title="Verified">✓</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-muted">Activity</p>
-          <ul className="mt-1 space-y-0.5 text-sm text-heading">
-            <li>
-              {detail.conversations.length} conversations
-              {Object.keys(perChannel).length > 0 &&
-                ` (${Object.entries(perChannel).map(([channel, count]) => `${channelStyle(channel).label} ${count}`).join(", ")})`}
-            </li>
-            <li>{detail.notes.length} memory notes</li>
-            <li>{detail.emails.length} emails since the switch to Gmail</li>
-            <li>{detail.rooms.length} live calls with staff</li>
-          </ul>
-        </div>
-      </div>
-
-      <MoodStrip conversations={detail.conversations} />
-
-      <div className="rounded-xl border border-line p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-semibold text-heading">AI insight</p>
-          <button
-            type="button"
-            onClick={() => void askInsight()}
-            disabled={insightBusy}
-            className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
-          >
-            {insightBusy ? "Claude is reading…" : insight ? "✨ Write it again" : "✨ Ask Claude"}
-          </button>
-        </div>
-        {insightError && <p className="mt-2 text-sm text-brand">{insightError}</p>}
-        {!insight && !insightError && !insightBusy && (
-          <p className="mt-1 text-xs text-muted">Claude reads this customer&apos;s notes, emails, calls and last few transcripts. Nothing is stored.</p>
-        )}
-        {insight && (
-          <div className="mt-3 space-y-3 text-sm text-heading">
-            <p>{insight.summary}</p>
-            <p className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  insight.sentiment === "positive"
-                    ? "bg-green-100 text-green-800"
-                    : insight.sentiment === "negative"
-                      ? "bg-red-100 text-brand-dark"
-                      : "bg-line text-heading"
-                }`}
-              >
-                Mood: {insight.sentiment}
-              </span>
-              <span className="text-xs text-muted">{insight.sentimentReason}</span>
-            </p>
-            {insight.flags.length > 0 && (
-              <p className="flex flex-wrap gap-1.5">
-                {insight.flags.map((flag) => (
-                  <span key={flag} className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-brand-dark">
-                    ⚠ {flag}
-                  </span>
-                ))}
-              </p>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <InsightList title="Topics" items={insight.topics} />
-              <InsightList title="AI Employees and services" items={insight.products} />
-              <InsightList title="Not resolved yet" items={insight.openIssues} />
+      <div key={tab} className="animate-fade-up scroll-thin min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+        {tab === "profile" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-line p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Channels</p>
+                {customer.channels.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted">None linked.</p>
+                ) : (
+                  <ul className="mt-2 space-y-2">
+                    {customer.channels.map((channel) => (
+                      <li key={`${channel.channel}-${channel.label}`} className="flex min-w-0 items-center gap-2 text-sm">
+                        <ChannelChip channel={channel.channel} />
+                        <span className="min-w-0 truncate text-heading">{channel.label}</span>
+                        {channel.verified && (
+                          <span className="text-xs text-green-700" title="Verified">
+                            ✓
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="rounded-xl border border-line p-4">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">Conversations by channel</p>
+                {Object.keys(perChannel).length ? <Bars values={perChannel} /> : <p className="text-sm text-muted">None yet.</p>}
+              </div>
             </div>
-            {insight.nextAction && (
-              <p className="rounded-lg bg-surface px-3 py-2">
-                <strong>Next step for staff:</strong> {insight.nextAction}
+            <MoodStrip conversations={detail.conversations} />
+          </div>
+        )}
+
+        {tab === "history" &&
+          (timeline.length === 0 ? (
+            <Empty icon={History} title="Nothing recorded yet" text="Memory notes, emails and live calls appear here." />
+          ) : (
+            <ol className="relative ml-1.5 space-y-4 border-l-2 border-line pl-5">
+              {timeline.slice(0, 40).map((item, index) => (
+                <li key={`${item.at}-${index}`} className="relative">
+                  <span
+                    className={`absolute -left-[27px] top-1 h-3 w-3 rounded-full ring-4 ring-white ${
+                      item.kind === "note" ? "bg-brand" : item.kind === "email" ? "bg-sky-500" : "bg-heading"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+                    {when(item.at)} ·{" "}
+                    {item.kind === "room" ? (
+                      <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-heading">Aida room</span>
+                    ) : (
+                      <ChannelChip channel={item.channel} />
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-sm text-heading">{item.text}</p>
+                </li>
+              ))}
+            </ol>
+          ))}
+
+        {tab === "insight" && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4">
+              <p className="max-w-md text-sm text-muted">
+                Claude reads this customer&apos;s notes, emails, calls and last few transcripts. Nothing is stored.
               </p>
+              <button
+                type="button"
+                onClick={() => void askInsight()}
+                disabled={insightBusy}
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {insightBusy ? "Claude is reading…" : insight ? "Write it again" : "Ask Claude"}
+              </button>
+            </div>
+            {insightError && <p className="text-sm text-brand-dark">{insightError}</p>}
+            {insight && (
+              <div className="space-y-4 text-sm text-heading">
+                <p className="leading-relaxed">{insight.summary}</p>
+                <p className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      insight.sentiment === "positive"
+                        ? "bg-green-100 text-green-800"
+                        : insight.sentiment === "negative"
+                          ? "bg-red-100 text-brand-dark"
+                          : "bg-surface text-heading"
+                    }`}
+                  >
+                    Mood: {insight.sentiment}
+                  </span>
+                  <span className="text-xs text-muted">{insight.sentimentReason}</span>
+                </p>
+                {insight.flags.length > 0 && (
+                  <p className="flex flex-wrap gap-1.5">
+                    {insight.flags.map((flag) => (
+                      <span key={flag} className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                        <TriangleAlert className="h-3 w-3" aria-hidden="true" /> {flag}
+                      </span>
+                    ))}
+                  </p>
+                )}
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <InsightList title="Topics" items={insight.topics} />
+                  <InsightList title="AI Employees and services" items={insight.products} />
+                  <InsightList title="Not resolved yet" items={insight.openIssues} />
+                </div>
+                {insight.nextAction && (
+                  <p className="rounded-xl border border-brand/20 bg-brand-soft px-4 py-3">
+                    <strong>Next step for staff:</strong> {insight.nextAction}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
       </div>
-
-      <div>
-        <p className="text-xs font-semibold text-muted">History</p>
-        {timeline.length === 0 ? (
-          <p className="mt-1 text-sm text-muted">Nothing recorded yet.</p>
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {timeline.slice(0, 40).map((item, index) => (
-              <li key={`${item.at}-${index}`} className="rounded-lg bg-surface px-3 py-2">
-                <p className="text-[11px] text-muted">
-                  {when(item.at)} · {item.kind === "room" ? "Aida room" : channelStyle(item.channel).label}
-                </p>
-                <p className="text-sm text-heading">{item.text}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </section>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-surface px-3 py-2">
+      <p className="text-lg font-bold leading-tight text-heading">{value}</p>
+      <p className="text-[11px] text-muted">{label}</p>
+    </div>
   );
 }
 
@@ -576,9 +746,9 @@ function MoodStrip({ conversations }: { conversations: CustomerDetail["conversat
   const count = (label: "positive" | "neutral" | "negative") => scored.filter((c) => c.mood?.label === label).length;
   const upset = scored.filter((c) => c.mood?.upset).length;
   return (
-    <div className="rounded-xl border border-line px-4 py-3">
+    <div className="rounded-xl border border-line p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-heading">Measured mood</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Measured mood</p>
         {scored.length > 0 && (
           <p className="flex flex-wrap items-center gap-3 text-xs text-muted">
             {(["positive", "neutral", "negative"] as const).map((label) => (
@@ -592,9 +762,9 @@ function MoodStrip({ conversations }: { conversations: CustomerDetail["conversat
         )}
       </div>
       {scored.length === 0 ? (
-        <p className="mt-1 text-xs text-muted">No scored conversation yet. ElevenLabs scores each conversation when it ends.</p>
+        <p className="mt-2 text-sm text-muted">No scored conversation yet. ElevenLabs scores each conversation when it ends.</p>
       ) : (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] text-muted">Oldest</span>
           {scored.map((conversation) => (
             <span

@@ -19,9 +19,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Empty, SectionTabs, useSectionPath } from "./ui";
 
 // Clara learns from the questions she could not answer and from feedback on her answers. Both arrive
 // here by themselves: unanswered questions and what customers said come from ElevenLabs' post-call
@@ -166,7 +165,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
   const [feedbackTab, setFeedbackTab] = useState<FeedbackTab>("customer");
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
-  const view = viewFromPath(usePathname());
+  const view = viewFromPath(useSectionPath("/admin/knowledge"));
 
   const call = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -332,34 +331,18 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
         </div>
       </section>
 
-      <nav aria-label="Knowledge" className="flex gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm">
-        {VIEWS.map((item) => {
-          const active = item.id === view;
-          const Icon = item.icon;
-          const count = counts[item.id];
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2.5 text-sm font-semibold transition sm:gap-2 sm:px-3 ${
-                active ? "bg-heading text-white shadow" : "text-muted hover:bg-surface hover:text-heading"
-              }`}
-            >
-              <Icon className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
-              <span className="sm:hidden">{item.short}</span>
-              <span className="hidden sm:inline">{item.label}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                  active ? "bg-white/15 text-white" : count && item.id !== "approved" ? "bg-brand text-white" : "bg-surface text-muted"
-                }`}
-              >
-                {count}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+      <SectionTabs
+        label="Knowledge"
+        tabs={VIEWS.map((item) => ({
+          href: item.href,
+          label: item.label,
+          short: item.short,
+          icon: item.icon,
+          count: counts[item.id],
+          highlight: item.id !== "approved",
+        }))}
+        active={current.href}
+      />
 
       <p key={view} className="animate-fade-up text-sm text-muted">
         {current.hint}
@@ -743,19 +726,6 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           })}
         </section>
       )}
-    </div>
-  );
-}
-
-/** What an empty tab shows. */
-function Empty({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
-  return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-white/60 px-6 py-10 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-muted shadow-sm">
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <p className="mt-3 font-semibold text-heading">{title}</p>
-      <p className="mt-1 max-w-sm text-sm text-muted">{text}</p>
     </div>
   );
 }
