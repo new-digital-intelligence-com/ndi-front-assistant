@@ -1,10 +1,11 @@
 // Twilio's REST API with NDI's own account (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN), for the hand-over of
-// a call-list call to a colleague (src/lib/handover.ts). Clara's calls themselves go through ElevenLabs'
-// Twilio integration; the web app only steps in to move a call that is already running.
+// a phone call to a colleague (src/lib/handover.ts) and its live sound (src/lib/liveSignal.ts). Clara's
+// calls themselves go through ElevenLabs' Twilio integration; the web app only steps in on a call that is
+// already running.
 //
 // Twilio calls the app back on /api/twilio/* (TwiML, call status, the live transcript), which is open
 // past the site password (src/proxy.ts). Each of those URLs carries a key made from the Auth Token and
-// the call-list item, the same way the Gmail and Meta webhooks carry a secret in their URL.
+// the call, the same way the Gmail and Meta webhooks carry a secret in their URL.
 
 import { appUrl } from "./appUrl";
 import { constantTimeEqual, sha256Hex } from "./auth";
@@ -43,26 +44,35 @@ export async function twilio<T>(path: string, fields?: Record<string, string>): 
 
 // --- Twilio calling the app back ------------------------------------------------------------------
 
-async function callbackKey(itemId: string): Promise<string> {
-  return (await sha256Hex(`ndi-handover:${credentials().token}:${itemId}`)).slice(0, 32);
+/** A phone call the app follows: a call from a staff call list, or a call to NDI that Clara answered. */
+export type CallKind = "list" | "incoming";
+export type CallRef = { kind: CallKind; id: string };
+
+export const isCallKind = (value: unknown): value is CallKind => value === "list" || value === "incoming";
+
+async function callbackKey(ref: CallRef): Promise<string> {
+  // A call-list call's key is the one it always had; a call to NDI's key also names its kind.
+  const scope = ref.kind === "list" ? ref.id : `${ref.kind}:${ref.id}`;
+  return (await sha256Hex(`ndi-handover:${credentials().token}:${scope}`)).slice(0, 32);
 }
 
-/** An absolute URL on this app for Twilio to call about one call-list item, with that item's key. */
-export async function callbackUrl(path: string, itemId: string, extra: Record<string, string> = {}): Promise<string> {
+/** An absolute URL on this app for Twilio to call about one call, with that call's key. */
+export async function callbackUrl(path: string, ref: CallRef, extra: Record<string, string> = {}): Promise<string> {
   const base = appUrl();
   if (!base) throw new Error("APP_URL is not set, so Twilio cannot reach the app");
-  const query = new URLSearchParams({ item: itemId, key: await callbackKey(itemId), ...extra });
+  const kind: Record<string, string> = ref.kind === "list" ? {} : { kind: ref.kind };
+  const query = new URLSearchParams({ item: ref.id, ...kind, key: await callbackKey(ref), ...extra });
   return `${base}${path}?${query}`;
 }
 
-/** The call-list item a Twilio request is about, when its key is right. Null otherwise. */
-export async function itemFromCallback(request: Request): Promise<string | null> {
+/** The call a Twilio request is about, when its key is right. Null otherwise. */
+export async function callFromCallback(request: Request): Promise<CallRef | null> {
   if (!twilioConfigured()) return null;
   const params = new URL(request.url).searchParams;
-  const itemId = params.get("item") ?? "";
+  const ref: CallRef = { kind: params.get("kind") === "incoming" ? "incoming" : "list", id: params.get("item") ?? "" };
   const key = params.get("key") ?? "";
-  if (!/^[0-9a-f-]{36}$/i.test(itemId) || !key) return null;
-  return constantTimeEqual(await callbackKey(itemId), key) ? itemId : null;
+  if (!/^[0-9a-f-]{36}$/i.test(ref.id) || !key) return null;
+  return constantTimeEqual(await callbackKey(ref), key) ? ref : null;
 }
 
 /** Twilio posts form fields. Anything that is not text is left out. */

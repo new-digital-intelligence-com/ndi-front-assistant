@@ -8,7 +8,7 @@ import { Lobby, StaffSignIn } from "../aida/AidaLobby";
 import { EmailModeCard } from "../aida/EmailModeCard";
 import { rememberStaffToken, savedName, savedStaffToken } from "../aida/types";
 import { NdiLogo } from "../NdiLogo";
-import { CallListPanel } from "./CallListPanel";
+import { CallsPanel } from "./CallsPanel";
 import { CustomersPanel } from "./CustomersPanel";
 import { KnowledgePanel } from "./KnowledgePanel";
 import { MoodPanel } from "./MoodPanel";
@@ -226,7 +226,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             )}
             {opened.has("calls") && (
               <div className={shown("calls")}>
-                <CallListPanel staffToken={staffToken} onSignOut={signOut} />
+                <CallsPanel staffToken={staffToken} onSignOut={signOut} />
               </div>
             )}
             {opened.has("knowledge") && (

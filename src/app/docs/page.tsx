@@ -22,7 +22,7 @@ const SECTIONS: { id: string; title: string }[] = [
   { id: "memory", title: "Customer memory" },
   { id: "aida", title: "Aida rooms (live copilot)" },
   { id: "admin", title: "Admin page" },
-  { id: "calls", title: "Outbound call list" },
+  { id: "calls", title: "Calls and hand-overs" },
   { id: "learning", title: "Clara learns" },
   { id: "mood", title: "Customer mood (sentiment)" },
   { id: "security", title: "Security and privacy" },
@@ -193,7 +193,7 @@ Hosted page / widget ───────────────┘         �
             </P>
             <P>
               Clara also calls customers herself, from the staff <A href="#calls">call list</A>, with a greeting that says why she is
-              calling.
+              calling. On a call to NDI, a caller who wants a person is handed over live to a colleague from the hand-over team.
             </P>
           </Section>
 
@@ -327,7 +327,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["📞 Aida rooms (/admin/rooms)", "Create, join and close rooms; read and email closed ones."],
                 ["👥 Customers (/admin/customers)", "Two tabs. People: a searchable customer list, and one customer at their own address beside it, with their channels and measured mood, their history, and ✨ Ask Claude (a summary, topics, the AI Employees they asked about, mood, open issues and a next step). Overview: the numbers per channel and ✨ Summarise with Claude for the whole week."],
                 ["😊 Mood (/admin/mood)", "Three tabs: Overview (how customers felt, per channel and per day), Follow-up (the unhappy conversations to follow up) and Emails & Aida calls (see Customer mood)."],
-                ["📲 Call list (/admin/calls)", "Phone numbers with instructions for Clara; Start calling and she phones them one by one (see Outbound call list)."],
+                ["📲 Calls (/admin/calls)", "Three tabs: Outgoing (call lists Clara phones), Incoming (calls to NDI, live and recent) and Hand-over team (/admin/calls/team). Every live call shows its sound; a hand-over opens its live view (see Calls and hand-overs)."],
                 ["📚 Knowledge (/admin/knowledge)", "Three tabs: To answer, Feedback (/admin/knowledge/feedback) and Approved answers (/admin/knowledge/approved). Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
                 ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
               ]}
@@ -335,7 +335,8 @@ End of every conversation   → post-call webhook  → one short note, their int
             <P>The Claude insights are written only when a staff member clicks, and nothing is stored.</P>
           </Section>
 
-          <Section id="calls" title="Outbound call list">
+          <Section id="calls" title="Calls and hand-overs">
+            <H3>Outgoing: the call list (/admin/calls)</H3>
             <P>
               Staff type phone numbers, an optional name and <B>instructions for Clara</B> for each call (for example “they asked
               for a demo of the AI SDR on our website: ask what they want to automate and offer a call with the NDI team”), then
@@ -349,13 +350,27 @@ End of every conversation   → post-call webhook  → one short note, their int
                 "She learns the instructions through customer_lookup at the start of the call, so no other channel is affected.",
               ]}
             />
+            <H3>Incoming: calls to NDI (/admin/calls/incoming)</H3>
+            <List
+              items={[
+                "Every call Clara answers on NDI's number appears here as it starts: who is calling (when NDI knows them), since when, and whether Clara or a colleague has them.",
+                "Afterwards it stays in the recent calls with Clara's summary and, after a hand-over, a note of the talk.",
+              ]}
+            />
+            <H3>Live sound</H3>
+            <P>
+              Every live call shows its sound as two moving bars: the customer, and NDI&apos;s side (Clara, or the colleague after a
+              hand-over). Twilio sends the app a copy of the call&apos;s audio, which becomes one loudness number every 100 ms. Nothing
+              is recorded or played: staff see who is talking, not what is said. The words are in the hand-over&apos;s transcript.
+            </P>
             <H3>Hand-over to a colleague</H3>
             <List
               items={[
-                "For any number, staff can tick “Hand the call over to a colleague” and give the colleague's name and phone number, and if they like when Clara should hand over (for example “when they want a demo”).",
+                "A call to NDI: when the caller wants a person, Clara connects them with the hand-over team (/admin/calls/team). The colleagues switched on are rung one after another, in the team's order, until one takes the call.",
+                "A call-list call: for any number, staff can tick “Hand the call over to a colleague” and pick someone from the team or type a name and number, and if they like when Clara should hand over (for example “when they want a demo”).",
                 "When that moment comes, Clara says she is connecting the customer, who hears hold music while the colleague's phone rings from NDI's number. The colleague hears who is waiting and what Clara learnt, and presses any key to take the call. Clara then leaves the call: it is the customer and the colleague (a Twilio conference).",
-                "While they talk, /admin/calls shows the conversation live (Twilio transcribes both voices) with Aida's suggestions for what the colleague could say next, what Clara learnt and what NDI already knows about the customer.",
-                "If the colleague does not take the call, the customer hears that NDI will call back. Afterwards the talk becomes one short note in the customer's memory, and the list moves on to the next number.",
+                "While they talk, the Outgoing or Incoming tab shows the call's sound and the conversation live (Twilio transcribes both voices) with Aida's suggestions for what the colleague could say next, what Clara learnt and what NDI already knows about the customer.",
+                "If nobody takes the call, the customer hears that NDI will call back. Afterwards the talk becomes one short note in the customer's memory; a call list moves on to the next number.",
               ]}
             />
           </Section>
@@ -439,7 +454,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["Anthropic Claude (Haiku)", "Insights, grouping questions, general answers, call reasons, email and Aida mood", "A fraction of a cent per use"],
                 ["LiveKit Cloud", "Voice and chat in Aida rooms", "Free plan, 5,000 participant-minutes a month"],
                 ["Anam", "The video avatar", "Free plan: 30 minutes a month, 3-minute calls"],
-                ["Twilio", "The phone number (calls in and out), and hand-overs to a colleague with a live transcript", "A monthly fee for the number, plus calls; the live transcript $0.027 a minute"],
+                ["Twilio", "The phone number (calls in and out), hand-overs to a colleague with a live transcript, and the live sound", "A monthly fee for the number, plus calls; the live transcript $0.027 a minute; the live sound $0.0044 a minute"],
                 ["Google Cloud", "Gmail API and Pub/Sub for the email channel", "Free tier"],
                 ["Meta, Telegram", "Instagram, Messenger and Telegram", "Free"],
               ]}

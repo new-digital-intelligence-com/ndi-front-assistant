@@ -312,6 +312,68 @@ create index if not exists handover_lines_item_idx on handover_lines (item_id, i
 alter table handover_lines enable row level security;
 
 -- ---------------------------------------------------------------------------------------------
+-- The hand-over team (src/lib/handoverTeam.ts): the NDI colleagues who can take over a phone call
+-- live. Staff keep the list on /admin/calls/team. For a call to NDI, Clara's hand-over rings the
+-- active ones one after another, in this order, until someone presses a key; a call-list call can
+-- name one of them (or anyone else) when the list is made.
+-- ---------------------------------------------------------------------------------------------
+
+create table if not exists handover_team (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  phone      text not null,                     -- +<country code>…, as dialled
+  active     boolean not null default true,     -- rung for calls to NDI
+  position   int not null default 0,            -- the order they are rung in
+  created_at timestamptz not null default now()
+);
+
+alter table handover_team enable row level security;
+
+-- ---------------------------------------------------------------------------------------------
+-- Calls to NDI (src/lib/incomingCalls.ts): every call Clara answers on NDI's number, registered by
+-- customer_lookup as it starts and closed by ElevenLabs' post-call webhook. Like a call-list call, it
+-- can be handed over live to a colleague; the handover_* columns work the same way (src/lib/handover.ts).
+-- ---------------------------------------------------------------------------------------------
+
+create table if not exists incoming_calls (
+  id                  uuid primary key default gen_random_uuid(),
+  conversation_id     text not null unique,    -- Clara's ElevenLabs conversation
+  call_sid            text,                    -- Twilio's id of the customer's call
+  phone               text,                    -- the caller, +<country code>…, when the network gave it
+  name                text,                    -- the customer's name, when NDI knows them
+  ndi_number          text,                    -- the NDI number they called; colleagues are rung from it
+  status              text not null default 'live',  -- live | ended
+  started_at          timestamptz not null default now(),
+  ended_at            timestamptz,
+  summary             text,                    -- ElevenLabs' summary of Clara's part
+  instructions        text not null default '', -- always empty: call lists only, kept so the hand-over code is shared
+  live_signal         text,                    -- why the live sound could not start, when it could not
+  handover_name       text,
+  handover_phone      text,
+  handover_status     text,                    -- ringing | live | ended | missed | abandoned | failed
+  handover_summary    text,
+  handover_language   text,
+  handover_call_sid   text,
+  handover_started_at timestamptz,
+  handover_live_at    timestamptz,
+  handover_ended_at   timestamptz,
+  handover_note       text,
+  handover_tried      uuid[] not null default '{}'  -- team members already rung for this hand-over
+);
+
+create index if not exists incoming_calls_started_idx on incoming_calls (started_at desc);
+
+alter table incoming_calls enable row level security;
+
+-- A hand-over's lines belong to a call-list call (item_id) or to a call to NDI (incoming_id).
+alter table handover_lines alter column item_id drop not null;
+alter table handover_lines add column if not exists incoming_id uuid references incoming_calls (id) on delete cascade;
+create index if not exists handover_lines_incoming_idx on handover_lines (incoming_id, id);
+
+-- Why the live sound of a call-list call could not start, when it could not (src/lib/liveSignal.ts).
+alter table call_list_items add column if not exists live_signal text;
+
+-- ---------------------------------------------------------------------------------------------
 -- Knowledge gaps: questions Clara could not answer (ElevenLabs' post-call data collection item
 -- "unanswered_question", on every channel), and the answers NDI staff approve for them on /admin.
 -- Approved answers are published to Clara's knowledge as one document, "NDI approved FAQ"

@@ -40,11 +40,10 @@ export const ADMIN_SECTIONS: {
   {
     id: "calls",
     href: "/admin/calls",
-    label: "Call list",
-    title: "Call list",
-    description: "People Clara phones for you, and hand-overs to a colleague with a live transcript.",
+    label: "Calls",
+    title: "Calls",
+    description: "Calls Clara makes and answers, live, and the colleagues who can take a call over.",
     icon: PhoneOutgoing,
-    width: "max-w-4xl",
   },
   {
     id: "knowledge",

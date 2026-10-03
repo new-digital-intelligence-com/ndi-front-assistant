@@ -1,22 +1,24 @@
 "use client";
 
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { LiveSignal } from "./LiveSignal";
 
-// A call-list call handed over to a colleague (src/lib/handover.ts), while it happens: what the
-// customer and the colleague say, as Twilio transcribes it, and Aida's suggestions for what the
-// colleague could say next.
+// A phone call handed over to a colleague (src/lib/handover.ts), while it happens: its live sound, what
+// the customer and the colleague say, as Twilio transcribes it, and Aida's suggestions for what the
+// colleague could say next. A call from a staff call list (kind "list") or a call to NDI ("incoming").
 //
 // Aida runs in this browser only while the two are talking, the same way she does for the host of an
-// Aida room. Before the first line she is told what Clara learnt, the staff instructions and what NDI
-// already knows about the customer. Customer lines are her questions; the colleague's lines are
-// background she never answers.
+// Aida room. Before the first line she is told what Clara learnt, the staff instructions (call lists)
+// and what NDI already knows about the customer. Customer lines are her questions; the colleague's
+// lines are background she never answers.
 
 type Status = "ringing" | "live" | "ended" | "missed" | "abandoned" | "failed";
 
 type Item = {
   id: string;
-  phone: string;
+  phone: string | null;
   name: string | null;
   instructions: string;
   handover_name: string | null;
@@ -52,7 +54,7 @@ function minutesAndSeconds(ms: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-type Props = { staffToken: string; itemId: string; onClose: () => void; onSignOut: () => void };
+type Props = { staffToken: string; kind: "list" | "incoming"; itemId: string; onClose: () => void; onSignOut: () => void };
 
 export function HandoverLive(props: Props) {
   return (
@@ -62,7 +64,7 @@ export function HandoverLive(props: Props) {
   );
 }
 
-function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
+function LiveView({ staffToken, kind, itemId, onClose, onSignOut }: Props) {
   const [item, setItem] = useState<Item | null>(null);
   const [known, setKnown] = useState<Known>(null);
   const [lines, setLines] = useState<Line[]>([]);
@@ -137,10 +139,12 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
         const name = current.handover_name || "an NDI colleague";
         copilotRef.current.sendContextualUpdate(
           [
-            "This is a live phone call, not a chat. Clara, NDI's virtual assistant, phoned the customer from a staff call list",
+            kind === "list"
+              ? "This is a live phone call, not a chat. Clara, NDI's virtual assistant, phoned the customer from a staff call list"
+              : "This is a live phone call, not a chat. The customer phoned NDI; Clara, NDI's virtual assistant, answered",
             `and handed the call over to ${name}, who is now talking with them. For each customer message, write what ${name}`,
             "could say next: one to three short sentences that are easy to say out loud.",
-            `Staff instructions for this call: ${current.instructions}`,
+            current.instructions ? `Staff instructions for this call: ${current.instructions}` : "",
             current.handover_summary ? `What Clara told ${name}: ${current.handover_summary}` : "",
             about
               ? [
@@ -187,7 +191,7 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
         copilotStartingRef.current = true;
         setAida("starting");
         try {
-          const response = await fetch(`/api/admin/calls/handover/${itemId}/copilot`, {
+          const response = await fetch(`/api/admin/calls/handover/${itemId}/copilot?kind=${kind}`, {
             method: "POST",
             headers: { "x-aida-staff": staffToken },
           });
@@ -213,7 +217,7 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
       try {
-        const response = await fetch(`/api/admin/calls/handover/${itemId}?after=${lastIdRef.current}`, {
+        const response = await fetch(`/api/admin/calls/handover/${itemId}?kind=${kind}&after=${lastIdRef.current}`, {
           headers: { "x-aida-staff": staffToken },
           cache: "no-store",
         });
@@ -251,7 +255,7 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
       stopped = true;
       clearTimeout(timer);
     };
-  }, [itemId, staffToken, onSignOut]);
+  }, [kind, itemId, staffToken, onSignOut]);
 
   // Aida while the two are talking, and not a moment longer.
   const status = item?.handover_status;
@@ -302,21 +306,37 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
   };
 
   return (
-    <section className="space-y-3 rounded-xl border-2 border-brand/30 bg-white p-4 shadow-sm">
+    <section className="animate-fade-up space-y-3 rounded-2xl border-2 border-brand/30 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="font-semibold text-heading">
-            {status === "live" ? "🔴 " : ""}Hand-over: {item ? `${item.name ? `${item.name} · ` : ""}${item.phone}` : "…"}
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 font-semibold text-heading">
+            {status === "live" && <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-accent" aria-hidden="true" />}
+            <span className="truncate">
+              Hand-over: {item ? [item.name, item.phone].filter(Boolean).join(" · ") || (kind === "incoming" ? "a call to NDI" : "a call") : "…"}
+            </span>
           </h2>
           <p className="text-xs text-muted">
-            With {colleague}
+            {kind === "incoming" ? "Called NDI" : "Call list"} · with {colleague}
             {clock && ` · ${clock}`}
           </p>
         </div>
-        <button type="button" onClick={onClose} className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-heading">
-          Close
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close the hand-over view"
+          className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1 text-xs font-semibold text-heading transition hover:border-heading"
+        >
+          <X className="h-3.5 w-3.5" aria-hidden="true" /> Close
         </button>
       </div>
+
+      <LiveSignal
+        staffToken={staffToken}
+        kind={kind}
+        id={itemId}
+        customerLabel={capitalise(customer)}
+        ndiLabel={status === "live" || status === "ended" ? capitalise(colleague) : "NDI"}
+      />
 
       {status && <p className={`rounded-lg px-3 py-2 text-sm ${banner[status].style}`}>{banner[status].text}</p>}
       {item?.handover_note && <p className="rounded-lg bg-surface p-3 text-sm text-heading">{item.handover_note}</p>}
@@ -375,7 +395,7 @@ function LiveView({ staffToken, itemId, onClose, onSignOut }: Props) {
           <details className="rounded-lg bg-surface p-3 text-sm" open>
             <summary className="cursor-pointer font-semibold text-heading">What Clara learnt</summary>
             <p className="mt-2 text-heading">{item?.handover_summary || "Clara left no summary."}</p>
-            <p className="mt-2 text-xs text-muted">Staff instructions: {item?.instructions}</p>
+            {item?.instructions && <p className="mt-2 text-xs text-muted">Staff instructions: {item.instructions}</p>}
           </details>
           <details className="rounded-lg bg-surface p-3 text-sm">
             <summary className="cursor-pointer font-semibold text-heading">What NDI already knows about {customer}</summary>

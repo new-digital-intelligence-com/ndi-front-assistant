@@ -383,13 +383,18 @@ export type CallBrief = {
   instructions: string;
   /** Set when staff named a colleague Clara may hand the call over to (src/lib/handover.ts). */
   handover: { colleague: string; when: string | null } | null;
+  /** For the server only (the live sound, src/lib/incomingCalls.ts): never told to Clara. */
+  itemId: string;
+  callSid: string | null;
 };
 
 /** For customer_lookup: when Clara is on a call from a list, whom she called and why. */
 export async function callBrief(conversationId: string): Promise<CallBrief | null> {
   if (!conversationId) return null;
-  const [item] = await rest<Pick<CallItem, "phone" | "name" | "instructions" | "handover_name" | "handover_phone" | "handover_when">[]>(
-    `call_list_items?conversation_id=eq.${q(conversationId)}&select=phone,name,instructions,handover_name,handover_phone,handover_when&limit=1`,
+  const [item] = await rest<
+    Pick<CallItem, "id" | "phone" | "name" | "instructions" | "handover_name" | "handover_phone" | "handover_when" | "call_sid">[]
+  >(
+    `call_list_items?conversation_id=eq.${q(conversationId)}&select=id,phone,name,instructions,handover_name,handover_phone,handover_when,call_sid&limit=1`,
   );
   if (!item) return null;
   return {
@@ -397,6 +402,8 @@ export async function callBrief(conversationId: string): Promise<CallBrief | nul
     customer_name: item.name,
     instructions: item.instructions,
     handover: item.handover_phone ? { colleague: item.handover_name || "a colleague", when: item.handover_when } : null,
+    itemId: item.id,
+    callSid: item.call_sid,
   };
 }
 

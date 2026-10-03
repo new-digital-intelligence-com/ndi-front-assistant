@@ -1,5 +1,9 @@
+import { after } from "next/server";
 import { hasValidToolSecret } from "@/lib/agentAuth";
 import { isRobotAddress } from "@/lib/emailParse";
+import { teamAvailable } from "@/lib/handoverTeam";
+import { trackPhoneCall } from "@/lib/incomingCalls";
+import { twilioConfigured } from "@/lib/twilio";
 import {
   customerForChannel,
   customerForConversation,
@@ -19,14 +23,20 @@ const LATE_REGISTRATION_WAIT_MS = 400;
 /**
  * Only say "found" when there is something worth saying, not merely that a row exists. On a call
  * NDI made from a staff call list, outbound_call tells Clara whom she rang and why (never the number),
- * and outbound_call.handover which colleague she may hand the call over to, and when.
+ * and outbound_call.handover which colleague she may hand the call over to, and when. On a call to NDI,
+ * inbound_call.handover says that a colleague from the hand-over team can take the call over.
  */
-function answer(profile: Profile | null, brief: CallBrief | null) {
+function answer(profile: Profile | null, brief: CallBrief | null, inboundHandover = false) {
   const found = profile ? Boolean(profile.name) || profile.recent.length > 0 : false;
   const outbound = brief
     ? { customer_name: brief.customer_name, instructions: brief.instructions, ...(brief.handover ? { handover: brief.handover } : {}) }
     : null;
-  return Response.json({ found, ...(profile ?? {}), ...(outbound ? { outbound_call: outbound } : {}) });
+  return Response.json({
+    found,
+    ...(profile ?? {}),
+    ...(outbound ? { outbound_call: outbound } : {}),
+    ...(inboundHandover ? { inbound_call: { handover: { colleague: "a colleague from the NDI team" } } } : {}),
+  });
 }
 
 // Tool `customer_lookup`: Clara calls this silently at the start of every conversation. She says
@@ -81,11 +91,18 @@ export async function POST(request: Request) {
     // message), which is taken as proof; a Telegram chat id or a phone number
     // proves nothing until the person links it from their account.
     const customer = await customerForChannel(identity, identity.channel === "email");
-    const [profile] = await Promise.all([
+    // A phone call that is not from a call list is a call to NDI: a colleague may take it over.
+    const toNdi = identity.channel === "phone" && !brief;
+    const [profile, , inboundHandover] = await Promise.all([
       profileFor(customer),
       rememberConversation(conversationId, customer.id, identity.channel),
+      toNdi && twilioConfigured() ? teamAvailable() : false,
     ]);
-    return answer(profile, brief);
+    // Once Clara has her answer: the call is registered and its live sound starts (src/lib/incomingCalls.ts).
+    if (identity.channel === "phone") {
+      after(() => trackPhoneCall(conversationId, brief ? { itemId: brief.itemId, callSid: brief.callSid } : null));
+    }
+    return answer(profile, brief, inboundHandover);
   } catch (error) {
     console.error("customer-lookup failed", error);
     return Response.json({ found: false });

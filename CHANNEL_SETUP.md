@@ -239,8 +239,10 @@ railway variables --set "KEY=value"   # one variable (redeploys)
 3. The service → **Settings → Networking → Generate Domain**, and change the name to **`ndi-assistant`** →
    `https://ndi-assistant.up.railway.app`. It must equal `APP_URL`: Clara's tools and webhook point there. If
    another address is used, Clara's two tools and the post-call webhook must be changed too (ask Claude).
-4. Railway builds with `npm run build` and starts with `npm start` (Next.js reads Railway's `PORT`). Every push to
-   `main` deploys again; a change of variables redeploys by itself.
+4. Railway builds with `npm run build` and starts with `npm start`, which runs **`server.mjs`**: Next.js plus the two
+   WebSockets of the live call sound (section 12), which Next.js route handlers cannot hold. It reads Railway's `PORT`
+   and starts the daily jobs like `next start` did. Every push to `main` deploys again; a change of variables
+   redeploys by itself.
 5. **Check:** `<APP_URL>/docs` opens without a password; `<APP_URL>/` asks for the site password; the deploy
    logs show `daily jobs: scheduled (once a day from 06:00 UTC)`.
 
@@ -425,13 +427,16 @@ corrections**. Both switches were set to **auto** on 2 Oct 2026.
 2. **ElevenLabs** → Phone Numbers → **Import number** → Twilio → the number, Account SID and Auth Token →
    assign agent **NDI Assistant – Clara**. (The Twilio account is already known to ElevenLabs from CDA's number.)
 3. Put the number in `PHONE_LINE` (`src/components/ChannelLinks.tsx`) and `DEMO_LINE`
-   (`src/components/admin/CallListPanel.tsx`), commit, push.
+   (`src/components/admin/OutgoingCalls.tsx`), commit, push.
 4. **Twilio → Voice → Settings → Geo permissions**: switch on every country Clara should call, and the countries of the
    colleagues calls are handed over to.
-5. **Hand-over to a colleague** (section 12): Railway variables `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` (Twilio →
-   Account → API keys & tokens). Nothing to set up in Twilio itself: the app moves the call and Twilio calls the app back
-   on `/api/twilio/handover/*`.
-6. **Test:** call the number → Clara answers with her English greeting.
+5. **Hand-over to a colleague and the live sound** (section 12): Railway variables `TWILIO_ACCOUNT_SID` and
+   `TWILIO_AUTH_TOKEN` (Twilio → Account → API keys & tokens). Nothing to set up in Twilio itself: the app moves the
+   call, Twilio calls the app back on `/api/twilio/handover/*` and sends the sound to `/api/twilio/media-stream`.
+6. **Hand-over team**: `/admin/calls/team` → add the colleagues who can take over a call to NDI, in the order they
+   should be rung.
+7. **Test:** call the number → Clara answers with her English greeting, and the call shows on `/admin/calls/incoming`
+   with its live sound. Ask for a person → the team's first colleague rings.
 
 ---
 
@@ -561,7 +566,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | 📞 **Aida rooms** `/admin/rooms` | Create, join, close rooms; read and email closed ones |
 | 👥 **Customers** `/admin/customers` | Two tabs: **People** (`/admin/customers`: a searchable list, and one customer at `/admin/customers/<id>` beside it with Profile, History and AI insight: ✨ Ask Claude writes a summary, topics, AI Employees asked about, mood, open issues, next step) and **Overview** (`/admin/customers/overview`: the numbers, the channels and ✨ Summarise with Claude for the week) |
 | 😊 **Mood** `/admin/mood` | Three tabs, with the 7 / 30 days switch, the import and the alert status above them: **Overview** (`/admin/mood`: how customers felt on every channel), **Follow-up** (`/admin/mood/follow-up`: the unhappy conversations, waiting ones first, each with Open customer) and **Emails & Aida calls** (`/admin/mood/emails-calls`) |
-| 📲 **Call list** `/admin/calls` | Phone numbers, each with instructions for Clara; **Start calling** and she phones them one by one |
+| 📲 **Calls** `/admin/calls` | Three tabs: **Outgoing** (`/admin/calls`: call lists, phone numbers each with instructions for Clara; **Start calling** and she phones them one by one), **Incoming** (`/admin/calls/incoming`: calls to NDI, live and recent) and **Hand-over team** (`/admin/calls/team`). Every live call shows its sound; a hand-over opens its live view |
 | 📚 **Knowledge** `/admin/knowledge` | Three tabs, each at its own address: **To answer** (`/admin/knowledge`), **Feedback** (`/admin/knowledge/feedback`, with customer feedback, Aida, email and Instagram & Messenger corrections) and **Approved answers** (`/admin/knowledge/approved`, searchable, add your own). Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
 | ✉️ **Replies** `/admin/replies` | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails, and the Instagram and Messenger drafts to send, change or discard |
 
@@ -575,21 +580,37 @@ to one browser tab: a section opened in a new tab asks for the password again.
 - **Call list**: Clara phones one number at a time from the number attached to her in ElevenLabs (section 8), up to
   3 tries, with a greeting written from the instructions: *"Hello Helmi, this is Clara, the virtual assistant from
   NDI. I'm calling about your demo request for the AI SDR. Have you got a moment?"*. Keep the page open while a list runs
-- **Hand-over to a colleague** (`src/lib/handover.ts`): per number, staff may tick *Hand the call over to a colleague*
-  and give a name, a phone number and *when* (optional). `customer_lookup` then returns `outbound_call.handover`, and
-  when the moment comes Clara says she is connecting them and calls `transfer_to_human`:
+- **Calls to NDI** (`src/lib/incomingCalls.ts`, table `incoming_calls`): when Clara answers a call on NDI's number,
+  `customer_lookup` registers it right after answering her (Next.js `after()`, so she is not kept waiting), and
+  ElevenLabs' post-call webhook ends Clara's part with her summary. `/admin/calls/incoming` lists the calls on now and
+  the last twenty. A withheld number is still listed, as "Unknown caller"
+- **Hand-over to a colleague** (`src/lib/handover.ts`): for a call-list call, staff may tick *Hand the call over to a
+  colleague* and give a name and phone number (or pick one from the team) and *when* (optional); `customer_lookup`
+  then returns `outbound_call.handover`. For a call to NDI, `customer_lookup` returns `inbound_call.handover` while the
+  **hand-over team** (`/admin/calls/team`, table `handover_team`, `src/lib/handoverTeam.ts`) has someone switched on.
+  When the moment comes Clara says she is connecting them and calls `transfer_to_human`:
   1. The app moves the customer's call off Clara (Twilio call update → `/api/twilio/handover/hold`): hold music in a
-     Twilio conference `ndi-handover-<item>`, and Twilio's live transcription of both voices in the call's language.
+     Twilio conference `ndi-handover-<id>`, Twilio's live transcription of both voices in the call's language, and the
+     live sound.
   2. The colleague's phone rings from NDI's number (25 s). They hear who is waiting and Clara's summary, and press any
-     key to join (`/accept`); a voicemail cannot press a key. Customer and colleague talk; Clara is gone.
-  3. Every finished sentence arrives at `/transcript` (`handover_lines`); `/admin/calls` opens the live view by itself:
-     the conversation, Aida's suggestions (Aida runs in that browser while they talk), what Clara learnt and what NDI
-     knows about the customer.
-  4. No answer → the customer hears *"nobody from the NDI team can take the call right now; NDI will call you back"*
-     in their language. When the customer's call ends (`/status`), Claude writes one note for the customer's memory
-     and the list moves on. While a hand-over runs, the list waits.
+     key to join (`/accept`); a voicemail cannot press a key. On a call to NDI, the team's colleagues are rung one after
+     another, top first, until one takes it. Customer and colleague talk; Clara is gone.
+  3. Every finished sentence arrives at `/transcript` (`handover_lines`); Outgoing or Incoming opens the live view by
+     itself: the live sound, the conversation, Aida's suggestions (Aida runs in that browser while they talk), what
+     Clara learnt and what NDI knows about the customer.
+  4. Nobody takes it → the customer hears *"nobody from the NDI team can take the call right now; NDI will call you
+     back"* in their language. When the customer's call ends (`/status`), Claude writes one note for the customer's
+     memory; a call list moves on, a call to NDI is closed. While a hand-over runs, its list waits.
   Costs: Twilio live transcription $0.027/min, conference $0.0018 per person per minute, the call to the colleague,
   and Aida's suggestions (ElevenLabs credits, as in Aida rooms)
+- **Live sound** (`src/lib/liveSignal.ts`, `server.mjs`, `src/components/admin/LiveSignal.tsx`): every phone call on
+  `/admin/calls` shows two moving bars, the customer and NDI's side (Clara, or the colleague). Right after
+  `customer_lookup`, the app asks Twilio for a copy of the call's audio (REST: `Calls/<sid>/Streams`, both directions)
+  sent to the WebSocket `/api/twilio/media-stream`; the hand-over's hold TwiML starts it again with `<Start><Stream>`.
+  `server.mjs` turns each 20 ms into one loudness number and sends staff the loudest of every 100 ms on the WebSocket
+  `/api/live/signal`. Nothing is stored or played. If Twilio refuses the copy while ElevenLabs is on the call, the
+  reason shows on the call ("No live sound: …") and the sound starts at the hand-over; the first real call shows which.
+  Twilio charges $0.0044/min for the copy
 - **Knowledge**: nothing reaches Clara without a staff member approving it (`src/lib/knowledge.ts`); the FAQ
   document is swapped in on Clara and Aida on their live branch (`ELEVENLABS_BRANCH_ID` if set, otherwise read from the agent)
 
@@ -600,8 +621,8 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | Item | Value |
 |---|---|
 | Repository | Public GitHub repository `new-digital-intelligence-com/ndi-front-assistant`, branch `main` → deploy on Railway with the command in section 3 (no automatic deploys yet) |
-| Stack | Next.js 16 (read `node_modules/next/dist/docs/`), React 19, Tailwind 4, `lucide-react` icons, `@elevenlabs/react`, LiveKit, Anam SDK |
-| Run | `npm install` · `npm run dev` · `npm run build` (before `npx tsc --noEmit`) · `npm run lint` |
+| Stack | Next.js 16 (read `node_modules/next/dist/docs/`), React 19, Tailwind 4, `lucide-react` icons, `@elevenlabs/react`, LiveKit, Anam SDK, `ws` (the live sound's WebSockets in `server.mjs`) |
+| Run | `npm install` · `npm run dev` (no live sound) · `npm run build` (before `npx tsc --noEmit`) · `npm start` (`server.mjs`, as on Railway) · `npm run lint` |
 | Commits | Author **HelmiDev03**; pushed straight to `main` |
 
 **Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin` and its sections, `/demos` and
@@ -610,7 +631,9 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | Routes | Called by | Protected by |
 |---|---|---|
 | `/api/agent/customer-lookup`, `/customer-link`, `/handover` | Clara's tools | `x-ndi-agent-secret` |
-| `/api/twilio/handover/*` (`hold`, `accept`, `status`, `transcript`) | Twilio, during a hand-over | `?key=` made from `TWILIO_AUTH_TOKEN` and the call |
+| `/api/twilio/handover/*` (`hold`, `accept`, `status`, `transcript`) | Twilio, during a hand-over | `?key=` made from `TWILIO_AUTH_TOKEN` and the call (`&kind=incoming` for a call to NDI) |
+| `/api/twilio/media-stream` (WebSocket, `server.mjs`) | Twilio, the copy of a call's audio | A key made from `TWILIO_AUTH_TOKEN` and the call, in the stream's custom parameters |
+| `/api/live/signal` (WebSocket, `server.mjs`) | Staff pages on `/admin/calls` | The Aida staff token in the URL |
 | `/api/agent/post-call` | ElevenLabs post-call webhook | HMAC signature (`ELEVENLABS_WEBHOOK_SECRET`) |
 | `/api/email/gmail-push` | Google Pub/Sub | `?token=` `GMAIL_PUSH_SECRET` |
 | `/api/email/assistant-reply` | ElevenLabs (email replies) | HMAC signature (`EMAIL_CHANNEL_SIGNING_SECRET`) |
@@ -639,7 +662,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Aida rooms (CDA's LiveKit project for now, copied) |
 | `AIDA_AGENT_ID`, `AIDA_STAFF_PASSWORD` | Aida `agent_0301m3y1xgv9ee8tr3qf8w110kbb`, staff password (new for NDI) |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Claude Haiku for insights and moods (copied) |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | NDI's Twilio account, for handing call-list calls over to a colleague (section 12) |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | NDI's Twilio account, for handing calls over to a colleague and for the live call sound (section 12) |
 | `gmail_sender`, `gmail_app_password`, `STAFF_ALERT_EMAIL` | Mailbox that sends conversation emails and alerts; who gets the alerts |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Gmail API: NDI's own OAuth client (project `ndi-front-assistant`); refresh token for contact@ |
 | `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUSH_SECRET` | `projects/ndi-front-assistant/topics/gmail-inbox-ndi`; the secret in the push URL |
@@ -663,7 +686,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | Telegram bot token | ElevenLabs Telegram connection | From @BotFather |
 | Instagram token | Supabase `channel_tokens` (refreshed every 7 days); starting token in `INSTAGRAM_ACCESS_TOKEN` | Shared with the CDA demo |
 | Google Drive access | ElevenLabs Google Drive integration | Read-only, picked files |
-| Twilio | ElevenLabs phone number import, and Railway (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`) for hand-overs | NDI's Twilio account |
+| Twilio | ElevenLabs phone number import, and Railway (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`) for hand-overs and the live sound | NDI's Twilio account |
 
 Values copied from CDA's `.env.local` on 2 Oct 2026: ElevenLabs, Anam key, LiveKit, Anthropic, Google OAuth client,
 Instagram and Messenger (tokens, IDs, webhook secrets). New for NDI: site password, staff password, tool secret,

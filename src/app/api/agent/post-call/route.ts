@@ -1,6 +1,7 @@
 import { hasValidWebhookSignature } from "@/lib/agentAuth";
 import { addInterests, addNote } from "@/lib/customers";
 import { recordSaidFeedback } from "@/lib/feedback";
+import { incomingCallEnded } from "@/lib/incomingCalls";
 import { recordGaps } from "@/lib/knowledge";
 import { recordConversationMood, type ConversationForMood } from "@/lib/mood";
 import { callEnded } from "@/lib/outboundCalls";
@@ -43,10 +44,20 @@ export async function POST(request: Request) {
   }
 
   // A call from a staff call list ended or never connected: the list moves on to the next number
-  // now. Never fatal: the staff page moves lists on as well.
+  // now. Never fatal: the staff page moves lists on as well. Any other phone call is a call to NDI, whose
+  // end (and ElevenLabs' summary) shows on /admin/calls/incoming.
   if (event.data?.conversation_id && (event.type === "post_call_transcription" || event.type === "call_initiation_failure")) {
+    const conversationId = event.data.conversation_id;
     const failure = event.type === "call_initiation_failure" ? event.data.failure_reason || "unknown" : undefined;
-    await callEnded(event.data.conversation_id, failure).catch((error) => console.error("call list update failed", error));
+    const listCall = await callEnded(conversationId, failure).catch((error) => {
+      console.error("call list update failed", error);
+      return true;
+    });
+    if (!listCall && event.data.metadata?.phone_call) {
+      await incomingCallEnded(conversationId, event.data.analysis?.transcript_summary?.trim()).catch((error) =>
+        console.error("call to NDI could not be closed", error),
+      );
+    }
   }
 
   // Only the transcription event carries a summary; other event types are acknowledged and dropped.

@@ -1,29 +1,35 @@
-// Hand-over of a call-list call to a colleague, live on the phone.
+// Hand-over of a phone call to a colleague, live on the phone: a call from a staff call list (to the
+// colleague named for that call), or a call to NDI that Clara answered (to the hand-over team, rung one
+// after another in the team's order, src/lib/handoverTeam.ts).
 //
-// Staff may give a call a colleague (name and phone number) and say when Clara should hand over. When
-// that moment comes, Clara tells the customer she is connecting them, and her tool transfer_to_human
+// When the moment comes, Clara tells the customer she is connecting them, and her tool transfer_to_human
 // (POST /api/agent/handover) starts this:
 //
 //   1. The customer's call leaves Clara for hold music in a Twilio conference of its own, and Twilio
-//      starts transcribing it live, both voices. Clara's conversation ends there.
+//      starts transcribing it live, both voices, and sending its sound to /admin (src/lib/liveSignal.ts).
+//      Clara's conversation ends there.
 //   2. The colleague's phone rings from NDI's number. They hear who is waiting and what Clara learnt,
-//      and join by pressing a key. A voicemail cannot press a key, so it never joins.
+//      and join by pressing a key. A voicemail cannot press a key, so it never joins. On a call to NDI,
+//      the next colleague of the team is rung when one does not take it.
 //   3. While they talk, every finished sentence arrives at /api/twilio/handover/transcript, and /admin
 //      shows the conversation with Aida's suggested answers.
-//   4. If the colleague does not take the call, the customer hears that NDI will call back.
-//   5. When the customer's call ends, the talk becomes one short note in the customer's memory, and the
-//      call list moves on to the next number.
+//   4. If nobody takes the call, the customer hears that NDI will call back.
+//   5. When the customer's call ends, the talk becomes one short note in the customer's memory; a call
+//      list moves on to the next number, and a call to NDI is closed.
 //
-// Twilio reaches the app on /api/twilio/handover/*; every URL carries the item's key (src/lib/twilio.ts).
+// Twilio reaches the app on /api/twilio/handover/*; every URL carries the call's key (src/lib/twilio.ts).
 
 import { cleanText } from "./aida";
 import { anthropicConfigured, askClaude } from "./anthropic";
 import { addCustomerNote, findByChannel, profileFor } from "./customers";
 import { elevenLabsConversation } from "./elevenlabs";
+import { nextTeamMember } from "./handoverTeam";
+import { closeIncomingCall, ensureIncomingCall } from "./incomingCalls";
+import { liveSignalTwiml } from "./liveSignal";
 import { advance } from "./outboundCalls";
 import { supabaseRest as rest } from "./supabase";
 import { formatDate } from "./transcriptEmail";
-import { callbackUrl, twilio, twilioConfigured, twimlDocument, xml } from "./twilio";
+import { callbackUrl, twilio, twilioConfigured, twimlDocument, xml, type CallKind, type CallRef } from "./twilio";
 
 const q = encodeURIComponent;
 
@@ -38,8 +44,7 @@ export type HandoverStatus = "ringing" | "live" | "ended" | "missed" | "abandone
 
 export type HandoverItem = {
   id: string;
-  list_id: string;
-  phone: string;
+  phone: string | null;
   name: string | null;
   instructions: string;
   conversation_id: string | null;
@@ -54,20 +59,32 @@ export type HandoverItem = {
   handover_live_at: string | null;
   handover_ended_at: string | null;
   handover_note: string | null;
+  /** Call lists only: the list that moves on when the call is over. */
+  list_id?: string;
+  /** Calls to NDI only: the number they called, which the colleagues are rung from. */
+  ndi_number?: string | null;
+  /** Calls to NDI only: the team members rung so far for this hand-over. */
+  handover_tried?: string[];
 };
 
-const FIELDS =
-  "id,list_id,phone,name,instructions,conversation_id,call_sid,handover_name,handover_phone,handover_status," +
-  "handover_summary,handover_language,handover_call_sid,handover_started_at,handover_live_at,handover_ended_at,handover_note";
+/** Where each kind of call is kept, and how its transcript lines point at it. */
+const TABLE: Record<CallKind, string> = { list: "call_list_items", incoming: "incoming_calls" };
+const LINE_COLUMN: Record<CallKind, string> = { list: "item_id", incoming: "incoming_id" };
 
-export async function handoverItem(itemId: string): Promise<HandoverItem | null> {
-  const [item] = await rest<HandoverItem[]>(`call_list_items?id=eq.${q(itemId)}&select=${FIELDS}&limit=1`);
+const FIELDS =
+  "id,phone,name,instructions,conversation_id,call_sid,handover_name,handover_phone,handover_status," +
+  "handover_summary,handover_language,handover_call_sid,handover_started_at,handover_live_at,handover_ended_at,handover_note";
+const fieldsOf = (kind: CallKind) => `${FIELDS},${kind === "list" ? "list_id" : "ndi_number,handover_tried"}`;
+const rowPath = (ref: CallRef) => `${TABLE[ref.kind]}?id=eq.${q(ref.id)}`;
+
+export async function handoverItem(ref: CallRef): Promise<HandoverItem | null> {
+  const [item] = await rest<HandoverItem[]>(`${rowPath(ref)}&select=${fieldsOf(ref.kind)}&limit=1`);
   return item ?? null;
 }
 
 /** Changes the hand-over only while it is still in one of the given states. False when it was not. */
-async function moveOn(itemId: string, from: HandoverStatus[], update: Record<string, unknown>): Promise<boolean> {
-  const rows = await rest<{ id: string }[]>(`call_list_items?id=eq.${q(itemId)}&handover_status=in.(${from.join(",")})&select=id`, {
+async function moveOn(ref: CallRef, from: HandoverStatus[], update: Record<string, unknown>): Promise<boolean> {
+  const rows = await rest<{ id: string }[]>(`${rowPath(ref)}&handover_status=in.(${from.join(",")})&select=id`, {
     method: "PATCH",
     prefer: "return=representation",
     body: JSON.stringify(update),
@@ -108,7 +125,7 @@ function say(text: string, language: HandoverLanguage = "en"): string {
   return `<Say voice="${voice}" language="${code}">${xml(text)}</Say>`;
 }
 
-const conferenceName = (itemId: string) => `ndi-handover-${itemId}`;
+const conferenceName = (ref: CallRef) => `ndi-handover-${ref.id}`;
 /** The live transcript is named so it can be stopped before the goodbye, which is not part of the talk. */
 const TRANSCRIPTION = "handover";
 
@@ -127,25 +144,45 @@ export async function startHandover(input: {
   language: unknown;
 }): Promise<{ ok: boolean; message?: string }> {
   if (!input.conversationId || !twilioConfigured()) return { ok: false, message: NOT_POSSIBLE };
-  const [item] = await rest<HandoverItem[]>(
-    `call_list_items?conversation_id=eq.${q(input.conversationId)}&select=${FIELDS}&limit=1`,
+  const [listItem] = await rest<HandoverItem[]>(
+    `call_list_items?conversation_id=eq.${q(input.conversationId)}&select=${fieldsOf("list")}&limit=1`,
   );
-  if (!item?.handover_phone) return { ok: false, message: NOT_POSSIBLE };
+  if (listItem) return startFor({ kind: "list", id: listItem.id }, listItem, input);
+
+  // A call to NDI: registered by customer_lookup as it started (or now, if that did not happen).
+  const incoming = await ensureIncomingCall(input.conversationId);
+  const call = incoming ? await handoverItem({ kind: "incoming", id: incoming.id }) : null;
+  if (incoming && call) return startFor({ kind: "incoming", id: incoming.id }, call, input);
+  return { ok: false, message: NOT_POSSIBLE };
+}
+
+async function startFor(
+  ref: CallRef,
+  item: HandoverItem,
+  input: { conversationId: string; summary: unknown; language: unknown },
+): Promise<{ ok: boolean; message?: string }> {
   if (item.handover_status) return { ok: true }; // already on its way: the tool was called twice
+
+  // Whom to ring: the colleague named for this call-list call, or the team's first active member.
+  const member = ref.kind === "incoming" ? await nextTeamMember([]) : null;
+  const colleague = ref.kind === "list" ? item.handover_phone : member?.phone;
+  if (!colleague) return { ok: false, message: NOT_POSSIBLE };
 
   // Twilio's id of the call, and NDI's number to ring the colleague from, as ElevenLabs recorded them.
   const record = await elevenLabsConversation(input.conversationId).catch(() => null);
   const callSid = item.call_sid || record?.metadata?.phone_call?.call_sid || null;
-  let ndiNumber = record?.metadata?.phone_call?.agent_number || null;
+  let ndiNumber = record?.metadata?.phone_call?.agent_number || item.ndi_number || null;
   if (callSid && !ndiNumber) {
-    ndiNumber = (await twilio<{ from?: string }>(`/Calls/${callSid}.json`).catch(() => null))?.from ?? null;
+    // NDI's number dialled the customer (a call list), or the customer dialled it (a call to NDI).
+    const call = await twilio<{ from?: string; to?: string }>(`/Calls/${callSid}.json`).catch(() => null);
+    ndiNumber = (ref.kind === "list" ? call?.from : call?.to) ?? null;
   }
   if (!callSid || !ndiNumber) {
     console.error("hand-over: the call is not known to Twilio", input.conversationId);
     return { ok: false, message: NOT_POSSIBLE };
   }
 
-  const [started] = await rest<HandoverItem[]>(`call_list_items?id=eq.${q(item.id)}&handover_status=is.null&select=${FIELDS}`, {
+  const [started] = await rest<HandoverItem[]>(`${rowPath(ref)}&handover_status=is.null&select=${fieldsOf(ref.kind)}`, {
     method: "PATCH",
     prefer: "return=representation",
     body: JSON.stringify({
@@ -154,119 +191,158 @@ export async function startHandover(input: {
       handover_language: languageOf(input.language),
       call_sid: callSid,
       handover_started_at: new Date().toISOString(),
+      ...(member
+        ? { handover_name: member.name, handover_phone: member.phone, handover_tried: [member.id], ndi_number: ndiNumber }
+        : {}),
     }),
   });
   if (!started) return { ok: true };
 
   // 1. The customer leaves Clara for hold music. Twilio asks /hold what to play, which also starts
-  //    the live transcript, and tells /status when the customer's call ends.
+  //    the live transcript and sound, and tells /status when the customer's call ends.
   try {
     await twilio(`/Calls/${callSid}.json`, {
-      Url: await callbackUrl("/api/twilio/handover/hold", item.id),
+      Url: await callbackUrl("/api/twilio/handover/hold", ref),
       Method: "POST",
-      StatusCallback: await callbackUrl("/api/twilio/handover/status", item.id, { leg: "customer" }),
+      StatusCallback: await callbackUrl("/api/twilio/handover/status", ref, { leg: "customer" }),
       StatusCallbackMethod: "POST",
     });
   } catch (error) {
     console.error("hand-over: the customer's call could not be moved", error);
-    await moveOn(item.id, ["ringing"], { handover_status: "failed", handover_ended_at: new Date().toISOString() });
+    await moveOn(ref, ["ringing"], { handover_status: "failed", handover_ended_at: new Date().toISOString() });
     return { ok: false, message: NOT_POSSIBLE };
   }
 
   // 2. The colleague's phone rings from NDI's number.
+  if (!(await ringColleague(ref, started, ndiNumber)) && !(await ringNextMember(ref, started))) {
+    await nobodyTakesIt(ref, started, "failed");
+  }
+  return { ok: true };
+}
+
+/** Rings the hand-over's current colleague. False when the call could not even be placed. */
+async function ringColleague(ref: CallRef, item: HandoverItem, ndiNumber: string): Promise<boolean> {
+  if (!item.handover_phone) return false;
   try {
     const call = await twilio<{ sid: string }>("/Calls.json", {
       To: item.handover_phone,
       From: ndiNumber,
       Timeout: String(RING_SECONDS),
-      Twiml: await colleagueBrief(started),
-      StatusCallback: await callbackUrl("/api/twilio/handover/status", item.id, { leg: "colleague" }),
+      Twiml: await colleagueBrief(ref, item),
+      StatusCallback: await callbackUrl("/api/twilio/handover/status", ref, { leg: "colleague" }),
       StatusCallbackMethod: "POST",
     });
-    await rest(`call_list_items?id=eq.${q(item.id)}`, {
-      method: "PATCH",
-      prefer: "return=minimal",
-      body: JSON.stringify({ handover_call_sid: call.sid }),
-    });
+    await rest(rowPath(ref), { method: "PATCH", prefer: "return=minimal", body: JSON.stringify({ handover_call_sid: call.sid }) });
+    return true;
   } catch (error) {
-    console.error("hand-over: the colleague could not be rung", error);
-    await nobodyTakesIt(started, "failed");
+    console.error("hand-over: the colleague could not be rung", item.handover_name, error);
+    return false;
   }
-  return { ok: true };
+}
+
+/**
+ * A call to NDI that the colleague did not take: the next active member of the team is rung, while the
+ * customer waits on hold. False when nobody is left (or for a call-list call, which names one colleague).
+ */
+async function ringNextMember(ref: CallRef, item: HandoverItem): Promise<boolean> {
+  if (ref.kind !== "incoming" || !item.ndi_number) return false;
+  let tried = item.handover_tried ?? [];
+  for (;;) {
+    const member = await nextTeamMember(tried);
+    if (!member) return false;
+    tried = [...tried, member.id];
+    const moved = await moveOn(ref, ["ringing"], {
+      handover_name: member.name,
+      handover_phone: member.phone,
+      handover_tried: tried,
+      handover_call_sid: null,
+    });
+    if (!moved) return true; // the customer hung up or someone took the call meanwhile: nothing more to do
+    const next = { ...item, handover_name: member.name, handover_phone: member.phone, handover_tried: tried };
+    if (await ringColleague(ref, next, item.ndi_number)) return true;
+  }
 }
 
 /** What the colleague hears when they pick up (in English), and the key that joins them to the customer. */
-async function colleagueBrief(item: HandoverItem): Promise<string> {
-  const action = xml(await callbackUrl("/api/twilio/handover/accept", item.id));
+async function colleagueBrief(ref: CallRef, item: HandoverItem): Promise<string> {
+  const action = xml(await callbackUrl("/api/twilio/handover/accept", ref));
   const ask = (text: string) => `<Gather numDigits="1" timeout="${KEY_SECONDS}" action="${action}" method="POST">${say(text)}</Gather>`;
   const hello = item.handover_name ? `Hello ${item.handover_name}.` : "Hello.";
-  const who = item.name ? `${item.name}, a customer from the NDI call list, is` : "A customer from the NDI call list is";
+  const kind = ref.kind === "list" ? "a customer from the NDI call list" : "a customer who called NDI";
+  const who = item.name ? `${item.name}, ${kind}, is` : `${kind.charAt(0).toUpperCase()}${kind.slice(1)} is`;
   const said = item.handover_summary ? ` Clara says: ${item.handover_summary}` : "";
   return twimlDocument(
     ask(`${hello} ${who} waiting for you on the line.${said} Press any key to take the call.`) +
       ask("Press any key to take the call.") +
-      say("No key was pressed, so the customer will hear that NDI calls back. Goodbye."),
+      say("No key was pressed, so the call goes to someone else or NDI calls back. Goodbye."),
   );
 }
 
 // --- Twilio calling back ---------------------------------------------------------------------------
 
-/** The customer's side after Clara: the live transcript starts, then hold music until the colleague joins. */
-export async function holdTwiml(itemId: string): Promise<string> {
-  const item = await handoverItem(itemId);
+/**
+ * The customer's side after Clara: the live transcript and sound start, then hold music until the
+ * colleague joins.
+ */
+export async function holdTwiml(ref: CallRef): Promise<string> {
+  const item = await handoverItem(ref);
   const language = languageOf(item?.handover_language);
   if (item?.handover_status !== "ringing") return `${say(SORRY[language], language)}<Hangup/>`;
-  const transcript = xml(await callbackUrl("/api/twilio/handover/transcript", itemId));
+  const transcript = xml(await callbackUrl("/api/twilio/handover/transcript", ref));
   return (
     `<Start><Transcription name="${TRANSCRIPTION}" statusCallbackUrl="${transcript}" track="both_tracks" ` +
     `languageCode="${VOICES[language].language}" partialResults="false" /></Start>` +
-    `<Dial><Conference startConferenceOnEnter="false" endConferenceOnExit="true" beep="false">${conferenceName(itemId)}</Conference></Dial>` +
+    (await liveSignalTwiml(ref)) +
+    `<Dial><Conference startConferenceOnEnter="false" endConferenceOnExit="true" beep="false">${conferenceName(ref)}</Conference></Dial>` +
     `<Stop><Transcription name="${TRANSCRIPTION}" /></Stop>` +
     say(GOODBYE[language], language)
   );
 }
 
 /** The colleague pressed a key: they join the customer, unless the customer has gone meanwhile. */
-export async function colleagueJoins(itemId: string): Promise<string> {
-  const joined = await moveOn(itemId, ["ringing"], { handover_status: "live", handover_live_at: new Date().toISOString() });
+export async function colleagueJoins(ref: CallRef): Promise<string> {
+  const joined = await moveOn(ref, ["ringing"], { handover_status: "live", handover_live_at: new Date().toISOString() });
   if (!joined) return `${say("Sorry, the customer is no longer on the line. Goodbye.")}<Hangup/>`;
   return (
     say("Connecting you now.") +
-    `<Dial><Conference startConferenceOnEnter="true" endConferenceOnExit="true" beep="false">${conferenceName(itemId)}</Conference></Dial>` +
+    `<Dial><Conference startConferenceOnEnter="true" endConferenceOnExit="true" beep="false">${conferenceName(ref)}</Conference></Dial>` +
     say("The call has ended. Goodbye.")
   );
 }
 
 /**
- * One of the two calls ended (Twilio's status callback). The colleague's call ending while the customer
- * still waits means nobody took it. The customer's call ending ends the hand-over, whatever its state.
+ * One of the calls ended (Twilio's status callback). The colleague's call ending while the customer still
+ * waits means they did not take it: the next colleague of the team is rung, or nobody takes it. The
+ * customer's call ending ends the hand-over, whatever its state.
  */
-export async function handoverLegEnded(itemId: string, leg: "customer" | "colleague"): Promise<void> {
-  const item = await handoverItem(itemId);
+export async function handoverLegEnded(ref: CallRef, leg: "customer" | "colleague", callSid?: string): Promise<void> {
+  const item = await handoverItem(ref);
   if (!item?.handover_status) return;
   if (leg === "colleague") {
+    // An earlier colleague's call, already given up on: the one ringing now decides.
+    if (callSid && item.handover_call_sid && callSid !== item.handover_call_sid) return;
     // After a talk, the customer's own call ends too (the conference ends with the colleague).
-    if (item.handover_status === "ringing") await nobodyTakesIt(item, "missed");
+    if (item.handover_status === "ringing" && !(await ringNextMember(ref, item))) await nobodyTakesIt(ref, item, "missed");
     return;
   }
-  await finish(item);
+  await finish(ref, item);
 }
 
 /** Nobody took the call: the customer, still on hold, hears that NDI will call back, and the call ends. */
-async function nobodyTakesIt(item: HandoverItem, status: "missed" | "failed"): Promise<void> {
-  if (!(await moveOn(item.id, ["ringing"], { handover_status: status })) || !item.call_sid) return;
+async function nobodyTakesIt(ref: CallRef, item: HandoverItem, status: "missed" | "failed"): Promise<void> {
+  if (!(await moveOn(ref, ["ringing"], { handover_status: status })) || !item.call_sid) return;
   const language = languageOf(item.handover_language);
   await twilio(`/Calls/${item.call_sid}.json`, { Twiml: twimlDocument(`${say(SORRY[language], language)}<Hangup/>`) }).catch((error) =>
     console.error("hand-over: the customer could not be told", error),
   );
 }
 
-/** The customer's call is over: the hand-over ends, the talk is remembered and the list moves on. */
-async function finish(item: HandoverItem): Promise<void> {
+/** The customer's call is over: the hand-over ends, the talk is remembered, and the call is done. */
+async function finish(ref: CallRef, item: HandoverItem): Promise<void> {
   const status: HandoverStatus =
     item.handover_status === "ringing" ? "abandoned" : item.handover_status === "live" ? "ended" : (item.handover_status ?? "failed");
   const endedAt = new Date().toISOString();
-  const rows = await rest<{ id: string }[]>(`call_list_items?id=eq.${q(item.id)}&handover_ended_at=is.null&select=id`, {
+  const rows = await rest<{ id: string }[]>(`${rowPath(ref)}&handover_ended_at=is.null&select=id`, {
     method: "PATCH",
     prefer: "return=representation",
     body: JSON.stringify({ handover_status: status, handover_ended_at: endedAt }),
@@ -278,21 +354,26 @@ async function finish(item: HandoverItem): Promise<void> {
     await twilio(`/Calls/${item.handover_call_sid}.json`, { Status: "completed" }).catch(() => {});
   }
   if (status === "ended") {
-    await rememberTalk({ ...item, handover_ended_at: endedAt }).catch((error) =>
+    await rememberTalk(ref, { ...item, handover_ended_at: endedAt }).catch((error) =>
       console.error("hand-over: the talk could not be remembered", error),
     );
   }
-  await advance(item.list_id).catch((error) => console.error("call list could not move on", item.list_id, error));
+  if (ref.kind === "list" && item.list_id) {
+    await advance(item.list_id).catch((error) => console.error("call list could not move on", item.list_id, error));
+  }
+  if (ref.kind === "incoming") {
+    await closeIncomingCall(ref.id).catch((error) => console.error("call to NDI could not be closed", ref.id, error));
+  }
 }
 
 const NOTE_SYSTEM = `You write one line for NDI's customer memory about a phone call between a customer and an NDI colleague.
 From the transcript, say in at most two short sentences what the customer wanted and what was agreed or promised next.
 Plain text. No greeting, no phone numbers or email addresses.`;
 
-/** The talk as one short note: on the call list, and in the customer's memory for every channel. */
-async function rememberTalk(item: HandoverItem): Promise<void> {
+/** The talk as one short note: on the call, and in the customer's memory for every channel. */
+async function rememberTalk(ref: CallRef, item: HandoverItem): Promise<void> {
   const lines = await rest<{ speaker: string; text: string }[]>(
-    `handover_lines?item_id=eq.${q(item.id)}&select=speaker,text&order=id.asc&limit=400`,
+    `handover_lines?${LINE_COLUMN[ref.kind]}=eq.${q(ref.id)}&select=speaker,text&order=id.asc&limit=400`,
   );
   let what = "";
   if (lines.length && anthropicConfigured()) {
@@ -306,17 +387,13 @@ async function rememberTalk(item: HandoverItem): Promise<void> {
   const when = formatDate(Number.isFinite(from) ? from : Date.now());
   const note = `Phone call with ${item.handover_name || "an NDI colleague"} (NDI) on ${when}, ${minutes} min${what ? `: ${what}` : "."}`;
 
-  await rest(`call_list_items?id=eq.${q(item.id)}`, {
-    method: "PATCH",
-    prefer: "return=minimal",
-    body: JSON.stringify({ handover_note: note.slice(0, 600) }),
-  });
-  const owner = await findByChannel({ channel: "phone", key: item.phone });
+  await rest(rowPath(ref), { method: "PATCH", prefer: "return=minimal", body: JSON.stringify({ handover_note: note.slice(0, 600) }) });
+  const owner = item.phone ? await findByChannel({ channel: "phone", key: item.phone }) : null;
   if (owner) await addCustomerNote(owner.customer.id, "phone", note);
 }
 
 /** One finished sentence from Twilio's live transcript, kept while the customer and the colleague talk. */
-export async function addTranscriptLine(itemId: string, fields: Record<string, string>): Promise<void> {
+export async function addTranscriptLine(ref: CallRef, fields: Record<string, string>): Promise<void> {
   if (fields.TranscriptionEvent !== "transcription-content" || fields.Final !== "true") return;
   let text = "";
   try {
@@ -328,14 +405,14 @@ export async function addTranscriptLine(itemId: string, fields: Record<string, s
 
   // Not the hold music before the colleague joins, nor the message the customer hears when nobody did.
   // "ended" still counts: the last sentence can arrive just after the call.
-  const [item] = await rest<{ handover_status: string | null }[]>(`call_list_items?id=eq.${q(itemId)}&select=handover_status&limit=1`);
+  const [item] = await rest<{ handover_status: string | null }[]>(`${rowPath(ref)}&select=handover_status&limit=1`);
   if (item?.handover_status !== "live" && item?.handover_status !== "ended") return;
 
   await rest("handover_lines?on_conflict=ref", {
     method: "POST",
     prefer: "resolution=ignore-duplicates,return=minimal",
     body: JSON.stringify({
-      item_id: itemId,
+      [LINE_COLUMN[ref.kind]]: ref.id,
       // On the customer's call, Twilio's inbound track is the customer; the outbound track is what they hear.
       speaker: fields.Track === "inbound_track" ? "customer" : "colleague",
       text,
@@ -354,6 +431,7 @@ const VIEW_FIELDS =
   "handover_started_at,handover_live_at,handover_ended_at,handover_note";
 
 export type HandoverView = {
+  kind: CallKind;
   item: Pick<
     HandoverItem,
     | "id"
@@ -378,19 +456,20 @@ export const handoverActive = (item: Pick<HandoverItem, "handover_status">) =>
   item.handover_status === "ringing" || item.handover_status === "live";
 
 /** The hand-over as it stands, with the lines after `afterId`. Null when this call has none. */
-export async function handoverView(itemId: string, afterId: number): Promise<HandoverView | null> {
-  const [item] = await rest<HandoverView["item"][]>(`call_list_items?id=eq.${q(itemId)}&select=${VIEW_FIELDS}&limit=1`);
+export async function handoverView(ref: CallRef, afterId: number): Promise<HandoverView | null> {
+  const [item] = await rest<HandoverView["item"][]>(`${rowPath(ref)}&select=${VIEW_FIELDS}&limit=1`);
   if (!item?.handover_status) return null;
   const [lines, known] = await Promise.all([
     rest<HandoverLine[]>(
-      `handover_lines?item_id=eq.${q(itemId)}&id=gt.${afterId}&select=id,speaker,text,created_at&order=id.asc&limit=200`,
+      `handover_lines?${LINE_COLUMN[ref.kind]}=eq.${q(ref.id)}&id=gt.${afterId}&select=id,speaker,text,created_at&order=id.asc&limit=200`,
     ),
     afterId > 0 ? undefined : knownAbout(item.phone),
   ]);
-  return { item, lines, ...(known === undefined ? {} : { known }) };
+  return { kind: ref.kind, item, lines, ...(known === undefined ? {} : { known }) };
 }
 
-async function knownAbout(phone: string): Promise<HandoverView["known"]> {
+async function knownAbout(phone: string | null): Promise<HandoverView["known"]> {
+  if (!phone) return null;
   const owner = await findByChannel({ channel: "phone", key: phone }).catch(() => null);
   if (!owner) return null;
   const profile = await profileFor(owner.customer);

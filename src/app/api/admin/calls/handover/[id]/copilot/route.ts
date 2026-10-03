@@ -3,16 +3,18 @@ import { elevenLabsGet } from "@/lib/elevenlabs";
 import { handoverActive, handoverItem } from "@/lib/handover";
 
 // Opens a text-only session with Aida for the staff member following a hand-over on /admin, so she can
-// suggest what the colleague could say next. Only while the hand-over is under way. Staff only.
+// suggest what the colleague could say next. Only while the hand-over is under way. ?kind=incoming for a
+// call to NDI. Staff only.
 export async function POST(request: Request, ctx: RouteContext<"/api/admin/calls/handover/[id]/copilot">) {
   if (!(await isStaffRequest(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Unknown call" }, { status: 404 });
+  const kind = new URL(request.url).searchParams.get("kind") === "incoming" ? "incoming" : "list";
 
   const agentId = process.env.AIDA_AGENT_ID;
   if (!agentId) return Response.json({ error: "Aida is not configured" }, { status: 503 });
 
-  const item = await handoverItem(id).catch(() => null);
+  const item = await handoverItem({ kind, id }).catch(() => null);
   if (!item || !handoverActive(item)) return Response.json({ error: "The call has ended" }, { status: 410 });
 
   try {
