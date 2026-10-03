@@ -9,9 +9,10 @@
 // the loudest of every 100 ms, for the customer and for NDI's side (Clara, or the colleague after a
 // hand-over). Everything is kept in memory, which is enough for the one server Railway runs.
 //
-// Twilio charges for the copy (and for the live transcript that goes with it), so it runs only while a
-// staff page watches the call: this server tells the app when a call's first page connects, and when its
-// last page has been gone for a little while (POST /api/live/watch), and the app starts and stops both.
+// Twilio charges for the copy (and, during Clara's part, for the live transcript that goes with it), so it
+// runs only while a staff page watches the call: this server tells the app when a call's first page
+// connects, and when its last page has been gone for a little while (POST /api/live/watch), and the app
+// starts and stops them.
 //
 // `npm run dev` stays `next dev`, without the live sound and transcript.
 

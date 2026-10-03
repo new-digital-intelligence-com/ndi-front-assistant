@@ -594,26 +594,32 @@ to one browser tab: a section opened in a new tab asks for the password again.
   **hand-over team** (`/admin/calls/team`, table `handover_team`, `src/lib/handoverTeam.ts`) has someone switched on.
   When the moment comes Clara says she is connecting them and calls `transfer_to_human`:
   1. The app moves the customer's call off Clara (Twilio call update → `/api/twilio/handover/hold`): hold music in a
-     Twilio conference `ndi-handover-<id>`. If staff have the call open live, its sound and transcript stop just
-     before the move and start again with the hold music (`<Start><Stream>`, `<Start><Transcription>`).
+     Twilio conference `ndi-handover-<id>`, and Twilio's transcript of the talk starts in any case
+     (`<Start><Transcription name="handover">`; ElevenLabs is off the call from here, so only Twilio can write the
+     talk down; the user's choice, 3 Oct 2026). If staff have the call open live, its sound and Clara's transcript
+     stop just before the move, and the sound starts again with the hold music (`<Start><Stream>`).
   2. The colleague's phone rings from NDI's number (25 s). They hear who is waiting and Clara's summary, and press any
      key to join (`/accept`); a voicemail cannot press a key. On a call to NDI, the team's colleagues are rung one after
      another, top first, until one takes it. Customer and colleague talk; Clara is gone.
   3. Staff follow it with **Open live call · Aida** on Outgoing or Incoming (nothing opens by itself): the sound, the
      conversation, Aida's suggestions (Aida runs in that browser while they talk), what Clara learnt and what NDI
-     knows about the customer. When the colleague hangs up, the transcript stops before the customer's goodbye.
+     knows about the customer. When the colleague hangs up, `<Stop><Transcription name="handover">` ends the
+     transcript before the customer's goodbye.
   4. Nobody takes it → the customer hears *"nobody from the NDI team can take the call right now; NDI will call you
      back"* in their language. When the customer's call ends (`/status`), the talk becomes one note in the customer's
-     memory, written by Claude from the transcript when the call was open live (otherwise only who talked and how
-     long); a call list moves on, a call to NDI is closed. While a hand-over runs, its list waits.
-  Costs: conference $0.0018 per person per minute, the call to the colleague, Aida's suggestions (ElevenLabs
-  credits, as in Aida rooms), and the live view while it is open (below)
+     memory, written by Claude from the transcript (with no working Claude key, or nothing said, only who talked and
+     how long); a call list moves on, a call to NDI is closed. While a hand-over runs, its list waits.
+  Costs: the talk's transcript $0.027/min (always, from the hold music to the colleague's goodbye), conference
+  $0.0018 per person per minute, the call to the colleague, Aida's suggestions (ElevenLabs credits, as in Aida
+  rooms), and the live view while it is open (below)
 - **Live view of a call** (`src/lib/liveCall.ts`, `server.mjs`, `src/components/admin/LiveCall.tsx` and
   `LiveSignal.tsx`; the user's request, 3 Oct 2026: *only when an employee clicks "live"*, because both cost money).
-  Nothing runs for a call until a staff member presses **Open live call** on Outgoing or Incoming. The view shows:
+  Nothing runs for a call until a staff member presses **Open live call** on Outgoing or Incoming, except the
+  transcript of a colleague's talk after a hand-over, which always runs (above). The view shows:
   - **with Clara** (outgoing or incoming): the live sound and the transcript (Clara and the customer);
   - **during a hand-over**: the live sound, the transcript (the colleague and the customer) and Aida's suggestions;
-  - **after the call** (*View conversation*): what was transcribed while it was open, Clara's summary, the note.
+  - **after the call** (*View conversation*): what was transcribed (Clara's part only if the view was open; a
+    colleague's talk always), Clara's summary, the note.
 
   How: the view's sound bars connect to the WebSocket `/api/live/signal` (`server.mjs`, Aida staff token). When the
   first page connects to a call, `server.mjs` tells the app (`POST /api/live/watch`, key made from `TWILIO_AUTH_TOKEN`
@@ -624,12 +630,13 @@ to one browser tab: a section opened in a new tab asks for the password again.
   `/api/twilio/live/transcript` (`handover_lines`: customer, clara or colleague). Both get a new name each time
   (`live_name`), which Twilio needs to stop them. 15 seconds after the last page has gone, `server.mjs` tells the app,
   which stops both; the end of the call stops them anyway, and a server start stops anything left over. A call still
-  ringing gets them as Clara's conversation starts (`customer_lookup`). `server.mjs` turns each 20 ms of audio into one
+  ringing gets them as Clara's conversation starts (`customer_lookup`); after a hand-over only the sound starts, as
+  the talk is transcribed anyway. `server.mjs` turns each 20 ms of audio into one
   loudness number and sends staff the loudest of every 100 ms; nothing is stored or played. If Twilio refuses one of
   them (perhaps the copy while ElevenLabs is on the call), the reason shows in the view ("Twilio refused: …"); the
   first real call shows whether it does.
-  Costs, **only while a live view is open**: the sound $0.0044/min and the transcript $0.027/min (Twilio). An open
-  view keeps running while staff look at another tab or section of the console: close it to stop
+  Costs, **only while a live view is open**: the sound $0.0044/min and Clara's transcript $0.027/min (Twilio). An
+  open view keeps running while staff look at another tab or section of the console: close it to stop
 - **Knowledge**: nothing reaches Clara without a staff member approving it (`src/lib/knowledge.ts`); the FAQ
   document is swapped in on Clara and Aida on their live branch (`ELEVENLABS_BRANCH_ID` if set, otherwise read from the agent)
 

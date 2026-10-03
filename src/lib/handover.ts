@@ -10,12 +10,12 @@
 //   2. The colleague's phone rings from NDI's number. They hear who is waiting and what Clara learnt,
 //      and join by pressing a key. A voicemail cannot press a key, so it never joins. On a call to NDI,
 //      the next colleague of the team is rung when one does not take it.
-//   3. While a staff page shows the call live (src/lib/liveCall.ts), Twilio transcribes the talk and sends
-//      its sound, and /admin shows the conversation with Aida's suggested answers.
+//   3. Twilio writes the talk down in any case, for the customer's memory: ElevenLabs is no longer on the
+//      call. While a staff page shows the call live (src/lib/liveCall.ts), /admin also shows its sound and
+//      the conversation with Aida's suggested answers.
 //   4. If nobody takes the call, the customer hears that NDI will call back.
-//   5. When the customer's call ends, the talk becomes one short note in the customer's memory (with what
-//      was said, when it was transcribed); a call list moves on to the next number, and a call to NDI is
-//      closed.
+//   5. When the customer's call ends, the talk becomes one short note in the customer's memory; a call list
+//      moves on to the next number, and a call to NDI is closed.
 //
 // Twilio reaches the app on /api/twilio/handover/*; every URL carries the call's key (src/lib/twilio.ts).
 
@@ -25,7 +25,7 @@ import { addCustomerNote, findByChannel } from "./customers";
 import { elevenLabsConversation } from "./elevenlabs";
 import { nextTeamMember } from "./handoverTeam";
 import { closeIncomingCall, ensureIncomingCall } from "./incomingCalls";
-import { callPath, LINE_COLUMN, liveTwiml, stopLive } from "./liveCall";
+import { callPath, LINE_COLUMN, liveSoundTwiml, stopLive, talkTranscriptTwiml } from "./liveCall";
 import { advance } from "./outboundCalls";
 import { supabaseRest as rest } from "./supabase";
 import { formatDate } from "./transcriptEmail";
@@ -191,9 +191,9 @@ async function startFor(
   });
   if (!started) return { ok: true };
 
-  // 1. The customer leaves Clara for hold music. Twilio asks /hold what to play (which starts the live
-  //    sound and transcript again if a staff page shows the call), and tells /status when the customer's
-  //    call ends. Running ones stop first: Twilio allows only so many on a call.
+  // 1. The customer leaves Clara for hold music. Twilio asks /hold what to play (which starts the talk's
+  //    transcript, and the live sound again if a staff page shows the call), and tells /status when the
+  //    customer's call ends. What runs for a staff page stops first: Twilio allows only so many on a call.
   await stopLive(ref);
   try {
     await twilio(`/Calls/${callSid}.json`, {
@@ -276,16 +276,19 @@ async function colleagueBrief(ref: CallRef, item: HandoverItem): Promise<string>
 // --- Twilio calling back ---------------------------------------------------------------------------
 
 /**
- * The customer's side after Clara: hold music until the colleague joins, with the live sound and
- * transcript if a staff page shows the call.
+ * The customer's side after Clara: hold music until the colleague joins. The talk is written down in any
+ * case, until the conference is over (not the goodbye), and its sound is copied if a staff page shows the call.
  */
 export async function holdTwiml(ref: CallRef): Promise<string> {
   const item = await handoverItem(ref);
   const language = languageOf(item?.handover_language);
   if (item?.handover_status !== "ringing") return `${say(SORRY[language], language)}<Hangup/>`;
+  const transcript = await talkTranscriptTwiml(ref);
   return (
-    (await liveTwiml(ref)) +
+    transcript.start +
+    (await liveSoundTwiml(ref)) +
     `<Dial><Conference startConferenceOnEnter="false" endConferenceOnExit="true" beep="false">${conferenceName(ref)}</Conference></Dial>` +
+    transcript.stop +
     say(GOODBYE[language], language)
   );
 }
@@ -312,9 +315,7 @@ export async function handoverLegEnded(ref: CallRef, leg: "customer" | "colleagu
   if (leg === "colleague") {
     // An earlier colleague's call, already given up on: the one ringing now decides.
     if (callSid && item.handover_call_sid && callSid !== item.handover_call_sid) return;
-    // After a talk, the customer's own call ends too (the conference ends with the colleague). The goodbye
-    // they hear is not part of the talk, so the live transcript stops here.
-    if (item.handover_status === "live") return stopLive(ref);
+    // After a talk, the customer's own call ends too (the conference ends with the colleague).
     if (item.handover_status === "ringing" && !(await ringNextMember(ref, item))) await nobodyTakesIt(ref, item, "missed");
     return;
   }
@@ -364,8 +365,8 @@ From the transcript, say in at most two short sentences what the customer wanted
 Plain text. No greeting, no phone numbers or email addresses.`;
 
 /**
- * The talk as one short note: on the call, and in the customer's memory for every channel. What was said
- * is in it when a staff page showed the call live, which is when it was transcribed (src/lib/liveCall.ts).
+ * The talk as one short note: on the call, and in the customer's memory for every channel. The talk is
+ * always transcribed (src/lib/liveCall.ts, talkTranscriptTwiml), so Claude can say what was agreed.
  */
 async function rememberTalk(ref: CallRef, item: HandoverItem): Promise<void> {
   // The colleague's talk only: Clara's part has its own summary, from ElevenLabs.

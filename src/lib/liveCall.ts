@@ -1,22 +1,26 @@
 // The live view of a phone call on /admin/calls (src/components/admin/LiveCall.tsx): its sound and a live
 // transcript, from Clara's part to the hand-over to a colleague (src/lib/handover.ts). Twilio charges for
 // both by the minute (the sound $0.0044, the transcript $0.027), so they run only while a staff page shows
-// the call:
+// the call, with one exception: the colleague's talk after a hand-over is always written down, so that it
+// can end up in the customer's memory (the user's choice, 3 Oct 2026). ElevenLabs is no longer on the call
+// by then, so its summary of the conversation stops where Clara hands over.
 //
 //   1. A staff member opens a call's live view. Its sound bars connect to the app's WebSocket (server.mjs),
 //      which tells this app that the call is now watched (POST /api/live/watch).
 //   2. The app asks Twilio, on the running call, for a copy of its audio (to server.mjs, which turns it into
-//      sound levels; nobody stores or plays the audio) and for a live transcript (each finished sentence
-//      arrives at /api/twilio/live/transcript). A call that is still ringing gets both as Clara's
-//      conversation starts (customer_lookup, src/lib/incomingCalls.ts).
-//   3. A hand-over stops both before the customer's call leaves Clara, and the hold music starts them
-//      again while the call is still watched.
+//      sound levels; nobody stores or plays the audio) and, during Clara's part, for a live transcript
+//      (each finished sentence arrives at /api/twilio/live/transcript). A call that is still ringing gets
+//      both as Clara's conversation starts (customer_lookup, src/lib/incomingCalls.ts).
+//   3. A hand-over stops both before the customer's call leaves Clara. The hold music then starts the
+//      transcript of the talk in any case (talkTranscriptTwiml), and the sound again if the call is still
+//      watched (liveSoundTwiml).
 //   4. 15 seconds after the last staff page stopped showing the call, server.mjs tells this app, which
-//      stops both. The end of the call stops them anyway.
+//      stops what it started for the page. The end of the call stops everything anyway.
 //
-// Each start gets a new name, which Twilio needs to stop it later; it is kept on the call (live_name). The
-// transcript works out the language itself (Deepgram's nova-3 "multi": English, German, Italian, French
-// and more). server.mjs checks the two keys below with its own copies: keep them in step.
+// Each start for a page gets a new name, which Twilio needs to stop it later; it is kept on the call
+// (live_name). The talk's transcript has a fixed name of its own (TALK_TRANSCRIPT). The transcript works
+// out the language itself (Deepgram's nova-3 "multi": English, German, Italian, French and more).
+// server.mjs checks the two keys below with its own copies: keep them in step.
 
 import { cleanText } from "./aida";
 import { appUrl } from "./appUrl";
@@ -57,20 +61,26 @@ const errorText = (error: unknown) => (error instanceof Error ? error.message : 
 
 // --- the call as the live view needs it ------------------------------------------------------------
 
-type LiveState = { call_sid: string | null; status: string; live_on: boolean; live_name: string | null };
+type LiveState = {
+  call_sid: string | null;
+  status: string;
+  live_on: boolean;
+  live_name: string | null;
+  handover_status: string | null;
+};
 
 /** A call-list call is on while it is "calling" (ringing, with Clara, or handed over); a call to NDI while "live". */
 const callIsOn = (ref: CallRef, status: string | null | undefined) => status === (ref.kind === "list" ? "calling" : "live");
 
 async function liveState(ref: CallRef): Promise<LiveState | null> {
-  const [row] = await rest<LiveState[]>(`${callPath(ref)}&select=call_sid,status,live_on,live_name&limit=1`);
+  const [row] = await rest<LiveState[]>(`${callPath(ref)}&select=call_sid,status,live_on,live_name,handover_status&limit=1`);
   return row ?? null;
 }
 
 /**
- * Takes the name for a new sound copy and transcript, if `from` is still the call's current one (null:
- * none). Two requests can never start two of them: Twilio allows four audio copies per call, and the two
- * together use all four.
+ * Takes the name for a new sound copy (and transcript), if `from` is still the call's current one (null:
+ * none). Two requests can never start two of them: Twilio allows four audio copies per call, and a sound
+ * copy and a transcript of both voices use two each.
  */
 async function claimName(ref: CallRef, from: string | null): Promise<string | null> {
   const name = `ndi-live-${crypto.randomUUID().slice(0, 8)}`;
@@ -86,6 +96,9 @@ async function claimName(ref: CallRef, from: string | null): Promise<string | nu
 /** Twilio's live transcript: every finished sentence of both voices, in whichever language is spoken. */
 const TRANSCRIPT = { engine: "deepgram", model: "nova-3", language: "multi" };
 
+/** The colleague's talk after a hand-over: a fixed name, so the hold TwiML can stop it before the goodbye. */
+const TALK_TRANSCRIPT = "handover";
+
 async function streamParameters(ref: CallRef): Promise<[string, string][]> {
   return [
     ["kind", ref.kind],
@@ -96,8 +109,13 @@ async function streamParameters(ref: CallRef): Promise<[string, string][]> {
 
 // --- starting and stopping ----------------------------------------------------------------------------
 
-/** Starts both on a running call. What went wrong with each, or null when it started. */
-async function startOnCall(ref: CallRef, callSid: string, name: string): Promise<{ sound: string | null; transcript: string | null }> {
+/** Starts the sound, and the transcript if asked, on a running call. What went wrong with each, or null. */
+async function startOnCall(
+  ref: CallRef,
+  callSid: string,
+  name: string,
+  withTranscript: boolean,
+): Promise<{ sound: string | null; transcript: string | null }> {
   const url = streamUrl();
   const sid = q(callSid);
   const parameters = (await streamParameters(ref)).flatMap(([key, value], index): [string, string][] => [
@@ -111,21 +129,26 @@ async function startOnCall(ref: CallRef, callSid: string, name: string): Promise
           errorText,
         )
       : "APP_URL is not set",
-    twilio(`/Calls/${sid}/Transcriptions.json`, {
-      Name: name,
-      Track: "both_tracks",
-      StatusCallbackUrl: await callbackUrl(TRANSCRIPT_PATH, ref),
-      TranscriptionEngine: TRANSCRIPT.engine,
-      SpeechModel: TRANSCRIPT.model,
-      LanguageCode: TRANSCRIPT.language,
-      PartialResults: "false",
-    }).then(() => null, errorText),
+    withTranscript
+      ? twilio(`/Calls/${sid}/Transcriptions.json`, {
+          Name: name,
+          Track: "both_tracks",
+          StatusCallbackUrl: await callbackUrl(TRANSCRIPT_PATH, ref),
+          TranscriptionEngine: TRANSCRIPT.engine,
+          SpeechModel: TRANSCRIPT.model,
+          LanguageCode: TRANSCRIPT.language,
+          PartialResults: "false",
+        }).then(() => null, errorText)
+      : null,
   ]);
   if (sound || transcript) console.error("live call: Twilio refused", ref, { sound, transcript });
   return { sound, transcript };
 }
 
-/** Stops both. Either may be over already (the call ended, or Twilio ended it): that is fine. */
+/**
+ * Stops the sound and the transcript of that name. Either may be over already, or may never have run
+ * (after a hand-over only the sound starts): that is fine.
+ */
 async function stopOnCall(callSid: string, name: string): Promise<void> {
   const sid = q(callSid);
   await Promise.all([
@@ -137,7 +160,8 @@ async function stopOnCall(callSid: string, name: string): Promise<void> {
 /**
  * Starts the sound and the transcript of a call a staff page shows, unless they run already; `restart`
  * replaces any that may be left over (after a restart of the app, a copy has nowhere to go). Only on a
- * call in progress: one still ringing gets them as Clara's conversation starts. Never throws.
+ * call in progress: one still ringing gets them as Clara's conversation starts. After a hand-over only the
+ * sound: the talk is written down anyway (talkTranscriptTwiml). Never throws.
  */
 export async function ensureLive(ref: CallRef, restart = false): Promise<void> {
   if (!twilioConfigured()) return;
@@ -151,21 +175,23 @@ export async function ensureLive(ref: CallRef, restart = false): Promise<void> {
     const name = await claimName(ref, state.live_name);
     if (!name) return;
     if (state.live_name) await stopOnCall(state.call_sid, state.live_name);
-    const { sound, transcript } = await startOnCall(ref, state.call_sid, name);
+    const withTranscript = !state.handover_status;
+    const { sound, transcript } = await startOnCall(ref, state.call_sid, name, withTranscript);
     if (!sound && !transcript) return;
     const problem = [sound && `Sound: ${sound}`, transcript && `Transcript: ${transcript}`].filter(Boolean).join(" · ");
+    // Nothing runs when all that was asked for failed: the name goes, so the next look can try again.
+    const nothing = Boolean(sound) && (Boolean(transcript) || !withTranscript);
     await rest(`${callPath(ref)}&live_name=eq.${q(name)}`, {
       method: "PATCH",
       prefer: "return=minimal",
-      // Nothing runs when both failed: the name goes, so the next look can try again.
-      body: JSON.stringify({ live_signal: problem.slice(0, 300), ...(sound && transcript ? { live_name: null } : {}) }),
+      body: JSON.stringify({ live_signal: problem.slice(0, 300), ...(nothing ? { live_name: null } : {}) }),
     });
   } catch (error) {
     console.error("live call could not start", ref, error);
   }
 }
 
-/** Stops the sound and the transcript of a call, if they run. Never throws. */
+/** Stops the sound and the transcript started for staff pages, if they run; never the talk's. Never throws. */
 export async function stopLive(ref: CallRef): Promise<void> {
   if (!twilioConfigured()) return;
   try {
@@ -183,10 +209,10 @@ export async function stopLive(ref: CallRef): Promise<void> {
 }
 
 /**
- * The sound and the transcript as TwiML, for the customer's call on hold at a hand-over, if a staff page
- * shows it. The hand-over stopped them before the call left Clara (stopLive), so they start again here.
+ * The sound as TwiML, for the customer's call on hold at a hand-over, if a staff page shows it. The
+ * hand-over stopped it before the call left Clara (stopLive), so it starts again here.
  */
-export async function liveTwiml(ref: CallRef): Promise<string> {
+export async function liveSoundTwiml(ref: CallRef): Promise<string> {
   const url = streamUrl();
   if (!twilioConfigured() || !url) return "";
   const state = await liveState(ref).catch(() => null);
@@ -194,12 +220,22 @@ export async function liveTwiml(ref: CallRef): Promise<string> {
   const name = await claimName(ref, null).catch(() => null);
   if (!name) return "";
   const parameters = (await streamParameters(ref)).map(([key, value]) => `<Parameter name="${key}" value="${xml(value)}"/>`).join("");
-  return (
-    `<Start><Stream name="${name}" url="${xml(url)}" track="both_tracks">${parameters}</Stream></Start>` +
-    `<Start><Transcription name="${name}" statusCallbackUrl="${xml(await callbackUrl(TRANSCRIPT_PATH, ref))}" track="both_tracks" ` +
-    `transcriptionEngine="${TRANSCRIPT.engine}" speechModel="${TRANSCRIPT.model}" languageCode="${TRANSCRIPT.language}" ` +
-    `partialResults="false" /></Start>`
-  );
+  return `<Start><Stream name="${name}" url="${xml(url)}" track="both_tracks">${parameters}</Stream></Start>`;
+}
+
+/**
+ * The talk after a hand-over, written down in any case, for the customer's memory (the user's choice,
+ * 3 Oct 2026): `start` goes before the hold music and `stop` after the conference, so the goodbye the
+ * customer hears is not part of it. Lines count from when the colleague joins (addTranscriptLine).
+ */
+export async function talkTranscriptTwiml(ref: CallRef): Promise<{ start: string; stop: string }> {
+  return {
+    start:
+      `<Start><Transcription name="${TALK_TRANSCRIPT}" statusCallbackUrl="${xml(await callbackUrl(TRANSCRIPT_PATH, ref))}" ` +
+      `track="both_tracks" transcriptionEngine="${TRANSCRIPT.engine}" speechModel="${TRANSCRIPT.model}" ` +
+      `languageCode="${TRANSCRIPT.language}" partialResults="false" /></Start>`,
+    stop: `<Stop><Transcription name="${TALK_TRANSCRIPT}" /></Stop>`,
+  };
 }
 
 // --- who is watching (server.mjs, through /api/live/watch) -------------------------------------------

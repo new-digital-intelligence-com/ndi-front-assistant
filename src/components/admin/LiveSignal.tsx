@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 // customer and NDI's side (Clara, or the colleague after a hand-over), ten times a second, from the app's
 // WebSocket (server.mjs). It shows loudness only: nobody hears the call from here.
 //
-// Being connected is what keeps the call's live sound and transcript running (src/lib/liveCall.ts): they
-// start when the first page connects and stop shortly after the last one has gone.
+// Being connected is what keeps the call's live sound (and the transcript of Clara's part) running
+// (src/lib/liveCall.ts): they start when the first page connects and stop shortly after the last one has gone.
 
 type Frame = { c: number; n: number };
 type State = "connecting" | "waiting" | "live" | "unavailable";

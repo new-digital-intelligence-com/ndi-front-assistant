@@ -361,14 +361,16 @@ End of every conversation   → post-call webhook  → one short note, their int
             <P>
               Every running call, outgoing or incoming, has an <B>Open live call</B> button. Nothing runs until a staff member presses
               it: the call&apos;s sound and transcript cost money by the minute at Twilio, so they start when the view opens and stop
-              about 15 seconds after it is closed (or when the call ends).
+              about 15 seconds after it is closed (or when the call ends). One exception: after a hand-over, the talk with the
+              colleague is always written down, so it can be summed up in the customer&apos;s memory. ElevenLabs is no longer on
+              the call then, so its summary ends where Clara hands over.
             </P>
             <List
               items={[
                 "With Clara: the live sound and what Clara and the customer say, as Twilio transcribes it.",
                 "During a hand-over: the live sound, what the colleague and the customer say, and Aida's suggestions for what the colleague could say next.",
                 "The live sound is two moving bars: the customer, and NDI's side (Clara, or the colleague). Twilio sends the app a copy of the call's audio, which becomes one loudness number every 100 ms. Nothing is recorded or played: staff see who is talking, and read what is said.",
-                "After the call, View conversation shows what was transcribed while the view was open, with Clara's summary.",
+                "After the call, View conversation shows what was transcribed (Clara's part if the view was open, a colleague's talk always), with Clara's summary.",
               ]}
             />
             <H3>Hand-over to a colleague</H3>
@@ -378,7 +380,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 "A call-list call: for any number, staff can tick “Hand the call over to a colleague” and pick someone from the team or type a name and number, and if they like when Clara should hand over (for example “when they want a demo”).",
                 "When that moment comes, Clara says she is connecting the customer, who hears hold music while the colleague's phone rings from NDI's number. The colleague hears who is waiting and what Clara learnt, and presses any key to take the call. Clara then leaves the call: it is the customer and the colleague (a Twilio conference).",
                 "To follow the talk, staff press Open live call · Aida on the Outgoing or Incoming tab: the call's sound, the conversation (Twilio transcribes both voices) and Aida's suggestions for what the colleague could say next, with what Clara learnt and what NDI already knows about the customer.",
-                "If nobody takes the call, the customer hears that NDI will call back. Afterwards the talk becomes one short note in the customer's memory (with what was said when the call was open live); a call list moves on to the next number.",
+                "If nobody takes the call, the customer hears that NDI will call back. Afterwards the talk becomes one short note in the customer's memory: Twilio writes the talk down in any case, and Claude sums up what the customer wanted and what was agreed. A call list then moves on to the next number.",
               ]}
             />
           </Section>
@@ -462,7 +464,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["Anthropic Claude (Haiku)", "Insights, grouping questions, general answers, call reasons, email and Aida mood", "A fraction of a cent per use"],
                 ["LiveKit Cloud", "Voice and chat in Aida rooms", "Free plan, 5,000 participant-minutes a month"],
                 ["Anam", "The video avatar", "Free plan: 30 minutes a month, 3-minute calls"],
-                ["Twilio", "The phone number (calls in and out), hand-overs to a colleague, and the live view of a call (its sound and transcript)", "A monthly fee for the number, plus calls; only while staff have a call open live: the transcript $0.027 a minute and the sound $0.0044 a minute"],
+                ["Twilio", "The phone number (calls in and out), hand-overs to a colleague, and the live view of a call (its sound and transcript)", "A monthly fee for the number, plus calls; the transcript $0.027 a minute (a colleague's talk after a hand-over always, Clara's part only while staff have the call open live); the sound $0.0044 a minute, only while open"],
                 ["Google Cloud", "Gmail API and Pub/Sub for the email channel", "Free tier"],
                 ["Meta, Telegram", "Instagram, Messenger and Telegram", "Free"],
               ]}

@@ -11,7 +11,8 @@ import { LiveSignal } from "./LiveSignal";
 // "list") or a call to NDI ("incoming"). An ended call shows what was transcribed and how it ended.
 //
 // Twilio charges for the sound and the transcript by the minute, so they run only while this view is open
-// on a running call: its sound bars (LiveSignal) keep them going, and closing the view stops them.
+// on a running call: its sound bars (LiveSignal) keep them going, and closing the view stops them. The one
+// exception: the colleague's talk after a hand-over is written down in any case, for the customer's memory.
 //
 // Aida runs in this browser only while the colleague and the customer talk, the same way she does for the
 // host of an Aida room. Before the first line she is told what Clara learnt, the staff instructions (call
@@ -366,7 +367,11 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
       {on && (
         <div className="space-y-1.5">
           <LiveSignal staffToken={staffToken} kind={kind} id={callId} customerLabel={capitalise(customer)} ndiLabel={ndiSide} />
-          <p className="text-xs text-muted">The sound and the transcript run while this view is open, and stop when you close it.</p>
+          <p className="text-xs text-muted">
+            {status
+              ? "The sound runs while this view is open. The talk with the colleague is written down in any case, for the customer's memory."
+              : "The sound and the transcript run while this view is open, and stop when you close it."}
+          </p>
         </div>
       )}
       {on && call?.live_signal && (
@@ -389,7 +394,9 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
                     ? status === "ringing"
                       ? "The transcript goes on when the colleague joins."
                       : "Waiting for the first words…"
-                    : "Nothing was transcribed: the call's live view was not open while it ran."}
+                    : status
+                      ? "Nothing was transcribed."
+                      : "Nothing was transcribed: the call's live view was not open while it ran."}
               </p>
             )}
             {lines.map((line, index) => {
