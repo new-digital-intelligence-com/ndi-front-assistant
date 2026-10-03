@@ -120,7 +120,7 @@ npm run lint
   runs until a staff member presses **Open live call**; then the call's sound (Twilio Media Streams, $0.0044/min) and
   transcript (Twilio real-time transcription, Deepgram `nova-3` `multi`, $0.027/min) run until 15 s after the view is
   closed (`src/lib/liveCall.ts`, columns `live_on` and `live_name`); Aida's suggestions during a hand-over. Tested
-  with a fake Twilio (44 checks) and `server.mjs` locally (16 checks); never on a real call yet
+  with a fake Twilio (43 checks) and `server.mjs` locally (16 checks); never on a real call yet
 - **Design and routing** (the user's request, 2 Oct 2026: "modern, not like CDA", "routing where there are many
   panels"): the customer site is an app with a side menu (on a phone: a bar at the bottom) and one address per way of
   talking: `/` chat, `/voice`, `/avatar`, `/aida` (`src/app/(site)`, `src/components/site/`). The staff console has a
