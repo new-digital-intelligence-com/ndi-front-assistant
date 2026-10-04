@@ -48,8 +48,8 @@ second agent, Aida, drafts answers for staff).
 | Email | ✅ contact@new-digital-intelligence.com (tested 2 Oct 2026) | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram **@new_digital_intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
 | Facebook Messenger, Page **New Digital Intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
-| Phone | ✅ **+41 44 513 70 94** (Zurich, bought 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Imported into ElevenLabs natively |
-| Video avatar (`/avatar`) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
+| Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026): calls in and out, hand-over to a colleague, live view | Imported into ElevenLabs natively |
+| Video avatar (`/avatar`) | ✅ NDI's own Anam avatar Elena (2 Oct 2026) | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
 | Slack, WhatsApp | Not built | Section 16 |
 | Alexa | Removed | Not part of NDI's assistant |

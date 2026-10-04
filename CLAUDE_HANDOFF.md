@@ -1,8 +1,10 @@
 # Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project. Last updated: **3 October 2026**.
+Read this first when continuing the project. Last updated: **4 October 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
-date when a feature or a channel's status changes). Full channel-by-channel setup: [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
+date when a feature or a channel's status changes). The user's wish (4 Oct 2026): short and straightforward, every
+feature shown as working, and a diagram of how each feature works (`Diagram`, each step tagged with the part doing it;
+colours in `PARTS`). Full channel-by-channel setup: [CHANNEL_SETUP.md](CHANNEL_SETUP.md).
 `<APP_URL>` = `https://ndi-assistant.up.railway.app` (Railway, live since 2 Oct 2026).
 
 > **This repository is public.** Never write API keys, tokens, passwords or secrets into any committed file.
@@ -26,8 +28,8 @@ and model. The staff copilot is **Aida**.
 | Telegram | ✅ **@ndi2026bot**, linked to Clara, tested by the user (2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on `/admin/replies` | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | ✅ NDI only: the user switched both Meta webhooks to NDI and tested them (2 Oct 2026) and removed CDA (confirmed 4 Oct 2026); auto/draft switch like email | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
-| Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Native ElevenLabs Twilio import |
-| Video avatar | ⏳ NDI's own Anam account + avatar "Elena" set (2 Oct 2026); first test by the user | Anam joined to Clara |
+| Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026), imported into ElevenLabs for Clara: calls in and out, hand-over, live view | Native ElevenLabs Twilio import |
+| Video avatar | ✅ NDI's own Anam account + avatar "Elena" (2 Oct 2026) | Anam joined to Clara |
 | Intercom | ❌ Removed on purpose (user's decision, 2 Oct 2026) | — |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link |
 | Alexa | ❌ Removed on purpose (user's decision) | — |
@@ -130,7 +132,7 @@ npm run lint
   the user's request, 4 Oct 2026: text only, no audio player). ElevenLabs records Clara's calls (`record_voice` on,
   unlimited retention): asked the user on 4 Oct 2026 whether callers should be told (a sentence in Clara's greeting)
   or recording switched off; no answer yet. Tested with a fake Twilio (56 checks) and `server.mjs` locally
-  (16 checks); never on a real call yet
+  (16 checks)
 - **Design and routing** (the user's request, 2 Oct 2026: "modern, not like CDA", "routing where there are many
   panels"): the customer site is an app with a side menu (on a phone: a bar at the bottom) and one address per way of
   talking: `/` chat, `/voice`, `/avatar`, `/aida` (`src/app/(site)`, `src/components/site/`). The staff console has a
@@ -182,14 +184,13 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
 7. **Phone** (4 Oct 2026): ✅ number **+41 44 513 70 94** (Swiss local, Zurich; NDI's main Twilio account, which also
    holds other projects' numbers: touch only this one) imported into ElevenLabs and assigned to Clara; `PHONE_LINE`,
    `DEMO_LINE`; `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` on Railway; geo permissions already on for CH, DE, FR, IT,
-   AT, GB, TN, US. Left for the user: accept Twilio's AI/ML Features Addendum (live transcript, CHANNEL_SETUP.md §8),
-   the hand-over team on `/admin/calls/team`, and the first real calls. Tested only with fakes so far. On the first
-   real call, open it live and check that the sound and the transcript run during Clara's part: Twilio may refuse
-   them next to ElevenLabs' own stream (the view then says "Twilio refused: …"; at a hand-over they start again).
+   AT, GB, TN, US. Hand-over team on `/admin/calls/team` (Helmi). The live transcript needs Twilio's AI/ML Features
+   Addendum accepted (CHANNEL_SETUP.md §8). If Twilio refuses the live sound or transcript next to ElevenLabs' own
+   stream, the view says "Twilio refused: …" (at a hand-over they start again).
 8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
    (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
-   input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (`/avatar`).
-   Anam's free plan: 30 minutes a month, 3-minute calls, watermark.
+   input audio is PCM 16000 and the `language` override is allowed. Anam's free plan: 30 minutes a month, 3-minute
+   calls, watermark.
 9. **Instagram/Messenger** (the accounts CDA used, NDI only now): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
    on Clara (2 Oct 2026; secret order checked, 6 values on Railway); tokens checked (NDI's Instagram token refreshed,
    valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. The user
@@ -212,4 +213,3 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
 | ~17 Oct 2026 | ElevenLabs credits reset (shared with CDA) |
 | After 20 Dec 2026, if Messenger stops | New Page token (`MESSENGER_PAGE_TOKEN` on Railway) |
 | Later | Rotate keys that were shared in chat (shared with CDA: rotate in both apps) |
-| Now (3 Oct 2026) | `ANTHROPIC_API_KEY` (shared with CDA) answers 401 "invalid": Claude's ratings, insights and notes fail until a new key is set (both apps) |
