@@ -86,7 +86,7 @@ export default function DocsPage() {
               head={["Channel", "What the customer does", "Status"]}
               rows={[
                 ["Website", "Chat (with photos and PDFs), voice call or video avatar in the browser", "Live"],
-                ["Phone", "Calls NDI's number, or Clara calls them from a staff call list", "Setting up"],
+                ["Phone", "Calls NDI's number +41 44 513 70 94, or Clara calls them from a staff call list", "Ready, first test next"],
                 ["Email", "Emails contact@new-digital-intelligence.com and gets a reply in the same thread", "Live"],
                 ["Telegram", "Messages NDI's Telegram bot @ndi2026bot", "Live"],
                 ["Instagram", "Sends a direct message to @new_digital_intelligence", "Live (shared with the CDA demo)"],
@@ -187,7 +187,8 @@ Hosted page / widget ───────────────┘         �
 
           <Section id="phone" title="Phone">
             <P>
-              A phone number bought on Twilio and connected natively to ElevenLabs. Customers call it and talk to Clara; she
+              NDI&apos;s number <B>+41 44 513 70 94</B> (Zurich), bought on Twilio and connected natively to ElevenLabs. Customers
+              call it and talk to Clara; she
               recognises them by the number saved in their account and greets them by name. She hangs up politely at the end and,
               when she calls out and reaches voicemail, leaves a short message.
             </P>

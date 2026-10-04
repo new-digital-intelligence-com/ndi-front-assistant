@@ -48,7 +48,7 @@ second agent, Aida, drafts answers for staff).
 | Email | ✅ contact@new-digital-intelligence.com (tested 2 Oct 2026) | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram **@new_digital_intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
 | Facebook Messenger, Page **New Digital Intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
-| Phone | ⏳ New Twilio number to buy | Imported into ElevenLabs natively |
+| Phone | ✅ **+41 44 513 70 94** (Zurich, bought 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Imported into ElevenLabs natively |
 | Video avatar (`/avatar`) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
 | Slack, WhatsApp | Not built | Section 16 |
@@ -424,8 +424,16 @@ corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 **What the customer does:** calls NDI's number and talks to Clara. Clara also calls customers from the staff call list (section 12).
 
-1. **Twilio** (NDI's account, the same one CDA's number is in) → buy a new number with Voice (and SMS), in the
-   country NDI wants (a UK number needs a regulatory bundle).
+**Done on 4 Oct 2026:** NDI's number is **+41 44 513 70 94**, a Swiss local number (Zurich) with Voice, address and
+documents accepted by Twilio. It is imported into ElevenLabs as "NDI Clara line (Zurich)" and assigned to Clara (in and
+out); Twilio sends its calls to ElevenLabs. `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` are on Railway. The Twilio
+account is NDI's main one ("NDI's Twilio account", paid): it also holds about 25 numbers of other NDI projects and
+CDA's: only this one belongs to the assistant. Geo permissions on 4 Oct 2026: Switzerland, Germany, France, Italy,
+Austria, UK, Tunisia and the US/Canada are on.
+
+1. **Twilio** (NDI's account, the same one CDA's number is in) → buy a number with **Voice**: in Switzerland a
+   **local** number (Swiss mobile numbers on Twilio are SMS only). Twilio asks for a Swiss address and NDI's
+   commercial register extract.
 2. **ElevenLabs** → Phone Numbers → **Import number** → Twilio → the number, Account SID and Auth Token →
    assign agent **NDI Assistant – Clara**. (The Twilio account is already known to ElevenLabs from CDA's number.)
 3. Put the number in `PHONE_LINE` (`src/components/ChannelLinks.tsx`) and `DEMO_LINE`
@@ -435,7 +443,9 @@ corrections**. Both switches were set to **auto** on 2 Oct 2026.
 5. **Hand-over to a colleague and the live view of calls** (section 12): Railway variables `TWILIO_ACCOUNT_SID` and
    `TWILIO_AUTH_TOKEN` (Twilio → Account → API keys & tokens). Nothing to set up in Twilio itself: the app moves the
    call, Twilio calls the app back on `/api/twilio/handover/*` and `/api/twilio/live/transcript`, and sends the sound
-   to `/api/twilio/media-stream`.
+   to `/api/twilio/media-stream`. **Twilio → Voice → Settings → General → Privacy & Security**: accept the
+   *Predictive and Generative AI/ML Features Addendum*, which Twilio's live transcript needs (without it Twilio refuses
+   with error 95250 and the view says "Twilio refused: …").
 6. **Hand-over team**: `/admin/calls/team` → add the colleagues who can take over a call to NDI, in the order they
    should be rung.
 7. **Test:** call the number → Clara answers with her English greeting, and the call shows on `/admin/calls/incoming`.

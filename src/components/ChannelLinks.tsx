@@ -7,7 +7,7 @@ const SUPPORT_EMAIL = "contact@new-digital-intelligence.com";
 /** The Telegram bot's username, without the @. */
 const TELEGRAM_BOT = "ndi2026bot";
 /** Clara's phone line (Twilio, answered by ElevenLabs), as shown and as dialled (+...). */
-const PHONE_LINE = { display: "", dial: "" };
+const PHONE_LINE = { display: "+41 44 513 70 94", dial: "+41445137094" };
 
 type Channel = {
   name: string;

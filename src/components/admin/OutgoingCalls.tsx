@@ -65,8 +65,8 @@ type Row = {
 
 const MAX_ATTEMPTS = 3;
 const POLL_MS = 4_000;
-/** NDI's Twilio number as shown, once it is bought and imported into ElevenLabs (CHANNEL_SETUP.md). */
-const DEMO_LINE = "";
+/** NDI's Twilio number as shown: the one attached to Clara in ElevenLabs (CHANNEL_SETUP.md section 8). */
+const DEMO_LINE = "+41 44 513 70 94";
 
 const FIELD =
   "rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none transition focus:border-brand/60 focus:ring-4 focus:ring-brand/10";

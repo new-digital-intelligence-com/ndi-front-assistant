@@ -26,7 +26,7 @@ and model. The staff copilot is **Aida**.
 | Telegram | ✅ **@ndi2026bot**, linked to Clara, tested by the user (2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on `/admin/replies` | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. ✅ Switched to NDI and tested by the user (2 Oct 2026) | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
-| Phone | ⏳ New Twilio number (not CDA's) | Native ElevenLabs Twilio import |
+| Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ NDI's own Anam account + avatar "Elena" set (2 Oct 2026); first test by the user | Anam joined to Clara |
 | Intercom | ❌ Removed on purpose (user's decision, 2 Oct 2026) | — |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link |
@@ -106,8 +106,8 @@ npm run lint
 - Same structure as CDA; see CHANNEL_SETUP.md §13 for routes and who may call them
 - Railway: `src/instrumentation.ts` + `src/lib/dailyJobs.ts` replace Vercel Cron; `src/lib/appUrl.ts` gives the
   public address (`APP_URL`, else `RAILWAY_PUBLIC_DOMAIN`)
-- Values still to fill in the code once known: `PHONE_LINE` (`src/components/ChannelLinks.tsx`, its button hidden
-  while empty) and `DEMO_LINE` (`src/components/admin/OutgoingCalls.tsx`); `SUPPORT_EMAIL` and `TELEGRAM_BOT` are set
+- Contact values in the code: `PHONE_LINE` (`src/components/ChannelLinks.tsx`) and `DEMO_LINE`
+  (`src/components/admin/OutgoingCalls.tsx`) = +41 44 513 70 94 since 4 Oct 2026; `SUPPORT_EMAIL` and `TELEGRAM_BOT`
 - **Server**: `npm start` runs **`server.mjs`** (since 3 Oct 2026): Next.js plus two WebSockets for a call's live view
   (`/api/twilio/media-stream` from Twilio, `/api/live/signal` to staff pages), which Next.js route handlers cannot
   hold; it tells the app which calls staff pages watch (`POST /api/live/watch`). It starts the daily jobs like
@@ -167,9 +167,11 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
    (owned by contact@, the user's decision: not CDA's), consent (refresh token), Pub/Sub topic `gmail-inbox-ndi` + push
    subscription, app password for `gmail_sender`, `SUPPORT_EMAIL`, Custom Channel "NDI email" (3 values on Railway),
    Gmail watch started (renewed daily). The user tested a reply. Auto or draft: `/admin/replies`.
-7. **Phone**: the user buys a new Twilio number → import into ElevenLabs, assign Clara → `PHONE_LINE`, `DEMO_LINE`;
-   `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` in Railway for the **hand-over to a colleague** and the **live view**
-   (CHANNEL_SETUP.md §8, §12); the hand-over team on `/admin/calls/team`. Tested only with fakes so far. On the first
+7. **Phone** (4 Oct 2026): ✅ number **+41 44 513 70 94** (Swiss local, Zurich; NDI's main Twilio account, which also
+   holds other projects' numbers: touch only this one) imported into ElevenLabs and assigned to Clara; `PHONE_LINE`,
+   `DEMO_LINE`; `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` on Railway; geo permissions already on for CH, DE, FR, IT,
+   AT, GB, TN, US. Left for the user: accept Twilio's AI/ML Features Addendum (live transcript, CHANNEL_SETUP.md §8),
+   the hand-over team on `/admin/calls/team`, and the first real calls. Tested only with fakes so far. On the first
    real call, open it live and check that the sound and the transcript run during Clara's part: Twilio may refuse
    them next to ElevenLabs' own stream (the view then says "Twilio refused: …"; at a hand-over they start again).
 8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
