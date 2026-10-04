@@ -122,7 +122,11 @@ npm run lint
   closed (`src/lib/liveCall.ts`, columns `live_on` and `live_name`); Aida's suggestions during a hand-over. One
   exception (the user's choice, 3 Oct 2026): the colleague's talk after a hand-over is always transcribed (hold
   TwiML, transcript `handover`), because ElevenLabs is off the call by then and the customer's memory note needs it.
-  Tested with a fake Twilio (49 checks) and `server.mjs` locally (16 checks); never on a real call yet
+  Once Clara's part is over, the view shows it in full from ElevenLabs (free; `/api/admin/calls/live/<id>/clara`;
+  the user's request, 4 Oct 2026: text only, no audio player). ElevenLabs records Clara's calls (`record_voice` on,
+  unlimited retention): asked the user on 4 Oct 2026 whether callers should be told (a sentence in Clara's greeting)
+  or recording switched off; no answer yet. Tested with a fake Twilio (56 checks) and `server.mjs` locally
+  (16 checks); never on a real call yet
 - **Design and routing** (the user's request, 2 Oct 2026: "modern, not like CDA", "routing where there are many
   panels"): the customer site is an app with a side menu (on a phone: a bar at the bottom) and one address per way of
   talking: `/` chat, `/voice`, `/avatar`, `/aida` (`src/app/(site)`, `src/components/site/`). The staff console has a

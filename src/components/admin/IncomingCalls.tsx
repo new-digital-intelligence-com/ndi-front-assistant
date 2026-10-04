@@ -23,8 +23,6 @@ type IncomingCall = {
   handover_name: string | null;
   handover_status: HandoverStatus | null;
   handover_note: string | null;
-  /** How many transcript lines the call has: it was open live at some point. */
-  lines?: { count: number }[];
 };
 
 /** How often the list is asked for: often while staff look at it, less when they are on another tab. */
@@ -32,7 +30,6 @@ const WATCHING_MS = 3_000;
 const AWAY_MS = 10_000;
 
 const handingOver = (call: IncomingCall) => call.handover_status === "ringing" || call.handover_status === "live";
-const transcribed = (call: IncomingCall) => (call.lines?.[0]?.count ?? 0) > 0;
 
 const when = (iso: string) => new Date(iso).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -170,11 +167,9 @@ export function IncomingCalls({
                       {call.ended_at ? ` · ${duration(call.started_at, call.ended_at)}` : ""}
                     </span>
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${outcome.style}`}>{outcome.text}</span>
-                    {(call.handover_status === "ended" || transcribed(call)) && (
-                      <button type="button" onClick={() => openCall(call.id)} className="text-xs font-semibold text-brand hover:underline">
-                        View conversation
-                      </button>
-                    )}
+                    <button type="button" onClick={() => openCall(call.id)} className="text-xs font-semibold text-brand hover:underline">
+                      View conversation
+                    </button>
                   </div>
                   {call.summary && <p className="mt-1 text-sm text-ink">{call.summary}</p>}
                   {call.handover_note && <p className="mt-1 rounded-lg bg-surface px-3 py-2 text-xs text-heading">{call.handover_note}</p>}

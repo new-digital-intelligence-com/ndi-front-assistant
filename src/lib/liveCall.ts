@@ -26,6 +26,7 @@ import { cleanText } from "./aida";
 import { appUrl } from "./appUrl";
 import { constantTimeEqual, sha256Hex } from "./auth";
 import { findByChannel, profileFor } from "./customers";
+import { elevenLabsConversation } from "./elevenlabs";
 import { supabaseRest as rest } from "./supabase";
 import { callbackUrl, twilio, twilioConfigured, xml, type CallKind, type CallRef } from "./twilio";
 
@@ -354,6 +355,27 @@ export async function liveCallView(ref: CallRef, afterId: number): Promise<LiveC
   ]);
   const { status, ...call } = row;
   return { kind: ref.kind, call: { ...call, on: callIsOn(ref, status) }, lines, ...(known === undefined ? {} : { known }) };
+}
+
+export type ClaraLine = { speaker: "customer" | "clara"; text: string };
+
+/**
+ * Clara's part of a call in full, as ElevenLabs keeps it: every turn she and the customer took, until the call
+ * ended or she handed it over (the user's request, 4 Oct 2026). Free to read, and exact, unlike a live
+ * transcript of the audio. "pending" until ElevenLabs has finished with the conversation (a few seconds to a
+ * minute after Clara's part); "none" when there is nothing to show.
+ */
+export async function claraTranscript(ref: CallRef): Promise<{ state: "done" | "pending" | "none"; lines: ClaraLine[] }> {
+  const [row] = await rest<{ conversation_id: string | null }[]>(`${callPath(ref)}&select=conversation_id&limit=1`);
+  if (!row?.conversation_id) return { state: "none", lines: [] };
+  // Not found: ElevenLabs creates the record a moment after the call starts.
+  const record = await elevenLabsConversation(row.conversation_id).catch(() => null);
+  if (!record || (record.status !== "done" && record.status !== "failed")) return { state: "pending", lines: [] };
+  const lines = (record.transcript ?? [])
+    .map((turn): ClaraLine => ({ speaker: turn.role === "user" ? "customer" : "clara", text: cleanText(turn.message, 2000) }))
+    // Clara's tool calls and their results are turns without words.
+    .filter((line) => line.text);
+  return { state: lines.length ? "done" : "none", lines };
 }
 
 async function knownAbout(phone: string | null): Promise<LiveCallView["known"]> {

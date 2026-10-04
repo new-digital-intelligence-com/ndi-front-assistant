@@ -628,8 +628,14 @@ to one browser tab: a section opened in a new tab asks for the password again.
   transcript of a colleague's talk after a hand-over, which always runs (above). The view shows:
   - **with Clara** (outgoing or incoming): the live sound and the transcript (Clara and the customer);
   - **during a hand-over**: the live sound, the transcript (the colleague and the customer) and Aida's suggestions;
-  - **after the call** (*View conversation*): what was transcribed (Clara's part only if the view was open; a
-    colleague's talk always), Clara's summary, the note.
+  - **after Clara's part** (the call ended, or she handed it over; *View conversation* on every call to NDI and
+    every reached call-list call): Clara's part **in full** as ElevenLabs keeps it (free, exact; the user's request,
+    4 Oct 2026: text only, no audio player), in place of any live lines of it; then a colleague's talk (always
+    transcribed); Clara's summary and the note. `GET /api/admin/calls/live/<id>/clara` (staff token) reads
+    `GET /v1/convai/conversations/<conversation_id>` and drops her tool-call turns; "pending" until ElevenLabs has
+    finished the conversation (the view asks every 5 s for up to 3 minutes). ElevenLabs also keeps the audio of
+    Clara's part (her privacy settings on 4 Oct 2026: `record_voice` on, retention unlimited); the staff console
+    does not play it.
 
   How: the view's sound bars connect to the WebSocket `/api/live/signal` (`server.mjs`, Aida staff token). When the
   first page connects to a call, `server.mjs` tells the app (`POST /api/live/watch`, key made from `TWILIO_AUTH_TOKEN`

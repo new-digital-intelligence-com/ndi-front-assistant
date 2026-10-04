@@ -107,10 +107,10 @@ export async function closeIncomingCall(id: string): Promise<void> {
 
 // --- for /admin ------------------------------------------------------------------------------------
 
-/** What staff see; Twilio's ids and the colleagues' numbers stay on the server. `lines`: how many transcript lines. */
+/** What staff see; Twilio's ids and the colleagues' numbers stay on the server. */
 const VIEW_FIELDS =
   "id,phone,name,status,started_at,ended_at,summary,handover_name,handover_status,handover_started_at," +
-  "handover_live_at,handover_ended_at,handover_note,lines:handover_lines(count)";
+  "handover_live_at,handover_ended_at,handover_note";
 
 export type IncomingCallView = {
   id: string;
@@ -126,7 +126,6 @@ export type IncomingCallView = {
   handover_live_at: string | null;
   handover_ended_at: string | null;
   handover_note: string | null;
-  lines: { count: number }[];
 };
 
 /** The calls happening now, and the last twenty. */

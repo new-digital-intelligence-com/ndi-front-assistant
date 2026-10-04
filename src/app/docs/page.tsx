@@ -371,7 +371,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 "With Clara: the live sound and what Clara and the customer say, as Twilio transcribes it.",
                 "During a hand-over: the live sound, what the colleague and the customer say, and Aida's suggestions for what the colleague could say next.",
                 "The live sound is two moving bars: the customer, and NDI's side (Clara, or the colleague). Twilio sends the app a copy of the call's audio, which becomes one loudness number every 100 ms. Nothing is recorded or played: staff see who is talking, and read what is said.",
-                "After the call, View conversation shows what was transcribed (Clara's part if the view was open, a colleague's talk always), with Clara's summary.",
+                "After the call, View conversation shows the whole call in writing: Clara's part in full (from ElevenLabs, at no cost) and, after a hand-over, the talk with the colleague, with Clara's summary.",
               ]}
             />
             <H3>Hand-over to a colleague</H3>

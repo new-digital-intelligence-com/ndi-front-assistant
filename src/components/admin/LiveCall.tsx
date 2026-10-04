@@ -8,7 +8,9 @@ import { LiveSignal } from "./LiveSignal";
 // A phone call's live view on /admin/calls, opened by staff (src/lib/liveCall.ts): its sound, what is said
 // as Twilio transcribes it (the customer and Clara, then the colleague after a hand-over), and during a
 // hand-over Aida's suggestions for what the colleague could say next. A call from a staff call list (kind
-// "list") or a call to NDI ("incoming"). An ended call shows what was transcribed and how it ended.
+// "list") or a call to NDI ("incoming"). An ended call shows what was said and how it ended. Once Clara's part
+// is over (the call ended, or she handed it over), it shows in full as ElevenLabs keeps it, free, in place of
+// any live lines of it (the user's request, 4 Oct 2026).
 //
 // Twilio charges for the sound and the transcript by the minute, so they run only while this view is open
 // on a running call: its sound bars (LiveSignal) keep them going, and closing the view stops them. The one
@@ -41,10 +43,16 @@ type Call = {
 };
 
 type Line = { id: number; speaker: "customer" | "clara" | "colleague"; text: string; created_at: string };
+type Speaker = Line["speaker"];
+/** Clara's part in full, from ElevenLabs: "pending" until ElevenLabs has finished with it. */
+type Clara = { state: "pending" | "done" | "none"; lines: { speaker: "customer" | "clara"; text: string }[] };
 type Known = { name: string | null; recent: string[]; interests: string[] } | null;
 type Suggestion = { id: string; text: string; replyTo: string };
 
 const POLL_MS = 1_500;
+/** ElevenLabs finishes a conversation within seconds to a minute: asked every 5 s, for up to 3 minutes. */
+const CLARA_RETRY_MS = 5_000;
+const CLARA_TRIES = 36;
 /** After a hand-over, how long to keep asking for the note that sums up the talk. */
 const NOTE_WAIT_MS = 60_000;
 /** How much of the call a newly started Aida is given, so she is not starting from nothing. */
@@ -79,6 +87,7 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
   const [call, setCall] = useState<Call | null>(null);
   const [known, setKnown] = useState<Known>(null);
   const [lines, setLines] = useState<Line[]>([]);
+  const [clara, setClara] = useState<Clara | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [aida, setAida] = useState<"off" | "starting" | "on" | "unavailable">("off");
   const [error, setError] = useState<string | null>(null);
@@ -287,6 +296,39 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
     [],
   );
 
+  // Clara's part in full, once it is over: the call has ended, or she has handed it over.
+  const claraOver = Boolean(call) && (!call?.on || Boolean(call?.handover_status));
+  useEffect(() => {
+    if (!claraOver) return;
+    let stopped = false;
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const load = async () => {
+      tries += 1;
+      try {
+        const response = await fetch(`/api/admin/calls/live/${callId}/clara?kind=${kind}`, {
+          headers: { "x-aida-staff": staffToken },
+          cache: "no-store",
+        });
+        if (response.status === 401) return onSignOut();
+        const body = (await response.json().catch(() => ({}))) as Partial<Clara>;
+        if (stopped) return;
+        if (response.ok && (body.state === "done" || body.state === "none")) return setClara({ state: body.state, lines: body.lines ?? [] });
+      } catch {
+        // Tried again below, like a transcript that is not ready yet.
+      }
+      if (stopped) return;
+      if (tries >= CLARA_TRIES) return setClara({ state: "none", lines: [] });
+      setClara({ state: "pending", lines: [] });
+      timer = setTimeout(load, CLARA_RETRY_MS);
+    };
+    timer = setTimeout(load, 0);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [claraOver, kind, callId, staffToken, onSignOut]);
+
   // The clock, while the call is on.
   const on = call?.on ?? false;
   useEffect(() => {
@@ -304,7 +346,7 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
   useEffect(() => {
     const box = transcriptRef.current;
     if (box) box.scrollTop = box.scrollHeight;
-  }, [lines]);
+  }, [lines, clara]);
 
   // --- what staff see -----------------------------------------------------------------------------------
 
@@ -330,12 +372,29 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
       : { text: "The call has ended.", style: "bg-line text-heading" };
 
   const ndiSide = status === "live" || status === "ended" ? capitalise(colleague) : status === "ringing" ? "On hold" : "Clara";
-  const speakerName = (line: Line) => (line.speaker === "customer" ? capitalise(customer) : line.speaker === "clara" ? "Clara" : capitalise(colleague));
-  const bubble: Record<Line["speaker"], string> = {
+  const speakerName = (speaker: Speaker) => (speaker === "customer" ? capitalise(customer) : speaker === "clara" ? "Clara" : capitalise(colleague));
+  const bubble: Record<Speaker, string> = {
     customer: "bg-white text-heading",
     clara: "bg-night text-white",
     colleague: "bg-brand text-white",
   };
+  const said = (key: string, speaker: Speaker, text: string) => (
+    <p key={key} className={speaker === "customer" ? "" : "text-right"}>
+      <span className={`inline-block max-w-[85%] rounded-lg px-3 py-1.5 text-left ${bubble[speaker]}`}>
+        <span className="block text-[11px] opacity-70">{speakerName(speaker)}</span>
+        {text}
+      </span>
+    </p>
+  );
+  const handedOverLabel = (
+    <p className="py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted">Handed over to {colleague}</p>
+  );
+
+  // Clara's part in full replaces any live lines of it; the talk with a colleague stays as Twilio wrote it down.
+  const claraLines = clara?.state === "done" ? clara.lines : [];
+  const handoverStart = call?.handover_started_at ?? null;
+  const shownLines = claraLines.length ? lines.filter((line) => saidAfter(line, handoverStart)) : lines;
+  const claraPending = claraOver && clara?.state !== "done" && clara?.state !== "none";
 
   return (
     <section ref={sectionRef} className="animate-fade-up scroll-mt-4 space-y-3 rounded-2xl border-2 border-brand/30 bg-white p-4 shadow-sm sm:p-5">
@@ -386,35 +445,39 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
         <div className="min-w-0 space-y-2">
           <h3 className="text-sm font-semibold text-heading">Conversation</h3>
           <div ref={transcriptRef} className="h-80 space-y-2 overflow-y-auto rounded-lg bg-surface p-3 text-sm">
-            {lines.length === 0 && (
+            {claraLines.length > 0 && (
+              <>
+                <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted">Clara&apos;s part, in full</p>
+                {claraLines.map((line, index) => said(`clara-${index}`, line.speaker, line.text))}
+                {status && shownLines.length === 0 && handedOverLabel}
+              </>
+            )}
+            {claraLines.length === 0 && shownLines.length === 0 && (
               <p className="text-muted">
                 {!call
                   ? "Loading…"
-                  : on
-                    ? status === "ringing"
-                      ? "The transcript goes on when the colleague joins."
-                      : "Waiting for the first words…"
-                    : status
-                      ? "Nothing was transcribed."
-                      : "Nothing was transcribed: the call's live view was not open while it ran."}
+                  : !claraOver
+                    ? "Waiting for the first words…"
+                    : claraPending
+                      ? "Clara's part appears here in full a moment after it ends."
+                      : "Nothing was transcribed."}
               </p>
             )}
-            {lines.map((line, index) => {
-              const handedOver = saidAfter(line, call?.handover_started_at ?? null) && (index === 0 || !saidAfter(lines[index - 1], call?.handover_started_at ?? null));
+            {claraLines.length === 0 && shownLines.length > 0 && claraPending && (
+              <p className="text-center text-[11px] text-muted">Clara&apos;s part appears here in full a moment after it ends.</p>
+            )}
+            {shownLines.map((line, index) => {
+              const handedOver = saidAfter(line, handoverStart) && (index === 0 || !saidAfter(shownLines[index - 1], handoverStart));
               return (
                 <Fragment key={line.id}>
-                  {handedOver && (
-                    <p className="py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted">Handed over to {colleague}</p>
-                  )}
-                  <p className={line.speaker === "customer" ? "" : "text-right"}>
-                    <span className={`inline-block max-w-[85%] rounded-lg px-3 py-1.5 text-left ${bubble[line.speaker]}`}>
-                      <span className="block text-[11px] opacity-70">{speakerName(line)}</span>
-                      {line.text}
-                    </span>
-                  </p>
+                  {handedOver && handedOverLabel}
+                  {said(String(line.id), line.speaker, line.text)}
                 </Fragment>
               );
             })}
+            {status === "ringing" && on && shownLines.length === 0 && (
+              <p className="text-center text-[11px] text-muted">The talk with {colleague} appears here when they join.</p>
+            )}
           </div>
         </div>
 

@@ -447,7 +447,7 @@ export function OutgoingCalls({ staffToken, onSignOut, team }: { staffToken: str
                       <OpenLive onOpen={() => openCall(item.id)} />
                     )}
                     {item.handover_status && <HandoverBadge item={item} onOpen={() => openCall(item.id)} />}
-                    {!item.handover_status && item.status !== "calling" && transcribed(item) && (
+                    {!item.handover_status && (item.status === "reached" || (item.status !== "calling" && transcribed(item))) && (
                       <button type="button" onClick={() => openCall(item.id)} className="text-xs font-semibold text-brand hover:underline">
                         View conversation
                       </button>
@@ -524,7 +524,7 @@ function HandoverBadge({ item, onOpen }: { item: CallItem; onOpen: () => void })
     <div className="flex flex-wrap items-center gap-2">
       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${shown[status].style}`}>{shown[status].text}</span>
       {handingOver(item) && <OpenLive onOpen={onOpen} label="Open live call · Aida" />}
-      {!handingOver(item) && item.status !== "calling" && (status === "ended" || transcribed(item)) && (
+      {!handingOver(item) && item.status !== "calling" && (
         <button type="button" onClick={onOpen} className="text-xs font-semibold text-brand hover:underline">
           View conversation
         </button>
