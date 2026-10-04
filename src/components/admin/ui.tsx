@@ -1,6 +1,6 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { PenLine, Zap, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -155,5 +155,142 @@ export function Panel({
       )}
       {children}
     </section>
+  );
+}
+
+/**
+ * A channel's tab on /admin/replies (Email, Instagram, Messenger): its settings on the left, staying in view,
+ * and what came in across the rest of the width. On a narrower screen the settings come first.
+ */
+export function ChannelLayout({ settings, children }: { settings: ReactNode; children: ReactNode }) {
+  return (
+    <div className="grid items-start gap-5 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="xl:sticky xl:top-0">{settings}</div>
+      <div className="min-w-0 space-y-5">{children}</div>
+    </div>
+  );
+}
+
+/** A channel's settings card on /admin/replies: the channel, its address and how Clara answers there. */
+export function ChannelPanel({
+  icon: Icon,
+  title,
+  subtitle,
+  badge,
+  className = "",
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  badge?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 ${className}`}>
+      <header className="flex items-start gap-3 border-b border-line px-5 py-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-heading text-white">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h2 className="text-base font-semibold text-heading">{title}</h2>
+            {badge}
+          </div>
+          <p className="mt-0.5 break-words text-xs text-muted">{subtitle}</p>
+        </div>
+      </header>
+      <div className="flex flex-1 flex-col gap-5 p-5">{children}</div>
+    </section>
+  );
+}
+
+/** A list on /admin/replies (the latest emails, the drafts waiting): a title row, then rows edge to edge. */
+export function ListPanel({ title, subtitle, aside, children }: { title: string; subtitle?: string; aside?: ReactNode; children: ReactNode }) {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <header className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-heading">{title}</h2>
+          {subtitle && <p className="text-xs text-muted">{subtitle}</p>}
+        </div>
+        {aside && <div className="shrink-0">{aside}</div>}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+export type ReplyMode = "auto" | "draft";
+
+const MODES: Record<ReplyMode, { title: string; text: string; icon: LucideIcon }> = {
+  auto: { title: "Send automatically", text: "Clara's answer goes to the customer straight away.", icon: Zap },
+  draft: { title: "Draft for staff", text: "Clara's answer waits for staff to check and send it.", icon: PenLine },
+};
+
+/** Clara's answers on a channel: sent straight away, or kept as drafts for staff. One card per choice. */
+export function ModeSwitch({
+  mode,
+  label,
+  disabled,
+  onChange,
+  notes,
+}: {
+  mode: ReplyMode | undefined;
+  label: string;
+  disabled?: boolean;
+  onChange: (mode: ReplyMode) => void;
+  /** What a choice means on this channel, instead of the general words. */
+  notes?: Partial<Record<ReplyMode, string>>;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="grid gap-2">
+      {(["auto", "draft"] as const).map((value) => {
+        const { title, text, icon: Icon } = MODES[value];
+        const on = mode === value;
+        return (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            disabled={disabled}
+            onClick={() => onChange(value)}
+            className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition disabled:cursor-wait disabled:opacity-60 ${
+              on ? "border-brand bg-brand-soft/40 ring-1 ring-brand" : "border-line bg-white hover:border-heading/30 hover:bg-surface"
+            }`}
+          >
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${on ? "bg-brand text-white" : "bg-surface text-muted"}`}>
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-heading">{title}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-muted">{notes?.[value] ?? text}</span>
+            </span>
+            <span
+              aria-hidden="true"
+              className={`mt-1 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 ${on ? "border-brand" : "border-line"}`}
+            >
+              {on && <span className="h-2 w-2 rounded-full bg-brand" />}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** "Automatic" or "Drafts for staff", for a channel's header. */
+export function ModeBadge({ mode }: { mode: ReplyMode | undefined }) {
+  if (!mode) return null;
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+        mode === "auto" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-900"
+      }`}
+    >
+      {mode === "auto" ? "Automatic" : "Drafts for staff"}
+    </span>
   );
 }

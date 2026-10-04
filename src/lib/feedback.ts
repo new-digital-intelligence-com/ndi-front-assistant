@@ -311,6 +311,31 @@ export function withoutQuotedHistory(text: string): string {
     .trim();
 }
 
+/**
+ * An email's paragraphs as the sender typed them. Gmail breaks a sent email's lines at about 70 characters,
+ * which made what staff sent look ragged next to Clara's draft on the correction cards: a line is joined to
+ * the one before where its first word would not have fitted there, so a short line ("Best regards,") keeps
+ * its break. Text that was not broken this way (its longest line far from 70) is left as it is.
+ */
+export function unwrapEmail(text: string): string {
+  const lines = text.split("\n");
+  const longest = Math.max(0, ...lines.filter((line) => /\S\s+\S/.test(line)).map((line) => line.trimEnd().length));
+  if (longest < 55 || longest > 80) return text;
+  const width = Math.max(longest, 70);
+  const out: string[] = [];
+  let before = 0; // the length of the line before, as sent
+  for (const line of lines) {
+    const word = line.trim().split(/\s+/)[0];
+    if (before && word && !/^\s*([-*•>]|\d+[.)])\s/.test(line) && before + 1 + word.length > width) {
+      out[out.length - 1] = `${out[out.length - 1].trimEnd()} ${line.trim()}`;
+    } else {
+      out.push(line);
+    }
+    before = line.trimEnd().length;
+  }
+  return out.join("\n");
+}
+
 type DraftRow = {
   gmail_id: string;
   thread_id: string;
@@ -376,8 +401,18 @@ export async function checkSentDrafts(): Promise<number> {
 // --- for the admin page -----------------------------------------------------------------------------
 
 export async function openFeedback(): Promise<FeedbackItem[]> {
-  return rest<FeedbackItem[]>(
+  const items = await rest<FeedbackItem[]>(
     "knowledge_feedback?status=eq.open&select=id,kind,source,channel,conversation_id,question,original_answer,comment,corrected_answer,created_at&order=created_at.desc&limit=100",
+  );
+  // The customer's email and what staff sent are kept as Gmail gave them, in lines of about 70 characters.
+  return items.map((item) =>
+    item.source === "email"
+      ? {
+          ...item,
+          question: item.question && unwrapEmail(item.question),
+          corrected_answer: item.corrected_answer && unwrapEmail(item.corrected_answer),
+        }
+      : item,
   );
 }
 

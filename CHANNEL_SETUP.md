@@ -409,14 +409,15 @@ photos or files. The Meta app must stay **Published**. Don't put "CDA" in any Me
 
 ### Auto or draft (like email)
 
-Each channel has its own switch on `/admin/replies`: **Send automatically**, or **Draft for staff**
+Each channel has its own tab on `/admin/replies` (`/admin/replies/instagram`, `/admin/replies/messenger`) with its
+switch: **Send automatically**, or **Draft for staff**
 (`instagram_mode` / `messenger_mode`, placeholders on the **Aida** agent like `email_mode`, `src/lib/replyMode.ts`;
 anything unreadable counts as draft). In draft mode Clara's answer is not sent: it waits in `social_drafts` with the
 customer's latest message (kept on the thread only in draft mode), and staff change it if needed and **Send** it, or
 **Discard** it (`src/lib/socialDrafts.ts`). Meta only takes a reply within **24 hours** of the customer's last
 message: the page shows the time, and Meta's refusal is shown in plain words. What staff changed counts in the
-weekly "sent unchanged" line and, when a fact changed, waits under `/admin/knowledge/feedback` → **Instagram & Messenger
-corrections**. Both switches were set to **auto** on 2 Oct 2026.
+weekly "sent unchanged" line and, when a fact changed, waits under `/admin/knowledge/feedback` → **Instagram
+corrections** or **Messenger corrections**. Both switches were set to **auto** on 2 Oct 2026.
 
 ---
 
@@ -572,8 +573,9 @@ A live call between NDI staff and a customer: everyone can **talk or type**, the
 own address, in a dark menu on the left (on a phone: the Menu button). `/admin` opens `/admin/rooms` (a redirect in
 `next.config.ts`). The sections live in the admin layout (`src/app/admin/layout.tsx` →
 `src/components/admin/AdminShell.tsx`, the list in `src/components/admin/sections.ts`) and stay mounted once
-visited, so moving to Customers does not drop a staff member out of an Aida call or a hand-over. The sign-in belongs
-to one browser tab: a section opened in a new tab asks for the password again.
+visited, so moving to Customers does not drop a staff member out of an Aida call or a hand-over. Every section uses
+the whole width beside the menu (the user's request, 4 Oct 2026). The sign-in belongs to one browser tab: a section
+opened in a new tab asks for the password again.
 
 | Section | What staff do |
 |---|---|
@@ -582,7 +584,7 @@ to one browser tab: a section opened in a new tab asks for the password again.
 | 😊 **Mood** `/admin/mood` | Three tabs, with the 7 / 30 days switch, the import and the alert status above them: **Overview** (`/admin/mood`: how customers felt on every channel), **Follow-up** (`/admin/mood/follow-up`: the unhappy conversations, waiting ones first, each with Open customer) and **Emails & Aida calls** (`/admin/mood/emails-calls`) |
 | 📲 **Calls** `/admin/calls` | Three tabs: **Outgoing** (`/admin/calls`: call lists, phone numbers each with instructions for Clara; **Start calling** and she phones them one by one), **Incoming** (`/admin/calls/incoming`: calls to NDI, live and recent) and **Hand-over team** (`/admin/calls/team`). **Open live call** on a running call shows its sound and conversation (Aida's suggestions during a hand-over); nothing runs until someone opens it |
 | 📚 **Knowledge** `/admin/knowledge` | Three tabs, each at its own address: **To answer** (`/admin/knowledge`), **Feedback** (`/admin/knowledge/feedback`, with customer feedback, and Aida, email, Instagram and Messenger corrections, each in its own panel) and **Approved answers** (`/admin/knowledge/approved`, searchable, add your own). Questions Clara could not answer and feedback on her answers; staff approve the right answer → "NDI approved FAQ" |
-| ✉️ **Replies** `/admin/replies` | Email, Instagram and Messenger: Send automatically / Draft for staff for each; the latest emails; then one panel for Instagram and one for Messenger (the user's request, 4 Oct 2026), each with its drafts to send, change or discard |
+| ✉️ **Replies** `/admin/replies` | Three tabs, each at its own address (the user's request, 4 Oct 2026): **Email** (`/admin/replies`: Send automatically / Draft for staff, and the latest emails with what Clara did with each), **Instagram** (`/admin/replies/instagram`) and **Messenger** (`/admin/replies/messenger`), each with its switch, its drafts to send, change or discard, and the ones recently decided. The tabs show how many drafts wait. Correction cards in Knowledge → Feedback show a sent email in whole paragraphs again (Gmail breaks its lines at about 70 characters; `unwrapEmail` in `src/lib/feedback.ts`) |
 
 - **Claude insights** (Claude Haiku, `ANTHROPIC_MODEL`, only when a staff member clicks, nothing stored)
 - **Customer mood**: ElevenLabs' sentiment for voice and website; Claude rates Custom Channel conversations (email,

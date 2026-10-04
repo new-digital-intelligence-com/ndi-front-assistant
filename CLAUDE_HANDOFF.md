@@ -139,8 +139,11 @@ npm run lint
   Icons: `lucide-react`. Cards everywhere take `shadow-sm` (redefined in `globals.css`), big panels `shadow-card`.
   Sections with several panels have tabs at their own addresses, in the shared tab bar of `src/components/admin/ui.tsx`
   (with `Empty`, `StatTile`, `Panel` and `useSectionPath`): Knowledge (`/admin/knowledge`, `/feedback`, `/approved`),
-  Customers (`/admin/customers`, one customer at `/admin/customers/<id>`, `/overview`) and Mood (`/admin/mood`,
-  `/follow-up`, `/emails-calls`; staff alert emails link to `/follow-up`). The site icon is
+  Customers (`/admin/customers`, one customer at `/admin/customers/<id>`, `/overview`), Mood (`/admin/mood`,
+  `/follow-up`, `/emails-calls`; staff alert emails link to `/follow-up`), Calls (`/admin/calls`, `/incoming`,
+  `/team`) and Replies (`/admin/replies` = Email, `/instagram`, `/messenger`, 4 Oct 2026: a channel's settings on the
+  left, its emails or drafts across the rest). Every section uses the whole width beside the menu (the user's
+  request, 4 Oct 2026: "use full available width"). The site icon is
   the NDI letters drawn as shapes (`src/app/icon.svg`, `src/app/apple-icon.png` 180x180 for phone home screens)
 - Colours: the **NDI logo** (the user's decision, 2 Oct 2026): red `#fe0100` capitals and black on white. Neutral
   Tailwind tokens (`brand`, `brand-soft`, `accent`, `heading`, `line`, `surface`, `muted`, `ink`, `night`) in `src/app/globals.css`:

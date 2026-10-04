@@ -5,15 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Lobby, StaffSignIn } from "../aida/AidaLobby";
-import { EmailModeCard } from "../aida/EmailModeCard";
 import { rememberStaffToken, savedName, savedStaffToken } from "../aida/types";
 import { NdiLogo } from "../NdiLogo";
 import { CallsPanel } from "./CallsPanel";
 import { CustomersPanel } from "./CustomersPanel";
 import { KnowledgePanel } from "./KnowledgePanel";
 import { MoodPanel } from "./MoodPanel";
+import { RepliesPanel } from "./RepliesPanel";
 import { ADMIN_SECTIONS, sectionFromPath, type AdminSection } from "./sections";
-import { SocialRepliesCard } from "./SocialRepliesCard";
 
 /**
  * The staff console (/admin/...), behind the Aida staff password rather than the site password: Aida
@@ -89,8 +88,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const section = ADMIN_SECTIONS.find((item) => item.id === active) ?? ADMIN_SECTIONS[0];
   const SectionIcon = section.icon;
   /** The open section settles in; the others stay mounted but hidden. */
-  const shown = (id: AdminSection, extra = "") =>
-    active === id ? `animate-fade-up ${ADMIN_SECTIONS.find((item) => item.id === id)?.width ?? ""} ${extra}` : "hidden";
+  const shown = (id: AdminSection, extra = "") => (active === id ? `animate-fade-up ${extra}` : "hidden");
 
   return (
     <div className="flex h-dvh min-h-[560px] w-full overflow-hidden">
@@ -200,7 +198,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="scroll-thin min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 lg:px-8 lg:py-7">
+          {/* Every section uses the whole width beside the menu (the user's request, 4 Oct 2026). */}
+          <div className="w-full px-3 py-5 sm:px-6 lg:px-8 lg:py-7">
             <header key={section.id} className="animate-fade-up mb-5 flex items-start gap-3">
               <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-brand shadow-sm sm:flex">
                 <SectionIcon className="h-5 w-5" aria-hidden="true" />
@@ -235,9 +234,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </div>
             )}
             {opened.has("replies") && (
-              <div className={shown("replies", "space-y-4")}>
-                <EmailModeCard staffToken={staffToken} />
-                <SocialRepliesCard staffToken={staffToken} onSignOut={signOut} />
+              <div className={shown("replies")}>
+                <RepliesPanel staffToken={staffToken} onSignOut={signOut} />
               </div>
             )}
             {children}

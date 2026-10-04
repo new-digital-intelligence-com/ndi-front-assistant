@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DraftWeek, FeedbackCard, type DraftCounts, type FeedbackItem } from "./FeedbackCard";
 import { Empty, SectionTabs, useSectionPath } from "./ui";
 
 // Clara learns from the questions she could not answer and from feedback on her answers. Both arrive
@@ -77,19 +78,7 @@ type Gap = { id: number; conversation_id: string | null; channel: string | null;
 type Faq = { id: number; question: string; answer: string; approved_by: string | null; updated_at: string };
 type Published = { document_id: string | null; entries: number; published_at: string | null };
 type Group = { question: string; answer: string; ids: number[] };
-type FeedbackItem = {
-  id: number;
-  kind: "feedback" | "correction" | "style";
-  source: "chat" | "said" | "aida" | "email" | "social";
-  channel: string | null;
-  question: string | null;
-  original_answer: string | null;
-  comment: string | null;
-  corrected_answer: string | null;
-  created_at: string;
-};
 type Score = { likes: number; dislikes: number };
-type DraftCounts = { total: number; unchanged: number; polished: number; corrected: number; declined: number; discarded: number };
 type State = {
   gaps: Gap[];
   feedback: FeedbackItem[];
@@ -98,16 +87,6 @@ type State = {
   faq: Faq[];
   published: Published;
 };
-
-/** "18 of 20 sent unchanged · 1 style edit · 1 corrected", or null when there were none this week. */
-function draftLine(counts: DraftCounts | undefined, notSent: "declined" | "discarded"): string | null {
-  if (!counts?.total) return null;
-  const parts = [`${counts.unchanged} of ${counts.total} sent unchanged`];
-  if (counts.polished) parts.push(`${counts.polished} style edit${counts.polished === 1 ? "" : "s"}`);
-  if (counts.corrected) parts.push(`${counts.corrected} corrected`);
-  if (counts[notSent]) parts.push(`${counts[notSent]} ${notSent === "declined" ? "declined" : "not sent"}`);
-  return parts.join(" · ");
-}
 
 const CHANNELS: Record<string, string> = {
   website: "Website",
@@ -119,16 +98,14 @@ const CHANNELS: Record<string, string> = {
   aida: "Aida room",
 };
 
+/** A feedback card's title; its icon and its "Style only" or "Corrected" chip say the rest. */
 function sourceLabel(item: FeedbackItem): string {
-  if (item.source === "chat") return "👎 Website chat";
-  if (item.source === "said") return `💬 Said by the customer · ${item.channel ? CHANNELS[item.channel] ?? item.channel : "unknown channel"}`;
-  const style = item.kind === "style";
-  if (item.source === "aida") return style ? "✏️ Staff reworded Aida's draft · style only" : "✏️ Staff corrected Aida's draft";
-  if (item.source === "social") {
-    const where = CHANNELS[item.channel ?? ""] ?? "Instagram or Messenger";
-    return style ? `✏️ Staff reworded Clara's ${where} draft · style only` : `✏️ Staff corrected Clara's ${where} draft`;
-  }
-  return style ? "✏️ Staff reworded Clara's email draft · style only" : "✏️ Staff corrected Clara's email draft";
+  if (item.source === "chat") return "Website chat";
+  if (item.source === "said") return `Said by the customer · ${item.channel ? CHANNELS[item.channel] ?? item.channel : "unknown channel"}`;
+  const did = item.kind === "style" ? "reworded" : "corrected";
+  if (item.source === "aida") return `Staff ${did} Aida's draft`;
+  if (item.source === "social") return `Staff ${did} Clara's ${CHANNELS[item.channel ?? ""] ?? "Instagram or Messenger"} draft`;
+  return `Staff ${did} Clara's email draft`;
 }
 
 const UNFINISHED = /\[check/i;
@@ -164,10 +141,10 @@ const DRAFT_LINES: Record<
   Exclude<FeedbackTab, "customer">,
   { title: string; key: "aida" | "email" | "instagram" | "messenger"; notSent: "declined" | "discarded" }
 > = {
-  aida: { title: "📞 Aida's drafts in rooms", key: "aida", notSent: "declined" },
-  email: { title: "✉️ Clara's email drafts", key: "email", notSent: "discarded" },
-  instagram: { title: "📷 Clara's Instagram drafts", key: "instagram", notSent: "discarded" },
-  messenger: { title: "💬 Clara's Messenger drafts", key: "messenger", notSent: "discarded" },
+  aida: { title: "Aida's drafts in rooms", key: "aida", notSent: "declined" },
+  email: { title: "Clara's email drafts", key: "email", notSent: "discarded" },
+  instagram: { title: "Clara's Instagram drafts", key: "instagram", notSent: "discarded" },
+  messenger: { title: "Clara's Messenger drafts", key: "messenger", notSent: "discarded" },
 };
 
 const when = (iso: string) =>
@@ -454,7 +431,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
       )}
 
       {view === "feedback" && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
           <div className="min-w-0 space-y-3">
             <div role="tablist" aria-label="Kinds of feedback" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
               {FEEDBACK_TABS.map((tabInfo) => {
@@ -502,16 +479,12 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
 
           <div className="min-w-0 space-y-3">
             {feedbackTab !== "customer" && (
-              <div className="rounded-2xl bg-white p-4 text-xs shadow-sm">
-                <p className="font-semibold text-heading">{DRAFT_LINES[feedbackTab].title}, this week</p>
-                <p className="text-muted">
-                  {draftLine(state.drafts?.[DRAFT_LINES[feedbackTab].key], DRAFT_LINES[feedbackTab].notSent) ?? "None yet."}
-                </p>
-                <p className="mt-1 text-muted">
-                  Every draft staff changed is below. <strong>Corrected</strong>: a fact changed, worth teaching Clara.{" "}
-                  <strong>Style only</strong>: just reworded, usually dismissed.
-                </p>
-              </div>
+              <DraftWeek
+                icon={FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.icon ?? Mail}
+                title={DRAFT_LINES[feedbackTab].title}
+                counts={state.drafts?.[DRAFT_LINES[feedbackTab].key]}
+                notSent={DRAFT_LINES[feedbackTab].notSent}
+              />
             )}
 
             {feedbackShown.length === 0 && (
@@ -527,80 +500,27 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
               const unfinished = UNFINISHED.test(draft.answer);
               const setDraft = (field: "question" | "answer", value: string) =>
                 setDrafts((current) => ({ ...current, [key]: { ...draft, [field]: value } }));
-              const who = item.source === "aida" ? "Aida" : "Clara";
               return (
-                <article key={key} className="space-y-2.5 rounded-2xl bg-white p-4 shadow-sm">
-                  <p className="text-xs text-muted">
-                    <span className="font-semibold text-heading">{sourceLabel(item)}</span> · {when(item.created_at)}
-                  </p>
-                  {item.question && (
-                    <p className="text-sm">
-                      <span className="text-xs font-semibold text-muted">Customer asked: </span>
-                      <LinkedText text={item.question} previews={false} />
-                    </p>
-                  )}
-                  {item.original_answer && (
-                    <p className="rounded-xl bg-surface p-3 text-sm text-muted">
-                      <span className="text-xs font-semibold">{who} answered: </span>
-                      <LinkedText text={item.original_answer} previews={false} />
-                    </p>
-                  )}
-                  {item.comment && (
-                    <p className="rounded-xl bg-red-50 p-3 text-sm text-brand-dark">
-                      <span className="text-xs font-semibold">Customer said: </span>
-                      <LinkedText text={item.comment} previews={false} />
-                    </p>
-                  )}
-                  {item.corrected_answer && (
-                    <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">
-                      <span className="text-xs font-semibold">Staff sent instead: </span>
-                      <LinkedText text={item.corrected_answer} previews={false} />
-                    </p>
-                  )}
-                  <input
-                    value={draft.question}
-                    onChange={(event) => setDraft("question", event.target.value)}
-                    placeholder="The question, for everyone"
-                    className={`font-semibold ${FIELD}`}
-                  />
-                  <textarea
-                    value={draft.answer}
-                    onChange={(event) => setDraft("answer", event.target.value)}
-                    placeholder="The right answer Clara should give from now on…"
-                    rows={3}
-                    className={FIELD}
-                  />
-                  {unfinished && <p className="text-xs text-brand">Replace every [check: …] with the real fact before approving.</p>}
-                  <div className="flex flex-wrap justify-end gap-2">
-                    <button type="button" onClick={() => void makeGeneral(item, key)} disabled={busy !== null} className={DARK}>
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                      {busy === `general-${key}` ? "Claude is writing…" : "Make it a general answer"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void change(`dismiss-${key}`, { action: "dismiss", feedbackIds: [item.id] })}
-                      disabled={busy !== null}
-                      className={GHOST}
-                    >
-                      Dismiss
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void change(
-                          `approve-${key}`,
-                          { action: "approve", question: draft.question, answer: draft.answer, feedbackIds: [item.id] },
-                          "Approved. Clara uses this answer from her next conversation.",
-                        )
-                      }
-                      disabled={busy !== null || !draft.question.trim() || !draft.answer.trim() || unfinished}
-                      className={PRIMARY}
-                    >
-                      <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                      {busy === `approve-${key}` ? "Teaching Clara…" : "Approve and teach Clara"}
-                    </button>
-                  </div>
-                </article>
+                <FeedbackCard
+                  key={key}
+                  cardKey={key}
+                  item={item}
+                  title={sourceLabel(item)}
+                  who={item.source === "aida" ? "Aida" : "Clara"}
+                  draft={draft}
+                  onDraft={setDraft}
+                  unfinished={unfinished}
+                  busy={busy}
+                  onGeneral={() => void makeGeneral(item, key)}
+                  onDismiss={() => void change(`dismiss-${key}`, { action: "dismiss", feedbackIds: [item.id] })}
+                  onApprove={() =>
+                    void change(
+                      `approve-${key}`,
+                      { action: "approve", question: draft.question, answer: draft.answer, feedbackIds: [item.id] },
+                      "Approved. Clara uses this answer from her next conversation.",
+                    )
+                  }
+                />
               );
             })}
           </div>

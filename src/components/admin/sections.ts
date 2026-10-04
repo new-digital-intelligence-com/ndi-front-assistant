@@ -10,8 +10,6 @@ export const ADMIN_SECTIONS: {
   title: string;
   description: string;
   icon: LucideIcon;
-  /** How wide the section may grow; the others use the full width. */
-  width?: string;
 }[] = [
   {
     id: "rooms",
@@ -52,7 +50,6 @@ export const ADMIN_SECTIONS: {
     title: "Knowledge",
     description: "Questions Clara could not answer, and the answers staff approve for her.",
     icon: BookOpen,
-    width: "max-w-5xl",
   },
   {
     id: "replies",
@@ -61,7 +58,6 @@ export const ADMIN_SECTIONS: {
     title: "Replies",
     description: "Email, Instagram and Messenger: send Clara's answers straight away, or check them first.",
     icon: Inbox,
-    width: "max-w-3xl",
   },
 ];
 

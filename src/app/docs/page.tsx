@@ -236,7 +236,8 @@ Hosted page / widget ───────────────┘         �
               Clara writes. Photos and files are not passed on: Clara asks the customer to type the details.
             </P>
             <P>
-              Like email, each of the two has a switch on /admin/replies: <B>Send automatically</B>, or <B>Draft for staff</B>.
+              Like email, each of the two has its own tab and switch on /admin/replies (/admin/replies/instagram and
+              /admin/replies/messenger): <B>Send automatically</B>, or <B>Draft for staff</B>.
               A draft waits there next to the customer&apos;s message; staff change it if needed and send it, or discard it. Meta
               only takes a reply within 24 hours of the customer&apos;s last message, so the page shows how long a draft can wait.
             </P>
@@ -335,7 +336,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["😊 Mood (/admin/mood)", "Three tabs: Overview (how customers felt, per channel and per day), Follow-up (the unhappy conversations to follow up) and Emails & Aida calls (see Customer mood)."],
                 ["📲 Calls (/admin/calls)", "Three tabs: Outgoing (call lists Clara phones), Incoming (calls to NDI, live and recent) and Hand-over team (/admin/calls/team). Open live call shows a call's sound and conversation, with Aida's suggestions during a hand-over (see Calls and hand-overs)."],
                 ["📚 Knowledge (/admin/knowledge)", "Three tabs: To answer, Feedback (/admin/knowledge/feedback) and Approved answers (/admin/knowledge/approved). Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
-                ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, then a panel for Instagram and one for Messenger with their drafts to send or discard."],
+                ["✉️ Replies (/admin/replies)", "Three tabs, one per channel: Email (/admin/replies), Instagram (/admin/replies/instagram) and Messenger (/admin/replies/messenger). Each one: send Clara's answers automatically or keep them as drafts for staff; the latest emails, or the drafts to send or discard. The tabs show how many drafts wait."],
               ]}
             />
             <P>The Claude insights are written only when a staff member clicks, and nothing is stored.</P>
@@ -409,12 +410,14 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["What the customer says, any channel", "“That's wrong”, “perfect, that solved it”: found by ElevenLabs' analysis after the conversation"],
                 ["Aida rooms", "What staff sent compared with Aida's draft"],
                 ["Email draft mode", "The reply staff sent compared with Clara's draft"],
+                ["Instagram and Messenger draft mode", "What staff sent compared with Clara's draft, each channel in its own panel"],
               ]}
             />
             <P>
-              A real correction (a changed fact, not just a new greeting) becomes a card; ✨ Make it a general answer turns it into a
-              question and answer for everyone, without that customer&apos;s details. A “right first time” score counts how many of
-              Clara&apos;s and Aida&apos;s drafts were sent unchanged.
+              A real correction (a changed fact, not just a new greeting) becomes a card: what Clara wrote and what staff sent side
+              by side, the words staff took out in red and the words they added in green. ✨ Make it a general answer turns it into
+              a question and answer for everyone, without that customer&apos;s details. A “right first time” score counts how many
+              of Clara&apos;s and Aida&apos;s drafts were sent unchanged.
             </P>
           </Section>
 
