@@ -25,7 +25,7 @@ and model. The staff copilot is **Aida**.
 | Website `<APP_URL>` (`/` chat, `/voice`, `/avatar`, `/aida` live call) + `/admin/...` + `/docs` | ✅ Live on Railway (2 Oct 2026) | Next.js on Railway |
 | Telegram | ✅ **@ndi2026bot**, linked to Clara, tested by the user (2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on `/admin/replies` | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | 🔀 Shared with the CDA demo (the user's decision: CDA's accounts), switched per demo; auto/draft switch like email. ✅ Switched to NDI and tested by the user (2 Oct 2026) | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
+| Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | ✅ NDI only: the user switched both Meta webhooks to NDI and tested them (2 Oct 2026) and removed CDA (confirmed 4 Oct 2026); auto/draft switch like email | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Native ElevenLabs Twilio import |
 | Video avatar | ⏳ NDI's own Anam account + avatar "Elena" set (2 Oct 2026); first test by the user | Anam joined to Clara |
 | Intercom | ❌ Removed on purpose (user's decision, 2 Oct 2026) | — |
@@ -36,7 +36,8 @@ and model. The staff copilot is **Aida**.
 **What differs from CDA** (decisions of the user, 2 Oct 2026): assistant **Clara** (not Ellie), voice **Katie X**
 (close to Shelley), call languages **English + German, Italian, French**, hosting on **Railway** from a **public**
 repository the user creates (not Vercel), **no Alexa**, **no Intercom**, a **new Twilio number**, a **new Anam avatar**, Instagram and
-Messenger **shared with CDA and switched per demo**, and the **AI Employees knowledge comes from the user's Google
+Messenger: the accounts CDA used, now **NDI only** (the user removed CDA from the Meta webhooks; never call them
+"shared with CDA" again), and the **AI Employees knowledge comes from the user's Google
 Drive** — never build or change AI Employee knowledge yourself. "Appliances" became **interests** (what the
 customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them). Website accounts
 are **NDI's own table `customer_accounts`** (email + scrypt password hash, `src/lib/account.ts`), not Supabase Auth,
@@ -151,8 +152,9 @@ npm run lint
   The logo is drawn by `src/components/NdiLogo.tsx` (Archivo Black, like the logo's capitals); emails use the same colours
 - Times: Central European (Europe/Zurich)
 
-**Shared with CDA on purpose**: the ElevenLabs account, the LiveKit project (for now), the Anthropic key, the Meta app "Customer Support"
-with the Instagram account and the Facebook Page (switched per demo), the Twilio account (new number).
+**Shared with CDA on purpose**: the ElevenLabs account, the LiveKit project (for now), the Anthropic key, the Twilio
+account (new number). **Not shared any more**: Instagram and Messenger. The Meta app "Customer Support" (made for
+CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4 Oct 2026).
 
 ---
 
@@ -188,10 +190,11 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
    (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
    input audio is PCM 16000 and the `language` override is allowed. Next: the user's first test (`/avatar`).
    Anam's free plan: 30 minutes a month, 3-minute calls, watermark.
-9. **Instagram/Messenger** (CDA's accounts, the user's decision): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
+9. **Instagram/Messenger** (the accounts CDA used, NDI only now): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"
    on Clara (2 Oct 2026; secret order checked, 6 values on Railway); tokens checked (NDI's Instagram token refreshed,
    valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. The user
-   switched the 2 Meta Callback URLs to NDI and tested both (2 Oct 2026). Back to CDA for a demo: CHANNEL_SETUP.md §7.
+   switched the 2 Meta Callback URLs to NDI and tested both (2 Oct 2026), and removed CDA (confirmed 4 Oct 2026).
+   Replies after Meta's 24 hours: only with Meta's "Human Agent" permission (7 days), not requested yet.
 10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
     API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
     links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
@@ -207,6 +210,6 @@ with the Instagram account and the Facebook Page (switched per demo), the Twilio
 |---|---|
 | Daily, automatic | The app's daily jobs renew the Gmail watch and refresh the Instagram token |
 | ~17 Oct 2026 | ElevenLabs credits reset (shared with CDA) |
-| After 20 Dec 2026, if Messenger stops | New Page token in both apps |
+| After 20 Dec 2026, if Messenger stops | New Page token (`MESSENGER_PAGE_TOKEN` on Railway) |
 | Later | Rotate keys that were shared in chat (shared with CDA: rotate in both apps) |
 | Now (3 Oct 2026) | `ANTHROPIC_API_KEY` (shared with CDA) answers 401 "invalid": Claude's ratings, insights and notes fail until a new key is set (both apps) |

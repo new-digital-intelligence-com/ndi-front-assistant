@@ -89,8 +89,8 @@ export default function DocsPage() {
                 ["Phone", "Calls NDI's number +41 44 513 70 94, or Clara calls them from a staff call list", "Ready, first test next"],
                 ["Email", "Emails contact@new-digital-intelligence.com and gets a reply in the same thread", "Live"],
                 ["Telegram", "Messages NDI's Telegram bot @ndi2026bot", "Live"],
-                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Live (shared with the CDA demo)"],
-                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Live (shared with the CDA demo)"],
+                ["Instagram", "Sends a direct message to @new_digital_intelligence", "Live"],
+                ["Facebook Messenger", "Messages the Facebook Page “New Digital Intelligence”", "Live"],
                 ["Hosted page, QR code, widget", "ElevenLabs’ own page and chat bubble", "Live"],
                 ["Slack, WhatsApp", "—", "Not built yet"],
               ]}
@@ -240,10 +240,6 @@ Hosted page / widget ───────────────┘         �
               /admin/replies/messenger): <B>Send automatically</B>, or <B>Draft for staff</B>.
               A draft waits there next to the customer&apos;s message; staff change it if needed and send it, or discard it. Meta
               only takes a reply within 24 hours of the customer&apos;s last message, so the page shows how long a draft can wait.
-            </P>
-            <P>
-              Instagram @new_digital_intelligence and the Facebook Page “New Digital Intelligence” are shared with NDI&apos;s CDA demo:
-              Meta sends their messages to one of the two demos at a time, switched before a demo.
             </P>
           </Section>
 

@@ -2,8 +2,8 @@
 //
 // Meta's Instagram tokens last at most 60 days. The current token is kept in Supabase
 // (channel_tokens) and the daily jobs refresh it every 7 days, so it never runs out.
-// INSTAGRAM_ACCESS_TOKEN is only the starting token, used until the first refresh. The CDA demo
-// uses the same account and refreshes its own copy the same way.
+// INSTAGRAM_ACCESS_TOKEN is only the starting token, used until the first refresh. (The CDA demo used
+// this account before the user removed it from the webhooks; its server may still refresh its own copy.)
 
 import type { MetaChannel } from "./metaChat";
 import { supabaseRest as rest } from "./supabase";

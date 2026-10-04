@@ -9,8 +9,8 @@
 // person's latest message is kept, so staff see what Clara's draft answers (src/lib/socialDrafts.ts).
 //
 // The two channels differ only in the settings below (src/lib/messenger.ts, src/lib/instagram.ts).
-// They are the same Instagram account and Facebook Page as the CDA demo: Meta's webhooks point at
-// one of the two apps at a time, switched before a demo (CHANNEL_SETUP.md, section 7).
+// The CDA demo used the same Instagram account and Facebook Page before; the user removed it from Meta's
+// webhooks, which point at this app only (CHANNEL_SETUP.md, section 7).
 
 import { stripAudioTags } from "./richText";
 import { hasValidWebhookSignature, secretMatches } from "./agentAuth";

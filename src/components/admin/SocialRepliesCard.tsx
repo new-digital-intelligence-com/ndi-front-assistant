@@ -38,8 +38,8 @@ type State = {
 
 const REFRESH_MS = 10_000;
 const CHANNEL: Record<Channel, { label: string; icon: LucideIcon; where: string }> = {
-  instagram: { label: "Instagram", icon: Camera, where: "Direct messages to @new_digital_intelligence (shared with the CDA demo)" },
-  messenger: { label: "Messenger", icon: MessageCircle, where: "Messages to the Page “New Digital Intelligence” (shared with the CDA demo)" },
+  instagram: { label: "Instagram", icon: Camera, where: "Direct messages to @new_digital_intelligence" },
+  messenger: { label: "Messenger", icon: MessageCircle, where: "Messages to the Facebook Page “New Digital Intelligence”" },
 };
 const LABEL = "text-[11px] font-semibold uppercase tracking-wide text-muted";
 

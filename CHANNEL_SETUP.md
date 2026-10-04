@@ -46,8 +46,8 @@ second agent, Aida, drafts answers for staff).
 | Docs `<APP_URL>/docs` | ✅ Live | Public documentation page, no password |
 | Telegram | ✅ **@ndi2026bot** (tested 2 Oct 2026) | Native ElevenLabs Telegram trigger |
 | Email | ✅ contact@new-digital-intelligence.com (tested 2 Oct 2026) | Gmail push → web app → Custom Channel "NDI email" |
-| Instagram **@new_digital_intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
-| Facebook Messenger, Page **New Digital Intelligence** | ✅ 🔀 Shared with the CDA demo, switched per demo (NDI tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
+| Instagram **@new_digital_intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
+| Facebook Messenger, Page **New Digital Intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
 | Phone | ✅ **+41 44 513 70 94** (Zurich, bought 4 Oct 2026), imported into ElevenLabs for Clara; first test by the user | Imported into ElevenLabs natively |
 | Video avatar (`/avatar`) | ⏳ NDI's own Anam avatar set (2 Oct 2026), first test next | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
@@ -369,33 +369,29 @@ normal reply in the same email thread.
 ## 7. Instagram and Facebook Messenger
 
 Both run in the web app (`src/lib/metaChat.ts`, settings in `src/lib/instagram.ts` and `src/lib/messenger.ts`),
-exactly as in the CDA demo, through the same Meta developer app **"Customer Support"**.
+built like the CDA demo's, through the Meta developer app **"Customer Support"** (the app first made for the CDA
+demo; the Page token belongs to it, checked 4 Oct 2026).
 
-### Shared with the CDA demo: switch per demo
+### Webhooks: NDI only
 
 **@new_digital_intelligence** (Instagram ID `17841430407573788`) and the Page **New Digital Intelligence** (Page ID
-`1450409441479124`) are NDI's own accounts, and the CDA demo uses them too. One account can only be answered by one
-assistant, so Meta's webhooks point at **one app at a time**:
+`1450409441479124`) are NDI's own accounts. The CDA demo used them before; the user switched both webhooks to NDI on
+2 Oct 2026 and removed CDA (confirmed 4 Oct 2026), so only Clara answers them:
 
-| Webhook | CDA demo | NDI assistant |
-|---|---|---|
-| Instagram Callback URL | `https://cda-demo.vercel.app/api/instagram/webhook?token=<INSTAGRAM_WEBHOOK_SECRET>` | `<APP_URL>/api/instagram/webhook?token=<INSTAGRAM_WEBHOOK_SECRET>` |
-| Messenger Callback URL | `https://cda-demo.vercel.app/api/messenger/webhook?token=<MESSENGER_WEBHOOK_SECRET>` | `<APP_URL>/api/messenger/webhook?token=<MESSENGER_WEBHOOK_SECRET>` |
+| Webhook | Callback URL |
+|---|---|
+| Instagram | `<APP_URL>/api/instagram/webhook?token=<INSTAGRAM_WEBHOOK_SECRET>` |
+| Messenger | `<APP_URL>/api/messenger/webhook?token=<MESSENGER_WEBHOOK_SECRET>` |
 
-NDI uses the **same tokens and the same webhook secrets (verify tokens) as CDA** (copied into `.env.local`), so a
-switch only changes the address (first switched to NDI and tested on 2 Oct 2026):
+Where they are set: **developers.facebook.com** → app **Customer Support** → **Use cases** → "Manage messaging &
+content on Instagram" → **API setup with Instagram login** → **Configure webhooks** (the `messages` subscription),
+and "Engage with customers on Messenger from Meta" → **Messenger API Settings** → **Configure webhooks** (the Page
+subscription). The tokens and the verify tokens were copied from CDA's `.env.local` on 2 Oct 2026.
 
-1. **developers.facebook.com** → app **Customer Support** → **Use cases** → "Manage messaging & content on
-   Instagram" → **API setup with Instagram login** → **Configure webhooks** → Callback URL from the table, Verify
-   token = the same secret → **Verify and save**. The `messages` subscription stays.
-2. Same app → "Engage with customers on Messenger from Meta" → **Messenger API Settings** → **Configure webhooks**
-   → Callback URL from the table, the same Verify token → **Verify and save**. The Page subscription stays.
-3. **Test** with a DM from another account.
+Good to know: a person who wrote to CDA's Ellie before is new to Clara (each app has its own database). CDA's
+server may still refresh its own copy of the Instagram token; NDI keeps and refreshes its own copy.
 
-Good to know: each app has its own database, so a person who wrote to CDA's Ellie is new to Clara (and the
-other way round). Both apps refresh the same Instagram token every 7 days and keep their own copy.
-
-### Before the first switch to NDI (✅ done 2 Oct 2026)
+### The Custom Channels in ElevenLabs (✅ done 2 Oct 2026)
 
 1. **ElevenLabs** → Clara → Channels → **Custom Channel** → Add trigger → new connection `NDI Instagram` →
    Reply Webhook URL `<APP_URL>/api/instagram/reply` → copy the 3 values → `INSTAGRAM_CHANNEL_INBOUND_URL`,
@@ -730,7 +726,7 @@ opened in a new tab asks for the password again.
 |---|---|---|
 | All `.env` values above | Railway + `.env.local` | Never committed (public repository) |
 | Telegram bot token | ElevenLabs Telegram connection | From @BotFather |
-| Instagram token | Supabase `channel_tokens` (refreshed every 7 days); starting token in `INSTAGRAM_ACCESS_TOKEN` | Shared with the CDA demo |
+| Instagram token | Supabase `channel_tokens` (refreshed every 7 days); starting token in `INSTAGRAM_ACCESS_TOKEN` | Copied from CDA's on 2 Oct 2026; NDI refreshes its own copy |
 | Google Drive access | ElevenLabs Google Drive integration | Read-only, picked files |
 | Twilio | ElevenLabs phone number import, and Railway (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`) for hand-overs and the live view of calls | NDI's Twilio account |
 
@@ -746,8 +742,7 @@ cron secret, Gmail push secret, post-call webhook secret.
 |---|---|
 | Daily, automatic | The app's daily jobs renew the Gmail watch and refresh the Instagram token (every 7 days) |
 | ~17th each month | ElevenLabs credits reset (shared with the CDA demo) |
-| Before a demo with Instagram/Messenger | Point the 2 Meta Callback URLs at the right app (section 7) |
-| After 20 Dec 2026, if Messenger stops | Generate the Page token again in the Meta app and update `MESSENGER_PAGE_TOKEN` (in both apps) |
+| After 20 Dec 2026, if Messenger stops | Generate the Page token again in the Meta app and update `MESSENGER_PAGE_TOKEN` on Railway |
 | When NDI content changes | Update the documents in Google Drive (auto sync) |
 
 ---
