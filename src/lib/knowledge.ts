@@ -11,7 +11,7 @@
 
 import { anthropicConfigured, askClaude, parseJsonObject } from "./anthropic";
 import { conversationChannel } from "./customers";
-import { closeFeedback, draftStats, openFeedback, weekScore, type DraftCounts, type FeedbackItem } from "./feedback";
+import { closeFeedback, draftStats, openFeedback, weekScore, type DraftStats, type FeedbackItem } from "./feedback";
 import { supabaseRest as rest } from "./supabase";
 
 const q = encodeURIComponent;
@@ -69,7 +69,7 @@ export type KnowledgeState = {
   gaps: Gap[];
   feedback: FeedbackItem[];
   score: { likes: number; dislikes: number };
-  drafts: { email: DraftCounts; aida: DraftCounts; social: DraftCounts };
+  drafts: DraftStats;
   faq: Faq[];
   published: Published;
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import { useEffect, useState } from "react";
 import { EmailTranscriptForm, postEmail } from "../EmailTranscriptForm";
 import { historyToState, LineView, type HistoryEvent } from "./AidaRoom";
@@ -115,7 +116,7 @@ export function AidaHistory({ code, staffToken, onBack }: { code: string; staffT
                     {suggestion.status === "approved" ? "Sent" : suggestion.status === "declined" ? "Declined" : "Not used"}
                     {suggestion.decidedBy ? ` by ${suggestion.decidedBy}` : ""}
                   </span>
-                  : {suggestion.text}
+                  : <LinkedText text={suggestion.text} previews={false} />
                 </p>
               ))
             )}

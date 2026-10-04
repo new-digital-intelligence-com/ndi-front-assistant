@@ -1,3 +1,4 @@
+import { stripAudioTags } from "@/lib/richText";
 import { cookies } from "next/headers";
 import { signedInCustomerId } from "@/lib/account";
 import { customerForConversation, findByChannel, normaliseEmail } from "@/lib/customers";
@@ -36,7 +37,13 @@ export async function POST(request: Request) {
   if (!record) return Response.json({ error: "This conversation has no messages yet." }, { status: 409 });
   const lines = (record.transcript ?? [])
     .filter((turn) => turn.message?.trim())
-    .map((turn) => ({ speaker: turn.role === "agent" ? "Clara" : "You", text: turn.message!.trim(), highlight: turn.role === "agent" }));
+    .map((turn) => ({
+      speaker: turn.role === "agent" ? "Clara" : "You",
+      // Clara's voice model writes audio tags ([calm]) for the voice to act out: not part of what she said.
+      text: turn.role === "agent" ? stripAudioTags(turn.message!.trim()) : turn.message!.trim(),
+      highlight: turn.role === "agent",
+    }))
+    .filter((line) => line.text);
   if (lines.length === 0) return Response.json({ error: "This conversation has no messages yet." }, { status: 409 });
 
   const started = record.metadata?.start_time_unix_secs;

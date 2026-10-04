@@ -12,6 +12,7 @@
 // They are the same Instagram account and Facebook Page as the CDA demo: Meta's webhooks point at
 // one of the two apps at a time, switched before a demo (CHANNEL_SETUP.md, section 7).
 
+import { stripAudioTags } from "./richText";
 import { hasValidWebhookSignature, secretMatches } from "./agentAuth";
 import { constantTimeEqual, sha256Hex } from "./auth";
 import { customerForChannel, findByChannel, rememberConversation } from "./customers";
@@ -248,11 +249,14 @@ export async function handleMetaReply(ch: MetaChannel, payload: MetaReply): Prom
   }
 
   const answers = (payload.data ?? []).filter((item) => item.type === "agent_response");
+  // Without the audio tags her voice model writes ([calm]): written, they are noise.
   const text = plainReply(
-    answers
-      .map((item) => item.event?.agent_response)
-      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      .join("\n\n"),
+    stripAudioTags(
+      answers
+        .map((item) => item.event?.agent_response)
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+        .join("\n\n"),
+    ),
   );
   if (!text) return { outcome: "no text in this turn" };
 

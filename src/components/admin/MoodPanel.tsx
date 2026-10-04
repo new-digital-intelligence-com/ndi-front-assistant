@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import { BellOff, BellRing, ChartColumn, CircleCheck, CloudDownload, Gauge, Headset, Mail, MessagesSquare, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -429,7 +430,11 @@ export function MoodPanel({ staffToken, onSignOut }: { staffToken: string; onSig
                       </span>
                       <span className="shrink-0 text-[11px] text-muted">{when(line.at)}</span>
                     </div>
-                    {line.excerpt && <p className="text-xs text-heading">“{line.excerpt}”</p>}
+                    {line.excerpt && (
+                      <p className="text-xs text-heading">
+                        “<LinkedText text={line.excerpt} previews={false} />”
+                      </p>
+                    )}
                     <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted">
                       <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[line.label] }} aria-hidden="true" />
                       {WORD[line.label]}, frustration {Math.round(line.frustration * 100)}%
@@ -592,7 +597,7 @@ function UnhappyCard({ item, onHandled }: { item: Unhappy; onHandled: (id: strin
           <p className="mt-1 text-sm font-semibold text-heading">{item.title ?? "Conversation"}</p>
           {item.lowPoint && (
             <p className="mt-1 text-sm text-heading">
-              <span className="text-xs text-muted">Where it turned: </span>“{item.lowPoint}”
+              <span className="text-xs text-muted">Where it turned: </span>“<LinkedText text={item.lowPoint} previews={false} />”
             </p>
           )}
           {item.summary && (

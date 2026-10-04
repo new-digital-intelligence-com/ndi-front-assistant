@@ -22,6 +22,7 @@
 // out the language itself (Deepgram's nova-3 "multi": English, German, Italian, French and more).
 // server.mjs checks the two keys below with its own copies: keep them in step.
 
+import { stripAudioTags } from "./richText";
 import { cleanText } from "./aida";
 import { appUrl } from "./appUrl";
 import { constantTimeEqual, sha256Hex } from "./auth";
@@ -372,7 +373,12 @@ export async function claraTranscript(ref: CallRef): Promise<{ state: "done" | "
   const record = await elevenLabsConversation(row.conversation_id).catch(() => null);
   if (!record || (record.status !== "done" && record.status !== "failed")) return { state: "pending", lines: [] };
   const lines = (record.transcript ?? [])
-    .map((turn): ClaraLine => ({ speaker: turn.role === "user" ? "customer" : "clara", text: cleanText(turn.message, 2000) }))
+    .map((turn): ClaraLine =>
+      turn.role === "user"
+        ? { speaker: "customer", text: cleanText(turn.message, 2000) }
+        : // Without the audio tags her voice model writes ([calm]).
+          { speaker: "clara", text: stripAudioTags(cleanText(turn.message, 2000)) },
+    )
     // Clara's tool calls and their results are turns without words.
     .filter((line) => line.text);
   return { state: lines.length ? "done" : "none", lines };

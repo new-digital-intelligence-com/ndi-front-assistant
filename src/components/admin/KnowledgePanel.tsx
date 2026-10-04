@@ -1,14 +1,16 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import {
   BadgeCheck,
   BookOpenCheck,
+  Camera,
   CircleCheck,
   CircleHelp,
   Headset,
   Mail,
   MessageSquareWarning,
-  MessagesSquare,
+  MessageCircle,
   Pencil,
   Plus,
   RefreshCw,
@@ -92,7 +94,7 @@ type State = {
   gaps: Gap[];
   feedback: FeedbackItem[];
   score: Score;
-  drafts: { email: DraftCounts; aida: DraftCounts; social: DraftCounts };
+  drafts: { email: DraftCounts; aida: DraftCounts; social: DraftCounts; instagram: DraftCounts; messenger: DraftCounts };
   faq: Faq[];
   published: Published;
 };
@@ -131,21 +133,41 @@ function sourceLabel(item: FeedbackItem): string {
 
 const UNFINISHED = /\[check/i;
 
-type FeedbackTab = "customer" | "aida" | "email" | "social";
+type FeedbackTab = "customer" | "aida" | "email" | "instagram" | "messenger";
 
-/** Customer feedback (👎 in the chat, complaints said in any conversation) and the kinds of staff correction. */
-const FEEDBACK_TABS: { id: FeedbackTab; label: string; detail: string; icon: LucideIcon; sources: FeedbackItem["source"][] }[] = [
-  { id: "customer", label: "Customer feedback", detail: "👎 in the chat, and complaints", icon: ThumbsDown, sources: ["chat", "said"] },
-  { id: "aida", label: "Aida corrections", detail: "Staff changed Aida's drafts", icon: Headset, sources: ["aida"] },
-  { id: "email", label: "Email corrections", detail: "Staff changed Clara's email drafts", icon: Mail, sources: ["email"] },
-  { id: "social", label: "Instagram & Messenger", detail: "Staff changed Clara's drafts", icon: MessagesSquare, sources: ["social"] },
+/**
+ * Customer feedback (👎 in the chat, complaints said in any conversation) and the kinds of staff correction,
+ * Instagram and Messenger each in their own panel (the user's request, 4 Oct 2026).
+ */
+const FEEDBACK_TABS: { id: FeedbackTab; label: string; detail: string; icon: LucideIcon; match: (item: FeedbackItem) => boolean }[] = [
+  { id: "customer", label: "Customer feedback", detail: "👎 in the chat, and complaints", icon: ThumbsDown, match: (item) => item.source === "chat" || item.source === "said" },
+  { id: "aida", label: "Aida corrections", detail: "Staff changed Aida's drafts", icon: Headset, match: (item) => item.source === "aida" },
+  { id: "email", label: "Email corrections", detail: "Staff changed Clara's email drafts", icon: Mail, match: (item) => item.source === "email" },
+  {
+    id: "instagram",
+    label: "Instagram corrections",
+    detail: "Staff changed Clara's Instagram drafts",
+    icon: Camera,
+    match: (item) => item.source === "social" && item.channel !== "messenger",
+  },
+  {
+    id: "messenger",
+    label: "Messenger corrections",
+    detail: "Staff changed Clara's Messenger drafts",
+    icon: MessageCircle,
+    match: (item) => item.source === "social" && item.channel === "messenger",
+  },
 ];
 
 /** Each staff-corrections tab's weekly line: whose drafts, and what not sending one is called. */
-const DRAFT_LINES: Record<Exclude<FeedbackTab, "customer">, { title: string; key: "aida" | "email" | "social"; notSent: "declined" | "discarded" }> = {
+const DRAFT_LINES: Record<
+  Exclude<FeedbackTab, "customer">,
+  { title: string; key: "aida" | "email" | "instagram" | "messenger"; notSent: "declined" | "discarded" }
+> = {
   aida: { title: "📞 Aida's drafts in rooms", key: "aida", notSent: "declined" },
   email: { title: "✉️ Clara's email drafts", key: "email", notSent: "discarded" },
-  social: { title: "📷 Clara's Instagram and Messenger drafts", key: "social", notSent: "discarded" },
+  instagram: { title: "📷 Clara's Instagram drafts", key: "instagram", notSent: "discarded" },
+  messenger: { title: "💬 Clara's Messenger drafts", key: "messenger", notSent: "discarded" },
 };
 
 const when = (iso: string) =>
@@ -193,7 +215,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
         // Open on a tab that has something in it, rather than an empty one.
         setFeedbackTab((current) => {
           const has = (tab: FeedbackTab) =>
-            loaded.feedback.some((item) => FEEDBACK_TABS.find((info) => info.id === tab)?.sources.includes(item.source));
+            loaded.feedback.some((item) => FEEDBACK_TABS.find((info) => info.id === tab)?.match(item));
           return has(current) ? current : FEEDBACK_TABS.find((info) => has(info.id))?.id ?? current;
         });
       }
@@ -279,9 +301,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
 
   const counts: Record<KnowledgeView, number> = { questions: state.gaps.length, feedback: state.feedback.length, approved: state.faq.length };
   const current = VIEWS.find((item) => item.id === view) ?? VIEWS[0];
-  const feedbackShown = state.feedback.filter((item) =>
-    FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.sources.includes(item.source),
-  );
+  const feedbackShown = state.feedback.filter((item) => FEEDBACK_TABS.find((tabInfo) => tabInfo.id === feedbackTab)?.match(item));
   const needle = search.trim().toLowerCase();
   const faqShown = needle
     ? state.faq.filter((entry) => `${entry.question}\n${entry.answer}`.toLowerCase().includes(needle))
@@ -438,7 +458,7 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
           <div className="min-w-0 space-y-3">
             <div role="tablist" aria-label="Kinds of feedback" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
               {FEEDBACK_TABS.map((tabInfo) => {
-                const count = state.feedback.filter((item) => tabInfo.sources.includes(item.source)).length;
+                const count = state.feedback.filter(tabInfo.match).length;
                 const active = feedbackTab === tabInfo.id;
                 const Icon = tabInfo.icon;
                 return (
@@ -516,25 +536,25 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                   {item.question && (
                     <p className="text-sm">
                       <span className="text-xs font-semibold text-muted">Customer asked: </span>
-                      {item.question}
+                      <LinkedText text={item.question} previews={false} />
                     </p>
                   )}
                   {item.original_answer && (
                     <p className="rounded-xl bg-surface p-3 text-sm text-muted">
                       <span className="text-xs font-semibold">{who} answered: </span>
-                      {item.original_answer}
+                      <LinkedText text={item.original_answer} previews={false} />
                     </p>
                   )}
                   {item.comment && (
                     <p className="rounded-xl bg-red-50 p-3 text-sm text-brand-dark">
                       <span className="text-xs font-semibold">Customer said: </span>
-                      {item.comment}
+                      <LinkedText text={item.comment} previews={false} />
                     </p>
                   )}
                   {item.corrected_answer && (
                     <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">
                       <span className="text-xs font-semibold">Staff sent instead: </span>
-                      {item.corrected_answer}
+                      <LinkedText text={item.corrected_answer} previews={false} />
                     </p>
                   )}
                   <input
@@ -695,7 +715,9 @@ export function KnowledgePanel({ staffToken, onSignOut }: { staffToken: string; 
                 ) : (
                   <>
                     <p className="font-semibold text-heading">{entry.question}</p>
-                    <p className="whitespace-pre-wrap text-ink">{entry.answer}</p>
+                    <p className="whitespace-pre-wrap text-ink">
+                      <LinkedText text={entry.answer} />
+                    </p>
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2 text-xs text-muted">
                       <span>
                         {entry.approved_by ? `Approved by ${entry.approved_by} · ` : ""}

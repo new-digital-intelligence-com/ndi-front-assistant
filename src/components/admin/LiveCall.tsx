@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -382,7 +383,7 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
     <p key={key} className={speaker === "customer" ? "" : "text-right"}>
       <span className={`inline-block max-w-[85%] rounded-lg px-3 py-1.5 text-left ${bubble[speaker]}`}>
         <span className="block text-[11px] opacity-70">{speakerName(speaker)}</span>
-        {text}
+        <LinkedText text={text} />
       </span>
     </p>
   );
@@ -503,7 +504,9 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
                     className={`rounded-lg border p-3 text-sm ${index === 0 ? "border-brand/50 bg-white" : "border-line bg-surface opacity-70"}`}
                   >
                     {note && <span className="mb-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-900">{note}</span>}
-                    <p className="text-heading">{suggestion.text.replace(STAFF_NOTE, "")}</p>
+                    <p className="text-heading">
+                      <LinkedText text={suggestion.text.replace(STAFF_NOTE, "")} />
+                    </p>
                     {suggestion.replyTo && <p className="mt-1 truncate text-xs text-muted">To: “{suggestion.replyTo}”</p>}
                   </article>
                 );

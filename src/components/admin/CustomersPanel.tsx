@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import {
   Activity,
   ArrowLeft,
@@ -657,7 +658,9 @@ function CustomerView({ id, staffToken }: { id: string; staffToken: string }) {
                       <ChannelChip channel={item.channel} />
                     )}
                   </p>
-                  <p className="mt-0.5 text-sm text-heading">{item.text}</p>
+                  <p className="mt-0.5 text-sm text-heading">
+                    <LinkedText text={item.text} previews={false} />
+                  </p>
                 </li>
               ))}
             </ol>

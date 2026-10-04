@@ -1,9 +1,16 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { linkifyMarkdown, stripAudioTags, youtubeIds } from "@/lib/richText";
+import { YouTubeCard } from "./LinkedText";
 import type { ChatMessage } from "./types";
 
+// One message in the website's chat, voice and avatar pages. Clara's words lose the audio tags her voice model
+// writes ([happy], [calm]), every address in them is a link, and a YouTube link shows the video's card
+// (src/lib/richText.ts).
 export function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
+  const text = message.text ? (isUser ? message.text : stripAudioTags(message.text)) : "";
+  const videos = text && !isUser ? youtubeIds(text) : [];
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
@@ -34,7 +41,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
             )}
           </div>
         )}
-        {message.text && (
+        {text && (
           <div className="chat-markdown">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -46,10 +53,13 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
                 ),
               }}
             >
-              {message.text}
+              {linkifyMarkdown(text)}
             </ReactMarkdown>
           </div>
         )}
+        {videos.map((id) => (
+          <YouTubeCard key={id} id={id} />
+        ))}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@
 // ElevenLabs' repeated deliveries from producing a second reply. It keeps who wrote and the
 // subject, never the text.
 
+import { stripAudioTags } from "./richText";
 import { customerForChannel, forgetRobotSender, rememberConversation } from "./customers";
 import { getEmailMode } from "./replyMode";
 import { withoutQuotedHistory } from "./feedback";
@@ -321,12 +322,14 @@ export type ReplyWebhook = {
   data?: { type?: string; event?: { agent_response?: unknown } }[];
 };
 
-/** Everything Clara said in this turn, in order. */
+/** Everything Clara said in this turn, in order, without the audio tags her voice model writes ([calm]). */
 function replyText(payload: ReplyWebhook): string {
   return (payload.data ?? [])
     .filter((item) => item.type === "agent_response")
     .map((item) => item.event?.agent_response)
     .filter((text): text is string => typeof text === "string" && text.trim().length > 0)
+    .map(stripAudioTags)
+    .filter(Boolean)
     .join("\n\n");
 }
 

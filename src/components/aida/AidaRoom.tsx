@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedText } from "../LinkedText";
 import { CommitStrategy, ConversationProvider, useConversation, useScribe } from "@elevenlabs/react";
 import { DisconnectReason, Room, RoomEvent, Track, type Participant } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -779,7 +780,7 @@ function RoomView({ joined, onLeave, onViewHistory }: Props) {
                     />
                   ) : (
                     <p className="mt-2 whitespace-pre-wrap text-sm text-heading">
-                      {suggestion.text.replace(STAFF_NOTE, "")}
+                      <LinkedText text={suggestion.text.replace(STAFF_NOTE, "")} />
                     </p>
                   )}
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -871,7 +872,9 @@ export function LineView({ line, viewerRole, mood }: { line: TimelineLine; viewe
             </span>
           )}
         </p>
-        <p className="mt-0.5 whitespace-pre-wrap text-sm">{line.text}</p>
+        <p className="mt-0.5 whitespace-pre-wrap text-sm">
+          <LinkedText text={line.text} />
+        </p>
       </div>
     </div>
   );

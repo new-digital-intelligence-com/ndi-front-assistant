@@ -84,7 +84,10 @@ npm run lint
 
 **ElevenLabs** (same account as CDA: Creator plan, 121,005 credits/month shared with CDA, resets ~17th)
 - **Clara**: "NDI Assistant – Clara", `agent_0901m3y1xemxeg2s0tjk20fjfgbv` — Ellie's settings copied: Gemini 3.7
-  Flash (temperature 0), TTS Eleven Flash v2 (English) / Flash v2.5 (presets `de`, `it`, `fr`), Scribe Realtime,
+  Flash (temperature 0), TTS **eleven_v3_conversational with expressive mode** on her live branch (found on 4 Oct
+  2026; it was Flash v2 / v2.5 when copied): expressive mode makes her write audio tags such as [happy] or [calm] for
+  the voice to act out, so `src/lib/richText.ts` takes them out of her written words (website, email, Instagram,
+  Messenger, transcripts) and her prompt forbids them in written channels (for Telegram; backup10), Scribe Realtime,
   turn_v3, input PCM 16000 / output PCM 24000, files on, retention unlimited, sentiment on, overrides `first_message`,
   `language`, `text_only` allowed. Voice **Katie X** `MzqUf1HbJ8UmQ0wUsx2p` (added to the workspace voices)
 - Tools `customer_lookup` `tool_3301m3y1xcjef3srtynq0bez04w0`, `customer_link` `tool_3501m3y1xdv2ecqrhdbbp4tyzgb8`,

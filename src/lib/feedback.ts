@@ -393,17 +393,30 @@ export async function weekScore(): Promise<{ likes: number; dislikes: number }> 
 
 export type DraftCounts = Record<DraftOutcome, number> & { total: number };
 
+export type DraftStats = { email: DraftCounts; aida: DraftCounts; social: DraftCounts; instagram: DraftCounts; messenger: DraftCounts };
+
 /** What happened to Clara's email, Instagram and Messenger drafts and Aida's drafts in the last 7 days. */
-export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCounts; social: DraftCounts }> {
+export async function draftStats(): Promise<DraftStats> {
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
-  const rows = await rest<{ source: string; outcome: DraftOutcome }[]>(
-    `draft_outcomes?created_at=gt.${q(since)}&select=source,outcome&limit=10000`,
+  const rows = await rest<{ ref: string | null; source: string; outcome: DraftOutcome }[]>(
+    `draft_outcomes?created_at=gt.${q(since)}&select=ref,source,outcome&limit=10000`,
   ).catch((error) => {
     console.error("draft outcomes could not be read", error);
     return [];
   });
-  const count = (source: string): DraftCounts => {
-    const mine = rows.filter((row) => row.source === source);
+  // Instagram and Messenger drafts share the source "social" (ref social:<draft id>): the draft knows which.
+  const draftId = (ref: string | null) => Number(ref?.split(":")[1]);
+  const socialIds = [...new Set(rows.filter((row) => row.source === "social").map((row) => draftId(row.ref)).filter(Number.isInteger))];
+  const channelOf = new Map<number, string>();
+  for (let i = 0; i < socialIds.length; i += 200) {
+    const drafts = await rest<{ id: number; channel: string }[]>(
+      `social_drafts?id=in.(${socialIds.slice(i, i + 200).join(",")})&select=id,channel`,
+    ).catch(() => []);
+    drafts.forEach((draft) => channelOf.set(draft.id, draft.channel));
+  }
+  type Row = (typeof rows)[number];
+  const count = (keep: (row: Row) => boolean): DraftCounts => {
+    const mine = rows.filter(keep);
     const of = (outcome: DraftOutcome) => mine.filter((row) => row.outcome === outcome).length;
     return {
       total: mine.length,
@@ -414,7 +427,14 @@ export async function draftStats(): Promise<{ email: DraftCounts; aida: DraftCou
       discarded: of("discarded"),
     };
   };
-  return { email: count("email"), aida: count("aida"), social: count("social") };
+  const social = (channel: string) => (row: Row) => row.source === "social" && channelOf.get(draftId(row.ref)) === channel;
+  return {
+    email: count((row) => row.source === "email"),
+    aida: count((row) => row.source === "aida"),
+    social: count((row) => row.source === "social"),
+    instagram: count(social("instagram")),
+    messenger: count(social("messenger")),
+  };
 }
 
 export async function closeFeedback(ids: number[], status: "answered" | "dismissed", faqId?: number) {

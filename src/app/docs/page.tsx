@@ -181,6 +181,11 @@ Hosted page / widget ───────────────┘         �
                   <B>Channel links</B>: buttons that open email, the phone line, Telegram, Instagram and Messenger (each one appears
                   once that channel is set up).
                 </>,
+                <>
+                  <B>Links</B>: every web address, email address and booking link in a conversation is clickable, everywhere on the
+                  site (chat, voice and avatar pages, Aida rooms, the staff console), and a YouTube link shows the video&apos;s
+                  picture and title, as on YouTube.
+                </>,
               ]}
             />
           </Section>
@@ -330,7 +335,7 @@ End of every conversation   → post-call webhook  → one short note, their int
                 ["😊 Mood (/admin/mood)", "Three tabs: Overview (how customers felt, per channel and per day), Follow-up (the unhappy conversations to follow up) and Emails & Aida calls (see Customer mood)."],
                 ["📲 Calls (/admin/calls)", "Three tabs: Outgoing (call lists Clara phones), Incoming (calls to NDI, live and recent) and Hand-over team (/admin/calls/team). Open live call shows a call's sound and conversation, with Aida's suggestions during a hand-over (see Calls and hand-overs)."],
                 ["📚 Knowledge (/admin/knowledge)", "Three tabs: To answer, Feedback (/admin/knowledge/feedback) and Approved answers (/admin/knowledge/approved). Questions Clara could not answer and feedback on her answers, on every channel; staff approve the right answer and Clara uses it at once (see Clara learns)."],
-                ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, and the Instagram and Messenger drafts to send or discard."],
+                ["✉️ Replies (/admin/replies)", "For email, Instagram and Messenger: send Clara's answers automatically or keep them as drafts for staff; the latest emails, then a panel for Instagram and one for Messenger with their drafts to send or discard."],
               ]}
             />
             <P>The Claude insights are written only when a staff member clicks, and nothing is stored.</P>
