@@ -192,6 +192,13 @@ calls YouTube during a conversation.
 URL document **"NDI public demo videos (live page)"** `EEG5MebQkLEcbyy25NuF` (auto-sync, search index built; ElevenLabs
 read all 85 links) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`.
 
+**Always in Clara's and Aida's context** (usage mode **prompt**, since 6 Oct 2026; backups `backup11_*`): on Telegram,
+"Is there an Access Tools and Subscription Manager AI Employee? … a demo link" got "I don't have details": the search
+returned 20 passages, all from the FAQ and Company Knowledge Base PDFs (their questions are worded like the
+customer's), and none from the demo list, whose passages each hold many videos. A question with the code ("GP-19")
+did find it. The list is small (about 9 KB), so it now goes into every conversation whole, like the approved answers;
+the other documents stay searchable ("auto"). The hourly refresh and "Approve and teach Clara" keep this setting.
+
 **Set it up (after the app is live on Railway)**
 1. **Google Cloud** (NDI's project `ndi-front-assistant`) → APIs & Services → **Enable** "YouTube Data API v3"
    → Credentials → **Create credentials → API key** → edit it: **API restrictions → YouTube Data API v3** only;
@@ -303,6 +310,10 @@ Authentication.
 - Private chats: every message is answered. Groups: only messages that @mention the bot or reply to it.
 - **Text only**: Clara does not see photos, files or voice notes (she asks the customer to type the details).
 - Not answering? Open `https://api.telegram.org/bot<TOKEN>/getWebhookInfo`: its `url` must point to `api.us.elevenlabs.io`.
+- **Finding a Telegram chat in ElevenLabs:** a Telegram chat is **one conversation for as long as it lasts**, listed
+  at the date of its first message (Helmi's: 2 Oct 2026, 20:20, "Account Linking & AI", id `conv_45_…_tg_6486763839`,
+  still growing on 6 Oct). New messages do not move it to the top of Conversations: filter by the Telegram source, or
+  search the text of a message.
 
 ---
 

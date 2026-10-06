@@ -1,6 +1,6 @@
 # Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project. Last updated: **4 October 2026**.
+Read this first when continuing the project. Last updated: **6 October 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
 date when a feature or a channel's status changes). The user's wish (4 Oct 2026): short and straightforward, every
 feature shown as working, and a diagram of how each feature works (`Diagram`, each step tagged with the part doing it;
@@ -101,7 +101,10 @@ npm run lint
 - **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only; its placeholders `email_mode`, `instagram_mode`, `messenger_mode` are the auto/draft switches)
 - Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, plus the URL document
   "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, auto-sync, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
-  attached to Clara **and** Aida on their live branches
+  attached to Clara **and** Aida on their live branches. The demo list is **always in their context** (usage mode
+  `prompt`, 6 Oct 2026, backups `backup11_*`): asked by name on Telegram, Clara's search found only FAQ passages and
+  said she had no demo (CHANNEL_SETUP.md §2, "Demo videos"). A Telegram chat is one long conversation in ElevenLabs,
+  listed at the date of its first message (§5)
 - Prompt: CHANNEL_SETUP.md §2. NDI facts in it come only from new-digital-intelligence.com (crawled 2 Oct 2026).
   The booking link from the contact page ("Schedule a Meeting", `https://calendly.com/michael-burian-ndi`, Michael
   Burian, NDI's CEO) is in Clara's prompt (section "Booking a meeting or a demo") and Aida's company context since
