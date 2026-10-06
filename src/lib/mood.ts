@@ -311,23 +311,75 @@ export async function recordConversationMood(record: ConversationForMood, { aler
   const recent = Date.now() - new Date(mood.started_at).getTime() < ALERT_MAX_AGE_MS;
   // An upset email alerts staff from the email flow, with the email's own details (src/lib/emailInbox.ts).
   if (alert && worthAlert && recent && channel !== "email") {
-    await alertOnce(mood.conversation_id, async () =>
-      sendMoodAlert({
-        kind: "conversation",
-        channel,
-        customerName: customer?.name ?? null,
-        when: new Date(mood.started_at),
-        label: mood.label,
-        score: mood.score,
-        frustration: Math.max(mood.frustration, mood.max_frustration ?? 0),
-        lowPoint: mood.low_point,
-        title: mood.title,
-        summary: mood.summary,
-        followUp: mood.follow_up,
-      }),
-    );
+    // A call Clara handed over: her part ends as the colleague's phone starts ringing (asking for a person
+    // reads as a follow-up), so it waits for the hand-over's end; one a colleague took needs nobody else.
+    const handover = channel === "phone" ? await handoverOf(mood.conversation_id) : null;
+    if (handover?.status === "live" || handover?.status === "ended") {
+      await markTakenOver(mood.conversation_id, handover.colleague);
+    } else if (handover?.status !== "ringing") {
+      await alertOnce(mood.conversation_id, async () => sendMoodAlert(alertFor(mood, channel, customer?.name ?? null)));
+    }
   }
   return { ...mood, channel, customerId: customer?.id ?? null };
+}
+
+function alertFor(mood: MoodRow, channel: string | null, customerName: string | null): Parameters<typeof sendMoodAlert>[0] {
+  return {
+    kind: "conversation",
+    channel,
+    customerName,
+    when: new Date(mood.started_at),
+    label: mood.label,
+    score: mood.score,
+    frustration: Math.max(mood.frustration, mood.max_frustration ?? 0),
+    lowPoint: mood.low_point,
+    title: mood.title,
+    summary: mood.summary,
+    followUp: mood.follow_up,
+  };
+}
+
+// --- calls Clara handed over to a colleague ------------------------------------------------------------
+
+/** The hand-over of a call Clara had (a call list's or a call to NDI): its state and the colleague, or null. */
+async function handoverOf(conversationId: string): Promise<{ status: string; colleague: string | null } | null> {
+  for (const table of ["call_list_items", "incoming_calls"]) {
+    const [row] = await rest<{ handover_status: string | null; handover_name: string | null }[]>(
+      `${table}?conversation_id=eq.${q(conversationId)}&select=handover_status,handover_name&limit=1`,
+    ).catch(() => []);
+    if (row) return row.handover_status ? { status: row.handover_status, colleague: row.handover_name } : null;
+  }
+  return null;
+}
+
+/** A colleague took the call: they have the customer, so it waits for nobody on the follow-up list. */
+async function markTakenOver(conversationId: string, colleague: string | null) {
+  await rest(`conversation_moods?conversation_id=eq.${q(conversationId)}&handled_at=is.null`, {
+    method: "PATCH",
+    prefer: "return=minimal",
+    body: JSON.stringify({ handled_at: new Date().toISOString(), handled_by: `${colleague || "a colleague"} (took the call)` }),
+  });
+}
+
+/**
+ * The end of a hand-over (src/lib/handover.ts), for a call whose mood is already stored: a colleague took it
+ * (marked followed up), or nobody did and the customer was told NDI will call back (staff are emailed, once,
+ * if the mood is worth it). A mood that comes later is decided by recordConversationMood. Never throws.
+ */
+export async function moodAfterHandover(conversationId: string | null, taken: boolean, colleague: string | null): Promise<void> {
+  if (!conversationId) return;
+  try {
+    const [stored] = await rest<(MoodRow & { channel: string | null; customer_id: string | null })[]>(
+      `conversation_moods?conversation_id=eq.${q(conversationId)}&select=*&limit=1`,
+    );
+    if (!stored) return;
+    if (taken) return await markTakenOver(conversationId, colleague);
+    if (!(isUpset({ score: stored.score, frustration: stored.frustration, maxFrustration: stored.max_frustration }) || stored.follow_up)) return;
+    const customer = await customerForConversation(conversationId).catch(() => null);
+    await alertOnce(conversationId, async () => sendMoodAlert(alertFor(stored, stored.channel, customer?.name ?? null)));
+  } catch (error) {
+    console.error("mood after a hand-over", conversationId, error);
+  }
 }
 
 /** Claims the alert first (alerted_at was empty), so two deliveries of one webhook email staff once. */

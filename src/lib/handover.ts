@@ -26,6 +26,7 @@ import { elevenLabsConversation } from "./elevenlabs";
 import { nextTeamMember } from "./handoverTeam";
 import { closeIncomingCall, ensureIncomingCall } from "./incomingCalls";
 import { callPath, LINE_COLUMN, liveSoundTwiml, stopLive, talkTranscriptTwiml } from "./liveCall";
+import { moodAfterHandover } from "./mood";
 import { advance } from "./outboundCalls";
 import { supabaseRest as rest } from "./supabase";
 import { formatDate } from "./transcriptEmail";
@@ -324,7 +325,10 @@ export async function handoverLegEnded(ref: CallRef, leg: "customer" | "colleagu
 
 /** Nobody took the call: the customer, still on hold, hears that NDI will call back, and the call ends. */
 async function nobodyTakesIt(ref: CallRef, item: HandoverItem, status: "missed" | "failed"): Promise<void> {
-  if (!(await moveOn(ref, ["ringing"], { handover_status: status })) || !item.call_sid) return;
+  if (!(await moveOn(ref, ["ringing"], { handover_status: status }))) return;
+  // The customer is told NDI will call back: the mood alert, held while the colleague's phone rang, goes now.
+  await moodAfterHandover(item.conversation_id, false, null);
+  if (!item.call_sid) return;
   const language = languageOf(item.handover_language);
   await twilio(`/Calls/${item.call_sid}.json`, { Twiml: twimlDocument(`${say(SORRY[language], language)}<Hangup/>`) }).catch((error) =>
     console.error("hand-over: the customer could not be told", error),
@@ -346,6 +350,11 @@ async function finish(ref: CallRef, item: HandoverItem): Promise<void> {
   // The customer hung up while waiting: the colleague's phone must not go on ringing.
   if (status === "abandoned" && item.handover_call_sid) {
     await twilio(`/Calls/${item.handover_call_sid}.json`, { Status: "completed" }).catch(() => {});
+  }
+  // Clara's mood alert waited for this: a colleague who talked with them has the customer; a customer who
+  // hung up while waiting is still owed a call.
+  if (status === "ended" || status === "abandoned") {
+    await moodAfterHandover(item.conversation_id, status === "ended", item.handover_name);
   }
   if (status === "ended") {
     await rememberTalk(ref, { ...item, handover_ended_at: endedAt }).catch((error) =>

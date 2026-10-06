@@ -59,6 +59,30 @@ const NOTE_WAIT_MS = 60_000;
 /** How much of the call a newly started Aida is given, so she is not starting from nothing. */
 const CONTEXT_LINES = 15;
 const MAX_SUGGESTIONS = 6;
+/**
+ * How long Aida may take to connect before the view gives up on that try, and how soon it tries again while
+ * the two still talk. On the first real hand-over (6 Oct 2026) her start never finished and the box said
+ * "starting…" until the call ended.
+ */
+const AIDA_START_TIMEOUT_MS = 12_000;
+const AIDA_RETRY_MS = 4_000;
+
+/** The promise, or a rejection naming what took too long. */
+function withTimeout<T>(promise: Promise<T>, ms: number, what: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${what} took longer than ${ms / 1000} s`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 /** Aida writes this when a customer line needs no answer ("ok", "thanks"). */
 const NO_REPLY = /\[no reply needed\]/i;
 /** Notes for staff at the start of a suggestion, e.g. "[Check]". */
@@ -90,7 +114,7 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
   const [lines, setLines] = useState<Line[]>([]);
   const [clara, setClara] = useState<Clara | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [aida, setAida] = useState<"off" | "starting" | "on" | "unavailable">("off");
+  const [aida, setAida] = useState<"off" | "starting" | "on" | "retrying" | "unavailable">("off");
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -214,18 +238,39 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
         copilotStartingRef.current = true;
         setAida("starting");
         try {
-          const response = await fetch(`/api/admin/calls/live/${callId}/copilot?kind=${kind}`, {
-            method: "POST",
-            headers: { "x-aida-staff": staffToken },
-          });
+          const response = await withTimeout(
+            fetch(`/api/admin/calls/live/${callId}/copilot?kind=${kind}`, {
+              method: "POST",
+              headers: { "x-aida-staff": staffToken },
+            }),
+            AIDA_START_TIMEOUT_MS,
+            "Aida's link",
+          );
           if (response.status === 401) return onSignOut();
           const body = (await response.json().catch(() => ({}))) as { signedUrl?: string; error?: string };
           if (!response.ok || !body.signedUrl) throw new Error(body.error ?? "Aida is unavailable");
           pendingDraftsRef.current = 0;
-          await copilotRef.current.startSession({ signedUrl: body.signedUrl, textOnly: true });
+          // startSession only begins the connection; onConnect says when she is there.
+          copilotRef.current.startSession({ signedUrl: body.signedUrl, textOnly: true });
+          const deadline = Date.now() + AIDA_START_TIMEOUT_MS;
+          while (!copilotReadyRef.current && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 250));
+          if (!copilotReadyRef.current) throw new Error(`Aida did not connect within ${AIDA_START_TIMEOUT_MS / 1000} s`);
         } catch (err) {
           console.warn("Aida could not start", err);
-          setAida("unavailable");
+          // A try that hangs is closed, and while the two still talk she is tried again.
+          if (!copilotReadyRef.current) {
+            try {
+              copilotRef.current.endSession();
+            } catch {
+              // nothing was open
+            }
+          }
+          if (callRef.current?.handover_status === "live") {
+            setAida("retrying");
+            setTimeout(() => void handlersRef.current?.start(), AIDA_RETRY_MS);
+          } else {
+            setAida("unavailable");
+          }
         } finally {
           copilotStartingRef.current = false;
         }
@@ -488,7 +533,15 @@ function LiveView({ staffToken, kind, callId, onClose, onSignOut }: Props) {
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-heading">Aida suggests</h3>
                 <span className="text-xs text-muted">
-                  {aida === "on" ? "listening" : aida === "starting" ? "starting…" : aida === "unavailable" ? "unavailable" : "starts when they talk"}
+                  {aida === "on"
+                    ? "listening"
+                    : aida === "starting"
+                      ? "starting…"
+                      : aida === "retrying"
+                        ? "trying again…"
+                        : aida === "unavailable"
+                          ? "unavailable"
+                          : "starts when they talk"}
                 </span>
               </div>
               {suggestions.length === 0 && (
