@@ -101,6 +101,13 @@ const TRANSCRIPT = { engine: "deepgram", model: "nova-3", language: "multi" };
 /** The colleague's talk after a hand-over: a fixed name, so the hold TwiML can stop it before the goodbye. */
 const TALK_TRANSCRIPT = "handover";
 
+/**
+ * The live transcript's name next to the sound copy's. Twilio keeps the names of a call's streams and
+ * transcriptions together and refuses a second one of the same name ("Session already exist with same
+ * name", seen on the first real call, 6 Oct 2026).
+ */
+const textName = (name: string) => `${name}-text`;
+
 async function streamParameters(ref: CallRef): Promise<[string, string][]> {
   return [
     ["kind", ref.kind],
@@ -133,7 +140,7 @@ async function startOnCall(
       : "APP_URL is not set",
     withTranscript
       ? twilio(`/Calls/${sid}/Transcriptions.json`, {
-          Name: name,
+          Name: textName(name),
           Track: "both_tracks",
           StatusCallbackUrl: await callbackUrl(TRANSCRIPT_PATH, ref),
           TranscriptionEngine: TRANSCRIPT.engine,
@@ -155,7 +162,7 @@ async function stopOnCall(callSid: string, name: string): Promise<void> {
   const sid = q(callSid);
   await Promise.all([
     twilio(`/Calls/${sid}/Streams/${q(name)}.json`, { Status: "stopped" }).catch(() => {}),
-    twilio(`/Calls/${sid}/Transcriptions/${q(name)}.json`, { Status: "stopped" }).catch(() => {}),
+    twilio(`/Calls/${sid}/Transcriptions/${q(textName(name))}.json`, { Status: "stopped" }).catch(() => {}),
   ]);
 }
 
