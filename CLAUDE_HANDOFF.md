@@ -29,7 +29,7 @@ and model. The staff copilot is **Aida**.
 | Email | ✅ contact@new-digital-intelligence.com (2 Oct 2026); auto/draft switch on `/admin/replies` | Gmail push → web app → Custom Channel "NDI email" |
 | Instagram @new_digital_intelligence, Messenger Page "New Digital Intelligence" | ✅ NDI only: the user switched both Meta webhooks to NDI and tested them (2 Oct 2026) and removed CDA (confirmed 4 Oct 2026); auto/draft switch like email | Meta webhook → web app → Custom Channels "NDI Instagram" / "NDI Messenger" (CHANNEL_SETUP.md §7) |
 | Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026), imported into ElevenLabs for Clara: calls in and out, hand-over, live view | Native ElevenLabs Twilio import |
-| Video avatar | ✅ NDI's own Anam account + avatar "Elena" (2 Oct 2026) | Anam joined to Clara |
+| Video avatar | ✅ NDI's own Anam account + avatar (2 Oct 2026): she is **Clara** (Anam's file is named "Elena"; never call her that) | Anam joined to Clara |
 | Intercom | ❌ Removed on purpose (user's decision, 2 Oct 2026) | — |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link |
 | Alexa | ❌ Removed on purpose (user's decision) | — |
@@ -187,8 +187,8 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
    AT, GB, TN, US. Hand-over team on `/admin/calls/team` (Helmi). The live transcript needs Twilio's AI/ML Features
    Addendum accepted (CHANNEL_SETUP.md §8). If Twilio refuses the live sound or transcript next to ElevenLabs' own
    stream, the view says "Twilio refused: …" (at a hand-over they start again).
-8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar "Elena"
-   (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
+8. **Avatar** (2 Oct 2026): ✅ NDI's own Anam account (new `ANAM_API_KEY`, not CDA's) and its custom avatar, Clara's
+   face (`ANAM_AVATAR_ID`; model `cara-4` as the app asks; office desk, NDI logo on the wall), both on Railway; Clara's
    input audio is PCM 16000 and the `language` override is allowed. Anam's free plan: 30 minutes a month, 3-minute
    calls, watermark.
 9. **Instagram/Messenger** (the accounts CDA used, NDI only now): ✅ Custom Channels "NDI Instagram" and "NDI Messenger"

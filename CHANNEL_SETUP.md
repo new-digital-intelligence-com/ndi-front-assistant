@@ -49,7 +49,7 @@ second agent, Aida, drafts answers for staff).
 | Instagram **@new_digital_intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Instagram" |
 | Facebook Messenger, Page **New Digital Intelligence** | ✅ NDI only: the webhook points at NDI, CDA removed by the user (tested 2 Oct 2026) | Meta webhook → web app → Custom Channel "NDI Messenger" |
 | Phone | ✅ **+41 44 513 70 94** (Zurich, 4 Oct 2026): calls in and out, hand-over to a colleague, live view | Imported into ElevenLabs natively |
-| Video avatar (`/avatar`) | ✅ NDI's own Anam avatar Elena (2 Oct 2026) | Anam joined to Clara |
+| Video avatar (`/avatar`) | ✅ Clara's face: NDI's own Anam avatar (2 Oct 2026) | Anam joined to Clara |
 | Hosted page / QR code | ✅ Works now | ElevenLabs talk-to link (no password) |
 | Slack, WhatsApp | Not built | Section 16 |
 | Alexa | Removed | Not part of NDI's assistant |
@@ -483,7 +483,8 @@ the web app tells Anam `conversationConfigOverride: { agent: { language } }`, an
 1. **lab.anam.ai** → create the NDI avatar from a picture → copy its ID (and the **API key** if it is a new Anam
    account; the free plan allows one custom avatar per account) → `ANAM_AVATAR_ID` (and `ANAM_API_KEY`).
    `ANAM_MAX_SESSION_SECONDS=180`. Done 2 Oct 2026: NDI's own Anam account (not CDA's) and its custom avatar
-   **Elena** (at an office desk, the NDI logo on the wall; model `cara-4`, which the app asks for).
+   (at an office desk, the NDI logo on the wall; model `cara-4`, which the app asks for). Anam's file name for it
+   is "Elena", but to customers and in every text she is **Clara** (the user, 6 Oct 2026).
 2. Clara's user input audio format is already **PCM 16000 Hz** (Anam needs it).
 3. **Test:** `/avatar` → Start video call → ask a question.
 

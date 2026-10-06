@@ -263,7 +263,7 @@ export default function DocsPage() {
                 {
                   or: [
                     { icon: Bot, title: "Chat or voice with Clara", part: "clara" },
-                    { icon: Video, title: "Avatar: Elena's face, Clara's words", part: "anam" },
+                    { icon: Video, title: "Video avatar: Clara face to face", part: "anam" },
                   ],
                 },
                 { icon: Database, title: "Remembered for next time", part: "db" },
