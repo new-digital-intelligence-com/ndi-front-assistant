@@ -1,6 +1,6 @@
 # Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project. Last updated: **6 October 2026**.
+Read this first when continuing the project. Last updated: **14 October 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
 date when a feature or a channel's status changes). The user's wish (4 Oct 2026): short and straightforward, every
 feature shown as working, and a diagram of how each feature works (`Diagram`, each step tagged with the part doing it;
@@ -201,8 +201,9 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
    Replies after Meta's 24 hours: only with Meta's "Human Agent" permission (7 days), not requested yet.
 10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
     API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
-    links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's hourly check
-    refreshes it when the channel changes (CHANNEL_SETUP.md §2, "Demo videos").
+    links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's daily check
+    (every 24 hours since 14 Oct 2026, the user's choice; it was hourly) refreshes it when the channel changes
+    (CHANNEL_SETUP.md §2, "Demo videos").
 11. ✅ **Staff alerts** (3 Oct 2026): `STAFF_ALERT_EMAIL` = contact@new-digital-intelligence.com (the user's choice).
 12. Optional: Slack, a separate LiveKit project. (Intercom was removed on the user's decision.)
 

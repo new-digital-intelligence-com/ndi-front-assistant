@@ -1,17 +1,22 @@
 // NDI's public demo videos, read from NDI's YouTube channel with the YouTube Data API. The API key only reads
 // public data (titles and links); it cannot change anything on the channel, and it stays on the server.
 //
-//   YouTube ──(at most once an hour)──► this list ──► /demos ──► Clara's knowledge (an ElevenLabs URL document)
+//   YouTube ──(once a day)──► this list ──► /demos ──► Clara's knowledge (an ElevenLabs URL document)
 //
-// Visitors never reach YouTube themselves: the list is kept for an hour. The hourly check (src/lib/dailyJobs.ts →
+// Visitors never reach YouTube themselves: the list is kept for a day. The daily check (src/lib/dailyJobs.ts →
 // /api/cron/demos) reads YouTube and, when the list changed, asks ElevenLabs to re-read /demos at once, so Clara
-// knows a new video within about an hour; ElevenLabs' own daily re-read catches up if that ever fails.
+// knows a new video within a day; ElevenLabs' own daily re-read catches up if that ever fails. YouTube is read once
+// every 24 hours (the user's choice, 14 Oct 2026: it was hourly), and once more when the server starts, since the
+// list is kept in memory only.
 // No imports, so the list logic can be tried on its own.
 
 const CHANNEL_HANDLE = "@NewDigitalIntelligence-j5c";
 export const CHANNEL_URL = `https://www.youtube.com/${CHANNEL_HANDLE}`;
 const API = "https://www.googleapis.com/youtube/v3";
-const MAX_AGE_MS = 60 * 60_000;
+/** A little longer than the daily check (24 hours), so only the check reads YouTube, never a visit to /demos. */
+const MAX_AGE_MS = 25 * 60 * 60_000;
+/** A list read this recently (a visit just after a restart, say) counts as fresh for the daily check. */
+const JUST_READ_MS = 10 * 60_000;
 
 export const DEMO_CATEGORIES: [string, string][] = [
   ["FO", "Front Office Digital Assistants"],
@@ -79,7 +84,7 @@ type PlaylistPage = {
   items?: { snippet?: { title?: string; publishedAt?: string; resourceId?: { videoId?: string } }; status?: { privacyStatus?: string } }[];
 };
 
-// Kept on globalThis, so the page and the hourly check share one list in this server process.
+// Kept on globalThis, so the page and the daily check share one list in this server process.
 const store = globalThis as typeof globalThis & {
   ndiDemoVideos?: { at: number; list: DemoList } | null;
   ndiDemoPlaylist?: string;
@@ -150,13 +155,13 @@ async function refreshKnowledgeDocument(documentId: string) {
 export type DemoCheck = { changed: boolean; refreshed: boolean; demos?: number; skipped?: string };
 
 /**
- * The hourly check: reads YouTube now and, when the list differs from the last one, asks ElevenLabs to re-read
- * /demos (ELEVENLABS_DEMOS_DOCUMENT_ID). A failed refresh is tried again at the next check. The first check
- * after a start always refreshes once, which is harmless.
+ * The daily check: reads YouTube (unless the list was read in the last few minutes) and, when the list differs from
+ * the last one, asks ElevenLabs to re-read /demos (ELEVENLABS_DEMOS_DOCUMENT_ID). A failed refresh is tried again at
+ * the next check. The first check after a start always refreshes once, which is harmless.
  */
 export async function checkDemoVideos(): Promise<DemoCheck> {
   if (!demoVideosConfigured()) return { changed: false, refreshed: false, skipped: "YOUTUBE_API_KEY is not set" };
-  const list = await getDemoVideos(0);
+  const list = await getDemoVideos(JUST_READ_MS);
   if (!list) return { changed: false, refreshed: false, skipped: "YouTube could not be read" };
   const signature = JSON.stringify([list.demos.map((demo) => [demo.code, demo.name, demo.url]), list.company]);
   const changed = signature !== store.ndiDemoSignature;

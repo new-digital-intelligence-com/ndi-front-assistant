@@ -2,8 +2,9 @@
 // - Daily: renew the Gmail watch, refresh the Instagram token, compare sent email drafts and import the last
 //   2 days of moods (all in /api/cron/daily), once a day at or after 06:00 UTC, exactly as Vercel Cron did. A
 //   restart later the same day runs them again, which is harmless: every job is safe to repeat.
-// - Hourly, when YOUTUBE_API_KEY is set: check NDI's YouTube demo videos (/api/cron/demos), so a new video
-//   reaches Clara's knowledge within about an hour (src/lib/demoVideos.ts).
+// - Every 24 hours, when YOUTUBE_API_KEY is set: check NDI's YouTube demo videos (/api/cron/demos), so a new video
+//   reaches Clara's knowledge within a day (src/lib/demoVideos.ts). The first check is a minute after the server
+//   starts. Hourly until 14 Oct 2026; once a day is the user's choice.
 // The app calls its own routes with the cron secret.
 
 import { setInterval, setTimeout } from "node:timers";
@@ -11,7 +12,7 @@ import { setInterval, setTimeout } from "node:timers";
 const FIRST_CHECK_MS = 60_000;
 const CHECK_EVERY_MS = 30 * 60_000;
 const RUN_FROM_UTC_HOUR = 6;
-const DEMOS_EVERY_MS = 60 * 60_000;
+const DEMOS_EVERY_MS = 24 * 60 * 60_000;
 
 let started = false;
 let lastRunDay: string | null = null;
@@ -28,7 +29,7 @@ export function startDailyJobs() {
   started = true;
   setTimeout(tick, FIRST_CHECK_MS).unref();
   setInterval(tick, CHECK_EVERY_MS).unref();
-  console.log(`daily jobs: scheduled (once a day from 06:00 UTC${process.env.YOUTUBE_API_KEY ? ", demo videos hourly" : ""})`);
+  console.log(`daily jobs: scheduled (once a day from 06:00 UTC${process.env.YOUTUBE_API_KEY ? ", demo videos every 24 hours" : ""})`);
 }
 
 function tick() {
@@ -61,7 +62,7 @@ async function runIfDue() {
   }
 }
 
-/** Roughly every hour (every other 30-minute tick). Logs only when something changed or failed. */
+/** Every 24 hours (the first 30-minute tick after a day has passed). Logs only when something changed or failed. */
 async function checkDemosIfDue() {
   if (!process.env.YOUTUBE_API_KEY || Date.now() - lastDemosCheck < DEMOS_EVERY_MS - 60_000) return;
   lastDemosCheck = Date.now();

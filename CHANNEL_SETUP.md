@@ -177,16 +177,17 @@ Rules learnt on CDA: never "crawl entire website"; a synced document must also b
 ### Demo videos (`/demos`, kept up to date by itself)
 
 ```
-YouTube channel ──(at most once an hour)──► <APP_URL>/demos ──► ElevenLabs URL document ──► Clara's answers
+YouTube channel ──(once a day)──► <APP_URL>/demos ──► ElevenLabs URL document ──► Clara's answers
 ```
 
 `src/lib/demoVideos.ts` reads NDI's YouTube channel (@NewDigitalIntelligence-j5c) with the **YouTube Data API**:
-public data only, 2–3 of the free 10,000 daily quota units per read, kept for an hour so visitors never reach
+public data only, 2–3 of the free 10,000 daily quota units per read, kept for 25 hours so visitors never reach
 YouTube. The page lists the newest video of each AI Employee (titles that start with a catalog code such as
-`FO-01`) and the NDI company videos; client-specific and investor videos are left out. Every hour the app's
-scheduler calls `/api/cron/demos`: when the list changed, it asks ElevenLabs to re-read the page
-(`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara knows a new video within about an hour. Clara never
-calls YouTube during a conversation.
+`FO-01`) and the NDI company videos; client-specific and investor videos are left out. **Once every 24 hours** the
+app's scheduler calls `/api/cron/demos` (the first time a minute after the server starts, since the list is kept in
+memory only): when the list changed, it asks ElevenLabs to re-read the page
+(`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara knows a new video within a day. It was hourly until
+14 Oct 2026; once a day is the user's choice. Clara never calls YouTube during a conversation.
 
 **Set up on 2 Oct 2026:** API key in project `ndi-front-assistant` → `YOUTUBE_API_KEY`; `/demos` lists 85 videos;
 URL document **"NDI public demo videos (live page)"** `EEG5MebQkLEcbyy25NuF` (auto-sync, search index built; ElevenLabs
@@ -197,7 +198,7 @@ read all 85 links) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`
 returned 20 passages, all from the FAQ and Company Knowledge Base PDFs (their questions are worded like the
 customer's), and none from the demo list, whose passages each hold many videos. A question with the code ("GP-19")
 did find it. The list is small (about 9 KB), so it now goes into every conversation whole, like the approved answers;
-the other documents stay searchable ("auto"). The hourly refresh and "Approve and teach Clara" keep this setting.
+the other documents stay searchable ("auto"). The daily refresh and "Approve and teach Clara" keep this setting.
 
 **Set it up (after the app is live on Railway)**
 1. **Google Cloud** (NDI's project `ndi-front-assistant`) → APIs & Services → **Enable** "YouTube Data API v3"
@@ -207,7 +208,7 @@ the other documents stay searchable ("auto"). The hourly refresh and "Approve an
 3. **ElevenLabs** → Knowledge Base → **Add URL** `<APP_URL>/demos`, auto-sync on (daily, as a backup) → attach it to
    **Clara and Aida** → copy the document ID → Railway variable `ELEVENLABS_DEMOS_DOCUMENT_ID`. (Claude can do this
    step with the API.)
-4. From then on the hourly check refreshes it whenever the videos change. Railway logs show
+4. From then on the daily check refreshes it whenever the videos change. Railway logs show
    "demo videos: 200 {…"changed":true…}" when that happens.
 
 ---
@@ -692,7 +693,7 @@ opened in a new tab asks for the password again.
 | `/api/email/gmail-push` | Google Pub/Sub | `?token=` `GMAIL_PUSH_SECRET` |
 | `/api/email/assistant-reply` | ElevenLabs (email replies) | HMAC signature (`EMAIL_CHANNEL_SIGNING_SECRET`) |
 | `/api/cron/daily` | The app's own daily jobs (`src/lib/dailyJobs.ts`) | `Bearer CRON_SECRET` |
-| `/api/cron/demos` | The app's own scheduler, hourly: refreshes the demo videos document when YouTube changed | `Bearer CRON_SECRET` |
+| `/api/cron/demos` | The app's own scheduler, every 24 hours: refreshes the demo videos document when YouTube changed | `Bearer CRON_SECRET` |
 | `/api/email/gmail-watch` | By hand, to restart the Gmail watch | `Bearer CRON_SECRET` or the push secret |
 | `/api/instagram/webhook`, `/api/messenger/webhook` | Meta | `?token=` `INSTAGRAM_WEBHOOK_SECRET` / `MESSENGER_WEBHOOK_SECRET` (+ Meta signature if `META_APP_SECRET` is set) |
 | `/api/instagram/reply`, `/api/messenger/reply` | ElevenLabs (replies) | HMAC signature (`INSTAGRAM_CHANNEL_SIGNING_SECRET` / `MESSENGER_CHANNEL_SIGNING_SECRET`) |

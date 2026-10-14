@@ -360,7 +360,7 @@ export default function DocsPage() {
               title="Demo videos"
               steps={[
                 { icon: Clapperboard, title: "A new video on NDI's YouTube", part: "youtube" },
-                { icon: ListIcon, title: "/demos lists every video", text: "checked every hour", part: "app" },
+                { icon: ListIcon, title: "/demos lists every video", text: "checked once a day", part: "app" },
                 { icon: RefreshCw, title: "Clara's knowledge reads it again", part: "elevenlabs" },
                 { icon: Bot, title: "Clara shares the right link", part: "clara" },
               ]}
