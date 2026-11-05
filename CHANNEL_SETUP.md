@@ -234,8 +234,7 @@ railway variables --set "KEY=value"   # one variable (redeploys)
 > service follows branch `main`. Don't deploy with the CLI (`railway up`, `railway redeploy` or `serviceInstanceDeployV2`):
 > push, then follow the commit's deployment with `railway deployment list`. IDs: project
 > `f3f842b6-b129-4771-aa39-1f8fcae53576`, environment production `69a5b197-475f-4791-bc78-5b9eb0de00d7`, service
-> `99047cb5-6812-4505-bd04-0d5429d096c0`. The old copy in POCs (service `3e214933-0335-4992-b922-69621d692587`) is
-> stopped and disconnected from GitHub: don't deploy it.
+> `99047cb5-6812-4505-bd04-0d5429d096c0`. The old copy in POCs was deleted on 2026-11-05.
 
 **Set it up from zero**
 1. **railway.com** → the project (ours: FO-01, NDI workspace) → **New → GitHub repo** → pick the NDI repository (branch `main`), or with the
