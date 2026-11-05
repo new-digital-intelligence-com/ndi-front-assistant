@@ -170,12 +170,11 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
    Data API), NDI's own secret key `sb_secret_…` in `SUPABASE_SERVICE_ROLE_KEY`. Checked read-only through the API.
    When `supabase/schema.sql` changes, the user runs it again in the SQL editor (safe: everything is "if not exists");
    until then the new feature fails (on 2 Oct 2026 the Instagram & Messenger card stayed empty for that reason).
-3. ✅ **Railway** (2 Oct 2026): team NDI → project POCs → service `[FO-01] ndi-front-assistant` (europe-west4),
+3. ✅ **Railway** (2 Oct 2026): team NDI → project FO-01 (since 5 Nov 2026; before, POCs) → service `[FO-01] ndi-front-assistant` (europe-west4),
    from GitHub `main`, domain `ndi-assistant.up.railway.app`, the variables from `.env.local` (empty ones left out; 43 on 2 Oct 2026).
    Checked: pages, protections, `daily jobs: scheduled`, staff admin reading Supabase (CHANNEL_SETUP.md §3).
-   **Pushes do not deploy by themselves** until a GitHub organisation owner gives Railway's GitHub App access to the
-   repository (the user is a member, not an owner): after each push, deploy the commit with the `railway api`
-   command in CHANNEL_SETUP.md §3.
+   **Every push to `main` deploys by itself** (since 5 Nov 2026, when the service moved to its own project with the
+   same settings, variables and domain). Never deploy with the CLI; follow the push's deployment (CHANNEL_SETUP.md §3).
 4. ✅ **Knowledge** (done 2 Oct 2026, 4 PDFs attached): the files were chosen on 2 Oct 2026 (CHANNEL_SETUP.md §2, "What goes in"): only public-safe,
    current client material from the NDI shared drive, attached to Clara **and** Aida. Never put Drive file names, IDs
    or client details into this public repository. Drive access for reading is KT-01's read-only Google sign-in.

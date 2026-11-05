@@ -218,31 +218,27 @@ the other documents stay searchable ("auto"). The daily refresh and "Approve and
 The web app runs on **Railway** from the public GitHub repository
 `github.com/new-digital-intelligence-com/ndi-front-assistant` (branch `main`). Vercel is not used.
 
-**Where it is:** Railway team **NDI** → project **POCs** (shared with the team's other PoCs, each its own service)
+**Where it is:** Railway team **NDI** → project **FO-01** (its own project since 5 Nov 2026; before, a service in the shared POCs project)
 → service **`[FO-01] ndi-front-assistant`**, environment `production`, region europe-west4 (Amsterdam), builder
 Railpack. Created on 2 Oct 2026 with the Railway CLI, because the dashboard's repository list only shows the
 organisation's repositories its GitHub App was given (the CLI's `railway add --repo` could link it anyway):
 
 ```bash
-railway link --workspace NDI --project POCs --environment production --service "[FO-01] ndi-front-assistant"
+railway link --workspace NDI --project FO-01 --environment production --service "[FO-01] ndi-front-assistant"
 railway deployment list          # status of the latest deployments
 railway logs                     # the running app's logs
 railway variables --set "KEY=value"   # one variable (redeploys)
 ```
 
-> **Pushes do not deploy by themselves yet.** Railway built the first version because the repository is public, but
-> GitHub only tells Railway about new pushes when Railway's GitHub App has access to the repository, and only an
-> organisation owner can give it (GitHub → organisation settings → GitHub Apps → Railway → Configure → add
-> `ndi-front-assistant`). Until then, deploy the latest commit after each push (or Railway dashboard → the service →
-> Ctrl/Cmd+K → "Deploy latest commit"):
->
-> ```bash
-> railway api 'mutation($s: String!, $e: String!, $c: String) { serviceInstanceDeployV2(serviceId: $s, environmentId: $e, commitSha: $c) }' \
->   --raw-var s=3e214933-0335-4992-b922-69621d692587 --raw-var e=432764db-ebfc-44ea-8536-4143fdef2b04 --raw-var c="$(git rev-parse HEAD)"
-> ```
+> **Every push to `main` deploys by itself** (since 5 Nov 2026). Railway's GitHub App can see the repository and the
+> service follows branch `main`. Don't deploy with the CLI (`railway up`, `railway redeploy` or `serviceInstanceDeployV2`):
+> push, then follow the commit's deployment with `railway deployment list`. IDs: project
+> `f3f842b6-b129-4771-aa39-1f8fcae53576`, environment production `69a5b197-475f-4791-bc78-5b9eb0de00d7`, service
+> `99047cb5-6812-4505-bd04-0d5429d096c0`. The old copy in POCs (service `3e214933-0335-4992-b922-69621d692587`) is
+> stopped and disconnected from GitHub: don't deploy it.
 
 **Set it up from zero**
-1. **railway.com** → the POCs project → **New → GitHub repo** → pick the NDI repository (branch `main`), or with the
+1. **railway.com** → the project (ours: FO-01, NDI workspace) → **New → GitHub repo** → pick the NDI repository (branch `main`), or with the
    CLI: `railway add --service "[FO-01] ndi-front-assistant" --repo new-digital-intelligence-com/ndi-front-assistant --branch main`.
 2. The service → **Variables** → **Raw Editor** → paste the `KEY=value` lines of `.env.local` (empty values may
    stay empty until their channel is set up) → **Update Variables**.
