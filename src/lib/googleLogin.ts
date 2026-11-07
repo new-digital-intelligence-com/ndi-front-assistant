@@ -8,8 +8,10 @@ type Flow = { state: string; verifier: string; next: string; created: number };
 
 export function googleLoginConfig() {
   const base = appUrl();
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const secret = process.env.GOOGLE_CLIENT_SECRET;
+  // A dedicated sign-in client leaves the existing Gmail OAuth grant untouched.
+  const dedicated = Boolean(process.env.GOOGLE_SIGNIN_CLIENT_ID || process.env.GOOGLE_SIGNIN_CLIENT_SECRET);
+  const clientId = dedicated ? process.env.GOOGLE_SIGNIN_CLIENT_ID : process.env.GOOGLE_CLIENT_ID;
+  const secret = dedicated ? process.env.GOOGLE_SIGNIN_CLIENT_SECRET : process.env.GOOGLE_CLIENT_SECRET;
   const signingKey = process.env.SITE_PASSWORD;
   if (process.env.GOOGLE_SIGNIN_ENABLED !== "true" || !base || !clientId || !secret || !signingKey) return null;
   if (new URL(base).protocol !== "https:") return null;

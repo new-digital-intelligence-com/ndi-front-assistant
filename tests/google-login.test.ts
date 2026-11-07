@@ -2,11 +2,30 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { NextRequest } from "next/server";
-import { startGoogle, readGoogleFlow, exchangeGoogle } from "../src/lib/googleLogin";
+import { startGoogle, readGoogleFlow, exchangeGoogle, googleLoginConfig } from "../src/lib/googleLogin";
 import { safeNextPath, SESSION_COOKIE } from "../src/lib/auth";
 import { GET as callback } from "../src/app/api/login/google/callback/route";
 
 const config = { clientId: "synthetic-client", secret: "synthetic-client-secret", signingKey: "synthetic-site-password", callback: "https://clara.example.test/api/login/google/callback" };
+
+test("dedicated sign-in credentials never mix with or replace the Gmail client", () => {
+  const old = { ...process.env };
+  try {
+    Object.assign(process.env, { GOOGLE_SIGNIN_ENABLED: "true", GOOGLE_CLIENT_ID: "gmail-client", GOOGLE_CLIENT_SECRET: "gmail-secret", SITE_PASSWORD: config.signingKey, APP_URL: "https://clara.example.test" });
+    delete process.env.GOOGLE_SIGNIN_CLIENT_ID;
+    delete process.env.GOOGLE_SIGNIN_CLIENT_SECRET;
+    assert.equal(googleLoginConfig()?.clientId, "gmail-client");
+    process.env.GOOGLE_SIGNIN_CLIENT_ID = "login-client";
+    assert.equal(googleLoginConfig(), null);
+    process.env.GOOGLE_SIGNIN_CLIENT_SECRET = "login-secret";
+    assert.equal(googleLoginConfig()?.clientId, "login-client");
+    assert.equal(googleLoginConfig()?.secret, "login-secret");
+    assert.equal(process.env.GOOGLE_CLIENT_ID, "gmail-client");
+    assert.equal(process.env.GOOGLE_CLIENT_SECRET, "gmail-secret");
+    delete process.env.GOOGLE_SIGNIN_CLIENT_ID;
+    assert.equal(googleLoginConfig(), null);
+  } finally { process.env = old; }
+});
 
 test("Google authorization requests identity only and binds a PKCE challenge to signed browser state", () => {
   const first = startGoogle(config, "/voice");

@@ -783,8 +783,11 @@ cron secret, Gmail push secret, post-call webhook secret.
 
 The user authorized any verified Google account for Clara's customer demo on 7 November 2026.
 Register `https://ndi-assistant.up.railway.app/api/login/google/callback` as an authorized
-redirect URI on the existing `GOOGLE_CLIENT_ID` web client. Retain its existing secret and
-other callback URLs. Then set `GOOGLE_SIGNIN_ENABLED=true`. The flow requests only OpenID,
+redirect URI on a dedicated web client and set `GOOGLE_SIGNIN_CLIENT_ID` and
+`GOOGLE_SIGNIN_CLIENT_SECRET`. Retain the existing `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+and Gmail grant. If neither sign-in-specific variable is set, the existing client is used;
+an incomplete dedicated pair disables sign-in instead of mixing credentials.
+Then set `GOOGLE_SIGNIN_ENABLED=true`. The flow requests only OpenID,
 email and profile scopes; it never changes Gmail consent or the staff console's separate
 authentication. Signed ten-minute state and PKCE protect the callback. Google login creates
 only the existing demo session, not a customer account or staff identity.
