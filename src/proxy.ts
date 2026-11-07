@@ -5,7 +5,7 @@ import { SESSION_COOKIE, isValidSession, sitePasswordConfigured } from "@/lib/au
 // they have to be readable before signing in.
 // /docs explains the demo to anyone (no secrets on it), so it needs no password either. /demos lists
 // NDI's public YouTube demo videos and is read by Clara's knowledge base (ElevenLabs), so it is open too.
-const PUBLIC_PATHS = new Set(["/login", "/api/login", "/api/login/google", "/api/login/google/callback", "/icon.svg", "/apple-icon.png", "/docs", "/demos"]);
+const PUBLIC_PATHS = new Set(["/", "/voice", "/avatar", "/aida", "/login", "/api/login", "/api/login/google", "/api/login/google/callback", "/icon.svg", "/apple-icon.png", "/docs", "/demos", "/api/elevenlabs/signed-url", "/api/elevenlabs/conversation-token", "/api/anam/session"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -38,7 +38,7 @@ export async function proxy(request: NextRequest) {
   // Aida has its own staff password, separate from this one. The invite page and the routes are open
   // here and every route decides for itself: the Aida staff token makes you an employee, a signed room
   // ticket proves you are in the room, and anyone else is a customer. (/aida itself is the customer
-  // site's "Live call" page, behind this password like the rest of the site.)
+  // site's public "Live call" page.)
   if (pathname === "/aida/join" || pathname.startsWith("/api/aida/")) return NextResponse.next();
 
   // The staff console (/admin and its sections) is behind the Aida staff password, not this one: the
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
 
   const isApi = pathname.startsWith("/api/");
   if (!sitePasswordConfigured()) {
-    // Fail closed: without SITE_PASSWORD nothing is reachable.
+    // Protected account routes fail closed when session signing is not configured.
     if (isApi) return Response.json({ error: "Site password is not configured" }, { status: 503 });
     return NextResponse.redirect(new URL("/login", request.url));
   }

@@ -1,12 +1,11 @@
 import { elevenLabsGet } from "@/lib/elevenlabs";
-import { hasValidSession } from "@/lib/session";
+import { publicConversation } from "@/lib/publicConversation";
 import { registerWebsiteConversation } from "@/lib/websiteSession";
 
 // WebRTC conversation token for voice conversations. Keeps the API key on the server.
-export async function GET() {
-  if (!(await hasValidSession())) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(request: Request) {
+  const blocked = publicConversation(request);
+  if (blocked) return blocked;
   try {
     const { token, conversation_id } = await elevenLabsGet<{ token: string; conversation_id?: string }>(
       "/conversation/token",

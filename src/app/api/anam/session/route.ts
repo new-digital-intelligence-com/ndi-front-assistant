@@ -1,7 +1,7 @@
 import { CALL_LANGUAGES, type AvatarOrientation } from "@/components/types";
 import { elevenLabsGet } from "@/lib/elevenlabs";
 import { conversationIdFromSignedUrl, registerWebsiteConversation } from "@/lib/websiteSession";
-import { hasValidSession } from "@/lib/session";
+import { publicConversation } from "@/lib/publicConversation";
 
 const DEFAULT_MAX_SESSION_SECONDS = 180;
 
@@ -14,9 +14,8 @@ const VIDEO_SIZES: Record<AvatarOrientation, { videoWidth: number; videoHeight: 
 // Creates a short-lived Anam session token for Clara's face. Anam's engine joins the ElevenLabs agent
 // through the signed URL, so Clara keeps her prompt, voice and knowledge. Both API keys stay on the server.
 export async function POST(request: Request) {
-  if (!(await hasValidSession())) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const blocked = publicConversation(request);
+  if (blocked) return blocked;
   const { orientation, language } = (await request.json().catch(() => ({}))) as { orientation?: string; language?: string };
   const videoSize = VIDEO_SIZES[orientation === "vertical" ? "vertical" : "horizontal"];
   // German, Italian and French use Clara's presets in ElevenLabs. Anam passes the override on when it

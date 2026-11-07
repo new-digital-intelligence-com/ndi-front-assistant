@@ -25,6 +25,7 @@ function describe(channel: LinkedChannel) {
 }
 
 export function AccountPanel() {
+  const [loginRequired, setLoginRequired] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [channels, setChannels] = useState<LinkedChannel[]>([]);
   const [mode, setMode] = useState<"signin" | "signup">("signup");
@@ -39,14 +40,15 @@ export function AccountPanel() {
 
   const load = useCallback(async () => {
     const response = await fetch("/api/account");
-    if (!response.ok) return { signedIn: false, channels: [] as LinkedChannel[] };
+    if (!response.ok) return { signedIn: false, channels: [] as LinkedChannel[], loginRequired: response.status === 401 };
     const body = (await response.json()) as { signedIn?: boolean; channels?: LinkedChannel[] };
-    return { signedIn: Boolean(body.signedIn), channels: body.channels ?? [] };
+    return { signedIn: Boolean(body.signedIn), channels: body.channels ?? [], loginRequired: false };
   }, []);
 
   const refresh = useCallback(async () => {
     const state = await load();
     setSignedIn(state.signedIn);
+    setLoginRequired(state.loginRequired);
     setChannels(state.channels);
   }, [load]);
 
@@ -55,6 +57,7 @@ export function AccountPanel() {
     load().then((state) => {
       if (cancelled) return;
       setSignedIn(state.signedIn);
+      setLoginRequired(state.loginRequired);
       setChannels(state.channels);
     });
     return () => {
@@ -85,6 +88,8 @@ export function AccountPanel() {
     await fetch("/api/account", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     setBusy(false);
   }
+
+  if (loginRequired) return <section className="rounded-2xl bg-surface p-4"><h2 className="text-sm font-semibold text-heading">Your account</h2><p className="mt-2 text-sm text-muted">Chat with Clara without signing in. Sign in to manage your account and linked channels.</p><a href="/login" className="mt-3 block font-semibold text-brand">Sign in</a></section>;
 
   if (signedIn === null) {
     return (

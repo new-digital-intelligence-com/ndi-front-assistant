@@ -27,7 +27,7 @@ const HELP_TOPICS = [
  * The assistant lives here, in the layout, so the call language chosen once stays for voice and
  * avatar. It is keyed by the way of talking: switching ends the conversation on screen, as before.
  */
-export function SiteShell({ children }: { children: ReactNode }) {
+export function SiteShell({ children, signedIn = false }: { children: ReactNode; signedIn?: boolean }) {
   const pathname = usePathname();
   const mode = modeFromPath(pathname);
   const [callLanguage, setCallLanguage] = useState<CallLanguage>("en");
@@ -145,14 +145,14 @@ export function SiteShell({ children }: { children: ReactNode }) {
           >
             Contact NDI <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
-          <form action="/api/logout" method="post">
+          {signedIn ? <form action="/api/logout" method="post">
             <button
               type="submit"
               className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-heading"
             >
               <LogOut className="h-3.5 w-3.5" aria-hidden="true" /> Log out
             </button>
-          </form>
+          </form> : <Link href="/login" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-muted hover:bg-surface">Sign in</Link>}
         </div>
       </aside>
 

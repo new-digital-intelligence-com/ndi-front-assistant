@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { safeNextPath, sitePasswordConfigured } from "@/lib/auth";
 import { NdiLogo } from "@/components/NdiLogo";
 import { googleLoginConfig } from "@/lib/googleLogin";
@@ -22,13 +23,14 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="mt-1 text-sm text-muted">
             NDI&apos;s virtual assistant: a live demo of the Multi-Channel Front Office Assistant.
           </p>
+          <Link href="/" className="mt-4 block font-semibold text-brand">Continue without signing in</Link>
           {googleLoginConfig() && <a className="mt-6 block rounded-xl border border-line px-3.5 py-2.5 text-center font-semibold text-heading" href={"/api/login/google?next=" + encodeURIComponent(nextPath)}>Continue with Google</a>}
           {google_error && <p role="alert" className="mt-3 text-sm text-brand-dark">Google sign-in failed. Please try again.</p>}
           {sitePasswordConfigured() ? (
             <LoginForm nextPath={nextPath} />
           ) : (
             <p className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-brand-dark">
-              This demo is locked: the SITE_PASSWORD environment variable is not set.
+              Account sign-in is temporarily unavailable. You can still try the public demo.
             </p>
           )}
         </div>

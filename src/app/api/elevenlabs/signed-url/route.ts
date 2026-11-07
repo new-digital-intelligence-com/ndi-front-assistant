@@ -1,12 +1,11 @@
 import { elevenLabsGet } from "@/lib/elevenlabs";
-import { hasValidSession } from "@/lib/session";
+import { publicConversation } from "@/lib/publicConversation";
 import { conversationIdFromSignedUrl, registerWebsiteConversation } from "@/lib/websiteSession";
 
 // Signed WebSocket URL for text (chat) conversations. Keeps the API key on the server.
-export async function GET() {
-  if (!(await hasValidSession())) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(request: Request) {
+  const blocked = publicConversation(request);
+  if (blocked) return blocked;
   try {
     const { signed_url } = await elevenLabsGet<{ signed_url: string }>("/conversation/get-signed-url", {
       include_conversation_id: "true",

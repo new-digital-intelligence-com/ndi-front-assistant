@@ -166,7 +166,7 @@ export default function DocsPage() {
             <Link className="underline" href="/admin">
               /admin
             </Link>{" "}
-            (both password protected).
+            (public customer demo; protected staff console).
           </p>
         </nav>
 
@@ -202,7 +202,7 @@ export default function DocsPage() {
             <List
               items={[
                 <>
-                  <B>Customer site</B> (site password): chat at <code>/</code>, voice call at <code>/voice</code>, video avatar at{" "}
+                  <B>Customer site</B> (no login required): chat at <code>/</code>, voice call at <code>/voice</code>, video avatar at{" "}
                   <code>/avatar</code>, live call with staff at <code>/aida</code>, and the customer account.
                 </>,
                 <>
@@ -563,7 +563,7 @@ export default function DocsPage() {
           <Section id="security" title="Security and privacy">
             <List
               items={[
-                "The customer demo accepts its password or Google sign-in when shown. Any verified Google account can enter the demo. The staff console keeps its separate staff password.",
+                "The customer demo works without login. Sign in with any verified Google account, or the site password, to manage account features. The staff console keeps its separate staff password.",
                 "Every service that calls the web app proves who it is (ElevenLabs, Google, Meta, Twilio), and keys live only in the server's settings, never in the code.",
                 "Customer passwords are never stored, only a scrambled form (scrypt); after 5 wrong passwords an email is locked for 15 minutes.",
                 "Only the server reads the database. For memory it keeps short notes and scores, not message texts; full transcripts stay in ElevenLabs.",

@@ -41,7 +41,7 @@ second agent, Aida, drafts answers for staff).
 
 | Channel | Status | How it reaches Clara |
 |---|---|---|
-| Website `<APP_URL>` (Chat, Voice, Avatar, Aida) | ✅ Live on Railway (2 Oct 2026) | Next.js app on Railway, site password |
+| Website `<APP_URL>` (Chat, Voice, Avatar, Aida) | ✅ Live on Railway (2 Oct 2026) | Next.js app on Railway, public customer demo |
 | Admin `<APP_URL>/admin` | ✅ Live | Staff console, one address per section, Aida staff password |
 | Docs `<APP_URL>/docs` | ✅ Live | Public documentation page, no password |
 | Telegram | ✅ **@ndi2026bot** (tested 2 Oct 2026) | Native ElevenLabs Telegram trigger |
@@ -248,7 +248,7 @@ railway variables --set "KEY=value"   # one variable (redeploys)
    WebSockets of a call's live view (section 12), which Next.js route handlers cannot hold. It reads Railway's `PORT`
    and starts the daily jobs like `next start` did. Every push to `main` deploys again; a change of variables
    redeploys by itself.
-5. **Check:** `<APP_URL>/docs` opens without a password; `<APP_URL>/` asks for the site password; the deploy
+5. **Check:** `<APP_URL>/docs` opens without a password; `<APP_URL>/` opens the public customer demo; the deploy
    logs show `daily jobs: scheduled (once a day from 06:00 UTC)`.
 
 **Daily jobs without a cron service:** `src/instrumentation.ts` starts `src/lib/dailyJobs.ts` when the server
@@ -460,7 +460,7 @@ Austria, UK, Tunisia and the US/Canada are on.
 
 ## 9. Website
 
-**What the customer does:** opens `<APP_URL>`, types the **site password**, and uses one of four pages, picked in
+**What the customer does:** opens `<APP_URL>` without signing in and uses one of four pages, picked in
 the menu on the left (on a phone: the bar at the bottom). The website talks to Clara directly through ElevenLabs' SDK.
 
 | Page | What happens |
@@ -473,7 +473,7 @@ the menu on the left (on a phone: the bar at the bottom). The website talks to C
 **How it is built:** the four pages share one layout (`src/app/(site)/layout.tsx` → `src/components/site/SiteShell.tsx`,
 the list of pages in `src/components/site/modes.ts`). The layout holds the assistant, keyed by the page, so moving
 to another page ends the conversation on screen (as the old tabs did) while the call language stays. A direct link
-such as `<APP_URL>/avatar` opens that page after the password, which is handy for a demo.
+such as `<APP_URL>/avatar` opens that public page, which is handy for a demo.
 
 **Voice and Avatar language:** an **English | Deutsch | Italiano | Français** switch above the start button sets the
 language Clara starts in (`src/components/LanguagePicker.tsx`). During the call she follows the customer by herself.
@@ -673,7 +673,7 @@ opened in a new tab asks for the password again.
 | Run | `npm install` · `npm run dev` (no live view of calls) · `npm run build` (before `npx tsc --noEmit`) · `npm start` (`server.mjs`, as on Railway) · `npm run lint` |
 | Commits | Author **HelmiDev03**; pushed straight to `main` |
 
-**Who can open what** (`src/proxy.ts`): everything needs the **site password** except `/login`, `/docs`, `/admin` and its sections, `/demos` and
+**Who can open what** (`src/proxy.ts`): customer pages (`/`, `/voice`, `/avatar`, `/aida`) and conversation-start endpoints are public. Account and transcript-email features require a site session. Other public routes include `/login`, `/docs`, `/admin` and its sections, `/demos` and
 `/aida/join` (they ask for their own proof, or show only public data) and the routes that check their own secret:
 
 | Routes | Called by | Protected by |
@@ -696,7 +696,8 @@ opened in a new tab asks for the password again.
 | `/api/aida/*` | Aida rooms | Staff token, room ticket, or nothing for customers (each route checks) |
 | `/docs` | Anyone | Nothing: public page, no secrets |
 | `/demos` | Anyone, and ElevenLabs (Clara's knowledge) | Nothing: public YouTube titles and links only |
-| `/api/elevenlabs/*`, `/api/anam/session`, `/api/account`, `/api/transcript/email` | Customer site | Site password |
+| Conversation-start endpoints (`/api/elevenlabs/signed-url`, `/api/elevenlabs/conversation-token`, `/api/anam/session`) | Customer site | Public, same-origin browser requests and start-rate limit |
+| `/api/account`, `/api/transcript/email` | Customer account features | Site session; account routes also enforce their existing customer identity rules |
 
 ### Environment variables (`.env.local` and Railway → Variables)
 
@@ -788,3 +789,5 @@ email and profile scopes; it never changes Gmail consent or the staff console's 
 authentication. Signed ten-minute state and PKCE protect the callback. Google login creates
 only the existing demo session, not a customer account or staff identity.
 
+
+The customer pages and isolated visitor conversations are public. Google or password sign-in is optional and gates account features; neither grants staff access. Public conversation starts reject cross-site browser requests and are limited to ten starts per IP per ten minutes in each server process. Existing provider duration limits remain in place.
