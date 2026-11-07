@@ -563,7 +563,7 @@ export default function DocsPage() {
           <Section id="security" title="Security and privacy">
             <List
               items={[
-                "Two separate passwords: one for the customer site, one for the staff console.",
+                "The customer demo accepts its password or Google sign-in when shown. Any verified Google account can enter the demo. The staff console keeps its separate staff password.",
                 "Every service that calls the web app proves who it is (ElevenLabs, Google, Meta, Twilio), and keys live only in the server's settings, never in the code.",
                 "Customer passwords are never stored, only a scrambled form (scrypt); after 5 wrong passwords an email is locked for 15 minutes.",
                 "Only the server reads the database. For memory it keeps short notes and scores, not message texts; full transcripts stay in ElevenLabs.",

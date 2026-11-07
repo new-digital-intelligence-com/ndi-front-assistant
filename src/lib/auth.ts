@@ -39,6 +39,6 @@ export async function passwordMatches(input: string): Promise<boolean> {
 
 /** Only allow redirects back to paths on this site. */
 export function safeNextPath(next: string | undefined | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\") || /[\u0000-\u0020]/.test(next)) return "/";
   return next;
 }

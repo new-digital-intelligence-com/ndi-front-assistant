@@ -778,3 +778,13 @@ cron secret, Gmail push secret, post-call webhook secret.
 | Instagram or Messenger: no answer | Do Meta's Callback URLs point at this app (section 7)? Meta app **Published**? Custom Channel values on Railway? Railway logs for `instagram` / `messenger` |
 | Daily jobs never run | Railway logs: "daily jobs: scheduled" at start? `CRON_SECRET` set? `DAILY_JOBS` not `off`? |
 | Avatar call won't start | Browser console (F12) and Railway logs; check `ANAM_*`, input format PCM 16000 Hz, 3-minute limit |
+## Google sign-in to the customer demo
+
+The user authorized any verified Google account for Clara's customer demo on 7 November 2026.
+Register `https://ndi-assistant.up.railway.app/api/login/google/callback` as an authorized
+redirect URI on the existing `GOOGLE_CLIENT_ID` web client. Retain its existing secret and
+other callback URLs. Then set `GOOGLE_SIGNIN_ENABLED=true`. The flow requests only OpenID,
+email and profile scopes; it never changes Gmail consent or the staff console's separate
+authentication. Signed ten-minute state and PKCE protect the callback. Google login creates
+only the existing demo session, not a customer account or staff identity.
+

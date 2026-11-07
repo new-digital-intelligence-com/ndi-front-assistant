@@ -5,7 +5,7 @@ import { SESSION_COOKIE, isValidSession, sitePasswordConfigured } from "@/lib/au
 // they have to be readable before signing in.
 // /docs explains the demo to anyone (no secrets on it), so it needs no password either. /demos lists
 // NDI's public YouTube demo videos and is read by Clara's knowledge base (ElevenLabs), so it is open too.
-const PUBLIC_PATHS = new Set(["/login", "/api/login", "/icon.svg", "/apple-icon.png", "/docs", "/demos"]);
+const PUBLIC_PATHS = new Set(["/login", "/api/login", "/api/login/google", "/api/login/google/callback", "/icon.svg", "/apple-icon.png", "/docs", "/demos"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

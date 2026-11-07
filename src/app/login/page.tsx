@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { safeNextPath, sitePasswordConfigured } from "@/lib/auth";
 import { NdiLogo } from "@/components/NdiLogo";
+import { googleLoginConfig } from "@/lib/googleLogin";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { next } = await searchParams;
+  const { next, google_error } = await searchParams;
   const nextPath = safeNextPath(typeof next === "string" ? next : undefined);
 
   return (
@@ -21,6 +22,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="mt-1 text-sm text-muted">
             NDI&apos;s virtual assistant: a live demo of the Multi-Channel Front Office Assistant.
           </p>
+          {googleLoginConfig() && <a className="mt-6 block rounded-xl border border-line px-3.5 py-2.5 text-center font-semibold text-heading" href={"/api/login/google?next=" + encodeURIComponent(nextPath)}>Continue with Google</a>}
+          {google_error && <p role="alert" className="mt-3 text-sm text-brand-dark">Google sign-in failed. Please try again.</p>}
           {sitePasswordConfigured() ? (
             <LoginForm nextPath={nextPath} />
           ) : (
