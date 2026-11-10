@@ -88,7 +88,7 @@ type Part =
   | "telegram"
   | "livekit"
   | "anam"
-  | "youtube";
+  | "catalogue";
 
 const PARTS: Record<Part, { label: string; tile: string; chip: string }> = {
   customer: { label: "Customer", tile: "bg-slate-600 text-white", chip: "bg-slate-100 text-slate-700" },
@@ -105,7 +105,7 @@ const PARTS: Record<Part, { label: string; tile: string; chip: string }> = {
   telegram: { label: "Telegram", tile: "bg-sky-500 text-white", chip: "bg-sky-50 text-sky-800" },
   livekit: { label: "LiveKit", tile: "bg-sky-700 text-white", chip: "bg-sky-50 text-sky-900" },
   anam: { label: "Anam", tile: "bg-fuchsia-600 text-white", chip: "bg-fuchsia-50 text-fuchsia-800" },
-  youtube: { label: "YouTube", tile: "bg-white text-red-600 ring-1 ring-red-200", chip: "bg-red-50 text-red-800" },
+  catalogue: { label: "AI Employees API", tile: "bg-teal-600 text-white", chip: "bg-teal-50 text-teal-800" },
 };
 
 /** One step of a diagram, or several at the same point: alternatives ("or") or all of them ("and"). */
@@ -226,7 +226,7 @@ export default function DocsPage() {
               steps={[
                 { icon: MessageSquare, title: "A message or a call", part: "customer" },
                 { icon: UserSearch, title: "Who is this customer?", text: "earlier notes and interests", part: "app" },
-                { icon: Search, title: "Search NDI's knowledge", text: "documents, demo videos, approved answers", part: "elevenlabs" },
+                { icon: Search, title: "Search NDI's knowledge", text: "AI Employees, documents, demo videos, approved answers", part: "elevenlabs" },
                 { icon: Sparkles, title: "Clara writes the answer", text: "in the customer's language", part: "clara" },
                 { icon: Send, title: "Answer on the same channel", part: "customer" },
               ]}
@@ -238,7 +238,7 @@ export default function DocsPage() {
                 ["Model", "Gemini 3.7 Flash, temperature 0 (the same question gets the same answer)"],
                 ["Voice", "Katie X, a clear British voice, in every language"],
                 ["Languages", "English, German, Italian and French; on a call she follows the customer from one to another"],
-                ["Knowledge", "NDI's documents (the AI Employees and more), NDI's demo videos, and the answers staff approved"],
+                ["Knowledge", "NDI's AI Employee catalogue (kept up to date by itself, without prices), NDI's documents, NDI's demo videos, and the answers staff approved"],
                 ["Files", "In the website chat she reads photos and PDFs, such as a process description or an RFP"],
                 ["Tools", "Recognise the customer, link a channel to their account, hand a call over to a colleague, end a call, detect voicemail and language"],
               ]}
@@ -355,14 +355,14 @@ export default function DocsPage() {
             />
             <P>Every private message is answered; in groups, only mentions and replies.</P>
 
-            <H3>Hosted page, QR code, widget and demo videos</H3>
+            <H3>Hosted page, QR code, widget, AI Employees and demo videos</H3>
             <Diagram
-              title="Demo videos"
+              title="AI Employees and demo videos"
               steps={[
-                { icon: Clapperboard, title: "A new video on NDI's YouTube", part: "youtube" },
-                { icon: ListIcon, title: "/demos lists every video", text: "checked once a day", part: "app" },
-                { icon: RefreshCw, title: "Clara's knowledge reads it again", part: "elevenlabs" },
-                { icon: Bot, title: "Clara shares the right link", part: "clara" },
+                { icon: Clapperboard, title: "NDI's AI Employee catalogue changes", text: "a new AI Employee, text or demo video", part: "catalogue" },
+                { icon: ListIcon, title: "/ai-employees and /demos follow", text: "asked every hour; prices left out", part: "app" },
+                { icon: RefreshCw, title: "Clara's knowledge reads them again", part: "elevenlabs" },
+                { icon: Bot, title: "Clara describes it and shares the right demo", part: "clara" },
               ]}
             />
             <P>

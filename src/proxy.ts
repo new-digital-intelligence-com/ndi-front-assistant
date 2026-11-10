@@ -3,9 +3,10 @@ import { SESSION_COOKIE, isValidSession, sitePasswordConfigured } from "@/lib/au
 
 // The icons (the browser tab's and the phone home screen's) are linked from the login page itself, so
 // they have to be readable before signing in.
-// /docs explains the demo to anyone (no secrets on it), so it needs no password either. /demos lists
-// NDI's public YouTube demo videos and is read by Clara's knowledge base (ElevenLabs), so it is open too.
-const PUBLIC_PATHS = new Set(["/", "/voice", "/avatar", "/aida", "/login", "/api/login", "/api/login/google", "/api/login/google/callback", "/icon.svg", "/apple-icon.png", "/docs", "/demos", "/api/elevenlabs/signed-url", "/api/elevenlabs/conversation-token", "/api/anam/session"]);
+// /docs explains the demo to anyone (no secrets on it), so it needs no password either. /demos (NDI's public
+// demo videos) and /ai-employees (NDI's AI Employees, without prices) are read by Clara's and Aida's knowledge
+// (ElevenLabs), so they are open too.
+const PUBLIC_PATHS = new Set(["/", "/voice", "/avatar", "/aida", "/login", "/api/login", "/api/login/google", "/api/login/google/callback", "/icon.svg", "/apple-icon.png", "/docs", "/demos", "/ai-employees", "/api/elevenlabs/signed-url", "/api/elevenlabs/conversation-token", "/api/anam/session"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
