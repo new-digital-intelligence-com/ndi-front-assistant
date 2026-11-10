@@ -135,20 +135,23 @@ who asks for a person, and offers it when they are upset or need the team; backu
 ### Knowledge base
 
 **Attached on 2 Oct 2026** to Clara and Aida (usage *auto*, searched on every turn, indexes complete), from the approved
-Drive folder through ElevenLabs' Google Drive integration: *NDI AI Employee Catalog.pptx.pdf*, *1 NDI Presentation
-EN.pptx.pdf*, *NDI_Company_Knowledge_Base.pdf*, *NDI_Frequently_Asked_Questions.pdf*. Keep RAG on: ignore the
-dashboard's "small knowledge base, disable RAG" hint (the catalog alone is about 140 KB of text).
+Drive folder through ElevenLabs' Google Drive integration: *1 NDI Presentation EN.pptx.pdf*,
+*NDI_Company_Knowledge_Base.pdf*, *NDI_Frequently_Asked_Questions.pdf*, and until 10 Nov 2026 *NDI AI Employee
+Catalog.pptx.pdf*, which the live AI Employees page replaced (see "AI Employees and demo videos" below; the PDF is
+still in the knowledge base, only detached; backups `backup12_*`). Keep RAG on: ignore the dashboard's "small
+knowledge base, disable RAG" hint (the AI Employees page alone is about 150 KB of text).
 
 **What goes in (decided 2 Oct 2026).** Clara is public: anything in her knowledge can be repeated to anyone. So only
 client-facing material that is current and safe to share (the exact file list is kept outside this public repository):
-- the **AI Employee catalog** and the **latest company presentation** — as PDF copies, because ElevenLabs cannot read PowerPoint
+- the **AI Employees**, from NDI's AI Employees API without prices (`<APP_URL>/ai-employees`, since 10 Nov 2026; see
+  below), and the **latest company presentation** as a PDF copy, because ElevenLabs cannot read PowerPoint
 - the **SARAA factsheet**
 - two PDFs written for Clara on 2 Oct 2026 from public sources only (website, LinkedIn, YouTube, privacy policy,
   the presentation and the catalog's overview): **NDI Company Knowledge Base** and **NDI Frequently Asked
   Questions**. They and their HTML sources are in `knowledge-base/` on the developer's machine (git-ignored;
   `knowledge-base/README.md` says how to rebuild them)
-- the **demo videos page** `<APP_URL>/demos`, added as an ElevenLabs **URL document** (see "Demo videos" below), so
-  new YouTube videos reach Clara by themselves. Adding the YouTube channel link itself does not work: ElevenLabs
+- the **demo videos page** `<APP_URL>/demos`, added as an ElevenLabs **URL document** (see below), so new demo
+  videos reach Clara by themselves. Adding the YouTube channel link itself does not work: ElevenLabs
   extracted 0 characters from it in a test (YouTube builds its pages with JavaScript)
 
 Best kept in **one approved folder with one owner at NDI**, and Clara reads nothing else (never the whole shared drive).
@@ -161,7 +164,7 @@ the old website texts (the site was relaunched in 2026). The FAQ, flyers and one
 folder are out of date and stay out until NDI updates them (an FAQ cleaned for customers can be added once NDI has
 approved it).
 
-Some catalog AI Employees are marked **"Demo Coming Soon"**: Clara's and Aida's prompts say never to promise a demo,
+Some AI Employees are marked **"Demo Coming Soon"**: Clara's and Aida's prompts say never to promise a demo,
 a date or a finished product for them.
 
 1. ElevenLabs → Knowledge Base → **Google Drive** → connect → pick the files (PDF or Google Docs; Sheets and
@@ -174,42 +177,54 @@ a date or a finished product for them.
 
 Rules learnt on CDA: never "crawl entire website"; a synced document must also be **attached** to the agent.
 
-### Demo videos (`/demos`, kept up to date by itself)
+### AI Employees and demo videos (`/ai-employees`, `/demos`, kept up to date by themselves)
 
 ```
-YouTube channel ──(once a day)──► <APP_URL>/demos ──► ElevenLabs URL document ──► Clara's answers
+NDI's AI Employees API ──(hourly, only when changed)──► <APP_URL>/ai-employees ─┬─► ElevenLabs URL documents ──► Clara's answers
+ (catalog, master sheet, pricing)                       <APP_URL>/demos ─────────┘
 ```
 
-`src/lib/demoVideos.ts` reads NDI's YouTube channel (@NewDigitalIntelligence-j5c) with the **YouTube Data API**:
-public data only, 2–3 of the free 10,000 daily quota units per read, kept for 25 hours so visitors never reach
-YouTube. The page lists the newest video of each AI Employee (titles that start with a catalog code such as
-`FO-01`) and the NDI company videos; client-specific and investor videos are left out. **Once every 24 hours** the
-app's scheduler calls `/api/cron/demos` (the first time a minute after the server starts, since the list is kept in
-memory only): when the list changed, it asks ElevenLabs to re-read the page
-(`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara knows a new video within a day. It was hourly until
-14 Oct 2026; once a day is the user's choice. Clara never calls YouTube during a conversation.
+Since **10 Nov 2026** (the user's request) `src/lib/aiEmployees.ts` reads NDI's **AI Employees API** (its address
+and token are only in the variables `AI_EMPLOYEES_API_URL` and `AI_EMPLOYEES_API_TOKEN`). The API reads NDI's
+catalog, master sheet and pricing files and says when it checks them next (`nextCheckAt`, every hour). The app asks
+about 5 minutes after that, with `If-None-Match: "<version>"`: while nothing changed the reply is an empty 304 and
+nothing else happens. **Prices never leave the server**: the app copies only the public fields (code, name, tagline,
+trigger, features, human in the loop, time saving (the user's choice), benefits, outcome, channels, integrations,
+outputs, "Demo Coming Soon", video link) and drops `internal` (the business case with the EUR figures, maturity,
+priority, agents, platform services) and the slide numbers. A field the API adds later stays out until someone adds
+it to `toPublic`.
 
-**Set up on 2 Oct 2026:** API key in project `ndi-front-assistant` → `YOUTUBE_API_KEY`; `/demos` lists 85 videos;
-URL document **"NDI public demo videos (live page)"** `EEG5MebQkLEcbyy25NuF` (auto-sync, search index built; ElevenLabs
-read all 85 links) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`.
+- `<APP_URL>/ai-employees`: every AI Employee (134 on 10 Nov 2026), URL document **"NDI AI Employees (live page, no
+  prices)"** `Kst8xMZRlLYxMzUaRvWX` → `ELEVENLABS_AI_EMPLOYEES_DOCUMENT_ID`, usage *auto* (searched: too big to go
+  into every conversation), auto-sync daily as a backup, index `multilingual_e5_large_instruct`.
+- `<APP_URL>/demos`: every AI Employee's demo video from the same list (90 on 10 Nov 2026), the AI Employees whose
+  demo is coming soon, and the three videos about NDI (fixed in `COMPANY_VIDEOS`: they are not in the API). URL
+  document `EEG5MebQkLEcbyy25NuF` → `ELEVENLABS_DEMOS_DOCUMENT_ID`.
 
-**Always in Clara's and Aida's context** (usage mode **prompt**, since 6 Oct 2026; backups `backup11_*`): on Telegram,
+When a new version comes in, `/api/cron/ai-employees` asks ElevenLabs to re-read both pages
+(`POST /v1/convai/knowledge-base/{id}/refresh`), so Clara and Aida know the change within the hour. The list is kept
+in memory only: the first check (a minute after the server starts) reads it again and refreshes both documents once,
+which is harmless. Railway logs show "AI Employees: 200 {…"changed":true…}" when the list changes. Clara never calls
+the API during a conversation.
+
+**Before 10 Nov 2026** `/demos` came from NDI's YouTube channel through the YouTube Data API (`YOUTUBE_API_KEY`,
+hourly, then daily from 14 Oct 2026). The AI Employees API gives every demo video too (on 10 Nov 2026 it had all 89
+the channel had, plus DO-24; DO-07 points to a newer video), so the YouTube key is no longer used.
+
+**The demo list (`/demos`) is always in Clara's and Aida's context** (usage mode **prompt**, since 6 Oct 2026; backups `backup11_*`): on Telegram,
 "Is there an Access Tools and Subscription Manager AI Employee? … a demo link" got "I don't have details": the search
 returned 20 passages, all from the FAQ and Company Knowledge Base PDFs (their questions are worded like the
 customer's), and none from the demo list, whose passages each hold many videos. A question with the code ("GP-19")
-did find it. The list is small (about 9 KB), so it now goes into every conversation whole, like the approved answers;
-the other documents stay searchable ("auto"). The daily refresh and "Approve and teach Clara" keep this setting.
+did find it. The list is small (about 12 KB since 10 Nov 2026), so it goes into every conversation whole, like the approved answers;
+the other documents, `/ai-employees` too, stay searchable ("auto"). The refresh and "Approve and teach Clara" keep this setting.
 
-**Set it up (after the app is live on Railway)**
-1. **Google Cloud** (NDI's project `ndi-front-assistant`) → APIs & Services → **Enable** "YouTube Data API v3"
-   → Credentials → **Create credentials → API key** → edit it: **API restrictions → YouTube Data API v3** only;
-   application restrictions: none (Railway has no fixed IP). → Railway variable `YOUTUBE_API_KEY`.
-2. Check `<APP_URL>/demos`: it lists the demos (without the key it only shows the channel link).
-3. **ElevenLabs** → Knowledge Base → **Add URL** `<APP_URL>/demos`, auto-sync on (daily, as a backup) → attach it to
-   **Clara and Aida** → copy the document ID → Railway variable `ELEVENLABS_DEMOS_DOCUMENT_ID`. (Claude can do this
-   step with the API.)
-4. From then on the daily check refreshes it whenever the videos change. Railway logs show
-   "demo videos: 200 {…"changed":true…}" when that happens.
+**Set it up again (after the app is live on Railway)**
+1. Railway variables `AI_EMPLOYEES_API_URL` and `AI_EMPLOYEES_API_TOKEN` (from the owner of the AI Employees API).
+2. Check `<APP_URL>/ai-employees` and `<APP_URL>/demos` (without the variables they show only NDI's website and
+   YouTube channel links).
+3. **ElevenLabs** → Knowledge Base → **Add URL** for each page, auto-sync on (daily, as a backup) → attach both to
+   **Clara and Aida** (`/ai-employees` usage *auto*, `/demos` usage *prompt*) → Railway variables
+   `ELEVENLABS_AI_EMPLOYEES_DOCUMENT_ID` and `ELEVENLABS_DEMOS_DOCUMENT_ID`. (Claude can do this step with the API.)
 
 ---
 
@@ -673,7 +688,7 @@ opened in a new tab asks for the password again.
 | Run | `npm install` · `npm run dev` (no live view of calls) · `npm run build` (before `npx tsc --noEmit`) · `npm start` (`server.mjs`, as on Railway) · `npm run lint` |
 | Commits | Author **HelmiDev03**; pushed straight to `main` |
 
-**Who can open what** (`src/proxy.ts`): customer pages (`/`, `/voice`, `/avatar`, `/aida`) and conversation-start endpoints are public. Account and transcript-email features require a site session. Other public routes include `/login`, `/docs`, `/admin` and its sections, `/demos` and
+**Who can open what** (`src/proxy.ts`): customer pages (`/`, `/voice`, `/avatar`, `/aida`) and conversation-start endpoints are public. Account and transcript-email features require a site session. Other public routes include `/login`, `/docs`, `/admin` and its sections, `/demos`, `/ai-employees` and
 `/aida/join` (they ask for their own proof, or show only public data) and the routes that check their own secret:
 
 | Routes | Called by | Protected by |
@@ -688,14 +703,14 @@ opened in a new tab asks for the password again.
 | `/api/email/gmail-push` | Google Pub/Sub | `?token=` `GMAIL_PUSH_SECRET` |
 | `/api/email/assistant-reply` | ElevenLabs (email replies) | HMAC signature (`EMAIL_CHANNEL_SIGNING_SECRET`) |
 | `/api/cron/daily` | The app's own daily jobs (`src/lib/dailyJobs.ts`) | `Bearer CRON_SECRET` |
-| `/api/cron/demos` | The app's own scheduler, every 24 hours: refreshes the demo videos document when YouTube changed | `Bearer CRON_SECRET` |
+| `/api/cron/ai-employees` | The app's own scheduler, about every hour: refreshes the AI Employees and demo videos documents when the AI Employees API has a new version | `Bearer CRON_SECRET` |
 | `/api/email/gmail-watch` | By hand, to restart the Gmail watch | `Bearer CRON_SECRET` or the push secret |
 | `/api/instagram/webhook`, `/api/messenger/webhook` | Meta | `?token=` `INSTAGRAM_WEBHOOK_SECRET` / `MESSENGER_WEBHOOK_SECRET` (+ Meta signature if `META_APP_SECRET` is set) |
 | `/api/instagram/reply`, `/api/messenger/reply` | ElevenLabs (replies) | HMAC signature (`INSTAGRAM_CHANNEL_SIGNING_SECRET` / `MESSENGER_CHANNEL_SIGNING_SECRET`) |
 | `/api/email/mode`, `/api/admin/*` | `/admin/...` | Aida staff token |
 | `/api/aida/*` | Aida rooms | Staff token, room ticket, or nothing for customers (each route checks) |
 | `/docs` | Anyone | Nothing: public page, no secrets |
-| `/demos` | Anyone, and ElevenLabs (Clara's knowledge) | Nothing: public YouTube titles and links only |
+| `/demos`, `/ai-employees` | Anyone, and ElevenLabs (Clara's and Aida's knowledge) | Nothing: demo links and the AI Employees' public details, never prices |
 | Conversation-start endpoints (`/api/elevenlabs/signed-url`, `/api/elevenlabs/conversation-token`, `/api/anam/session`) | Customer site | Public, same-origin browser requests and start-rate limit |
 | `/api/account`, `/api/transcript/email` | Customer account features | Site session; account routes also enforce their existing customer identity rules |
 
@@ -724,8 +739,9 @@ opened in a new tab asks for the password again.
 | `MESSENGER_PAGE_TOKEN`, `MESSENGER_PAGE_ID`, `MESSENGER_WEBHOOK_SECRET` | Messenger (copied from CDA: the same Page) |
 | `MESSENGER_CHANNEL_INBOUND_URL`, `MESSENGER_CHANNEL_INBOUND_SECRET`, `MESSENGER_CHANNEL_SIGNING_SECRET` | "NDI Messenger" Custom Channel |
 | `META_APP_SECRET` (optional) | Also check Meta's signature on Instagram and Messenger webhooks |
-| `YOUTUBE_API_KEY` | YouTube Data API key for `/demos` (public data only; restricted to YouTube Data API v3) |
-| `ELEVENLABS_DEMOS_DOCUMENT_ID` | The ElevenLabs URL document that reads `<APP_URL>/demos`; refreshed when the videos change |
+| `AI_EMPLOYEES_API_URL`, `AI_EMPLOYEES_API_TOKEN` | NDI's AI Employees API, for `/ai-employees` and `/demos` (the app keeps no prices) |
+| `ELEVENLABS_AI_EMPLOYEES_DOCUMENT_ID`, `ELEVENLABS_DEMOS_DOCUMENT_ID` | The ElevenLabs URL documents that read `<APP_URL>/ai-employees` and `<APP_URL>/demos`; refreshed when the list changes |
+| `YOUTUBE_API_KEY` | Not used since 10 Nov 2026 (the demo videos come from the AI Employees API); can be deleted |
 
 ---
 

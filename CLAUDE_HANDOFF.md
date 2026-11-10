@@ -1,6 +1,6 @@
 # Claude handoff – NDI multi-channel assistant
 
-Read this first when continuing the project. Last updated: **14 October 2026**.
+Read this first when continuing the project. Last updated: **10 November 2026**.
 Public plain-words documentation of every feature: **`<APP_URL>/docs`** (`src/app/docs/page.tsx`; keep it up to
 date when a feature or a channel's status changes). The user's wish (4 Oct 2026): short and straightforward, every
 feature shown as working, and a diagram of how each feature works (`Diagram`, each step tagged with the part doing it;
@@ -39,8 +39,8 @@ and model. The staff copilot is **Aida**.
 (close to Shelley), call languages **English + German, Italian, French**, hosting on **Railway** from a **public**
 repository the user creates (not Vercel), **no Alexa**, **no Intercom**, a **new Twilio number**, a **new Anam avatar**, Instagram and
 Messenger: the accounts CDA used, now **NDI only** (the user removed CDA from the Meta webhooks; never call them
-"shared with CDA" again), and the **AI Employees knowledge comes from the user's Google
-Drive** — never build or change AI Employee knowledge yourself. "Appliances" became **interests** (what the
+"shared with CDA" again), and the **AI Employees knowledge comes from NDI's own files** (since 10 Nov 2026 through NDI's
+AI Employees API, which reads the catalog and master sheet) — never write or change AI Employee texts yourself. "Appliances" became **interests** (what the
 customer wants from NDI). Freshdesk and Make.com leftovers were removed (NDI never had them). Website accounts
 are **NDI's own table `customer_accounts`** (email + scrypt password hash, `src/lib/account.ts`), not Supabase Auth,
 because the Supabase project is shared with other PoCs.
@@ -99,9 +99,14 @@ npm run lint
 - Post-call webhook "NDI customer memory (post-call)" `a33b3560435a4e30b00aabc89012e165` → `<APP_URL>/api/agent/post-call`
   (signing secret in `ELEVENLABS_WEBHOOK_SECRET`)
 - **Aida**: "Aida – NDI copilot (drafts for staff)", `agent_0301m3y1xgv9ee8tr3qf8w110kbb` (text only; its placeholders `email_mode`, `instagram_mode`, `messenger_mode` are the auto/draft switches)
-- Knowledge base (2 Oct 2026): catalog, latest presentation, Company Knowledge Base and FAQ PDFs, plus the URL document
-  "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, auto-sync, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
-  attached to Clara **and** Aida on their live branches. The demo list is **always in their context** (usage mode
+- Knowledge base (2 Oct 2026): latest presentation, Company Knowledge Base and FAQ PDFs, plus two URL documents kept
+  up to date from NDI's **AI Employees API** (10 Nov 2026, the user's request; CHANNEL_SETUP.md §2, "AI Employees and
+  demo videos"): "NDI AI Employees (live page, no prices)" `Kst8xMZRlLYxMzUaRvWX` (= `<APP_URL>/ai-employees`,
+  `ELEVENLABS_AI_EMPLOYEES_DOCUMENT_ID`; it replaced the catalog PDF, which is detached, backups `backup12_*`) and
+  "NDI public demo videos (live page)" `EEG5MebQkLEcbyy25NuF` (= `<APP_URL>/demos`, `ELEVENLABS_DEMOS_DOCUMENT_ID`),
+  attached to Clara **and** Aida on their live branches. **Never show prices**: the app keeps only the public fields
+  of the API (time saving stays, the user's choice) and drops `internal` (business case in EUR, maturity, priority,
+  agents, platform services). The demo list is **always in their context** (usage mode
   `prompt`, 6 Oct 2026, backups `backup11_*`): asked by name on Telegram, Clara's search found only FAQ passages and
   said she had no demo (CHANNEL_SETUP.md §2, "Demo videos"). A Telegram chat is one long conversation in ElevenLabs,
   listed at the date of its first message (§5)
@@ -198,11 +203,12 @@ CDA) sends them to NDI only: the user removed CDA from its webhooks (confirmed 4
    valid to 1 Dec 2026; Page token valid with `pages_messaging`); the live webhooks pass Meta's verify check. The user
    switched the 2 Meta Callback URLs to NDI and tested both (2 Oct 2026), and removed CDA (confirmed 4 Oct 2026).
    Replies after Meta's 24 hours: only with Meta's "Human Agent" permission (7 days), not requested yet.
-10. ✅ **Demo videos** (2 Oct 2026): YouTube Data API key (project `ndi-front-assistant`, restricted to YouTube Data
-    API v3) → `YOUTUBE_API_KEY`; `/demos` lists 85 videos; URL document `EEG5MebQkLEcbyy25NuF` (ElevenLabs read all 85
-    links, search index built) attached to Clara and Aida → `ELEVENLABS_DEMOS_DOCUMENT_ID`. The app's daily check
-    (every 24 hours since 14 Oct 2026, the user's choice; it was hourly) refreshes it when the channel changes
-    (CHANNEL_SETUP.md §2, "Demo videos").
+10. ✅ **AI Employees and demo videos** (10 Nov 2026): NDI's AI Employees API (`AI_EMPLOYEES_API_URL`,
+    `AI_EMPLOYEES_API_TOKEN`) feeds `/ai-employees` (134 AI Employees, no prices) and `/demos` (90 demo videos plus
+    the 3 videos about NDI). The app asks about 5 minutes after the API's hourly check, with `If-None-Match` (304 when
+    unchanged), and refreshes both ElevenLabs documents only when the version changes (`/api/cron/ai-employees`).
+    From 2 Oct to 10 Nov 2026 `/demos` came from YouTube (`YOUTUBE_API_KEY`, no longer used; it can be deleted from
+    Railway and Google Cloud). CHANNEL_SETUP.md §2, "AI Employees and demo videos".
 11. ✅ **Staff alerts** (3 Oct 2026): `STAFF_ALERT_EMAIL` = contact@new-digital-intelligence.com (the user's choice).
 12. Optional: Slack, a separate LiveKit project. (Intercom was removed on the user's decision.)
 
